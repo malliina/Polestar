@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "Polestar"
-include ':automotive'
+include(":automotive")
