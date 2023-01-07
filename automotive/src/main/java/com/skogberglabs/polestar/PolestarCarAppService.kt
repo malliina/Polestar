@@ -33,21 +33,27 @@ class PolestarSession : Session() {
         val isGranted =
             carContext.checkSelfPermission(ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         return if (isGranted) {
-            PolestarScreen(carContext)
+            PlacesScreen(carContext)
         } else {
             val sm = carContext.getCarService(ScreenManager::class.java)
-            sm.push(PolestarScreen(carContext))
+            sm.push(PlacesScreen(carContext))
             RequestPermissionScreen(carContext, onGranted = { sm.pop() })
         }
     }
 }
 
-class PolestarScreen(carContext: CarContext) : Screen(carContext) {
+class MapScreen(carContext: CarContext): Screen(carContext) {
+    override fun onGetTemplate(): Template = navigationTemplate {
+
+    }
+}
+
+class PlacesScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         val myItems = itemList {
             addItem(
                 row {
-                    setTitle("Hej")
+                    setTitle("Places")
                     setBrowsable(true)
                     setOnClickListener {
                         screenManager.push(NoPermissionScreen(carContext))

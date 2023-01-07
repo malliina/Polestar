@@ -9,6 +9,7 @@ import androidx.car.app.model.PaneTemplate
 import androidx.car.app.model.Place
 import androidx.car.app.model.PlaceListMapTemplate
 import androidx.car.app.model.Row
+import androidx.car.app.navigation.model.NavigationTemplate
 
 fun row(build: Row.Builder.() -> Unit): Row =
     Row.Builder().apply { build(this) }.build()
@@ -18,6 +19,8 @@ fun pane(build: Pane.Builder.() -> Unit): Pane =
     Pane.Builder().apply { build(this) }.build()
 fun paneTemplate(pane: Pane, build: PaneTemplate.Builder.() -> Unit): PaneTemplate =
     PaneTemplate.Builder(pane).apply { build(this) }.build()
+fun navigationTemplate(build: NavigationTemplate.Builder.() -> Unit) =
+    NavigationTemplate.Builder().apply { build(this) }.build()
 fun place(loc: CarLocation, build: Place.Builder.() -> Unit = {}): Place =
     Place.Builder(loc).apply { build(this) }.build()
 fun placeListMap(build: PlaceListMapTemplate.Builder.() -> Unit): PlaceListMapTemplate =
