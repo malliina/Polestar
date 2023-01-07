@@ -1,0 +1,28 @@
+package com.skogberglabs.polestar
+
+import androidx.car.app.model.Action
+import androidx.car.app.model.CarLocation
+import androidx.car.app.model.ItemList
+import androidx.car.app.model.MessageTemplate
+import androidx.car.app.model.Pane
+import androidx.car.app.model.PaneTemplate
+import androidx.car.app.model.Place
+import androidx.car.app.model.PlaceListMapTemplate
+import androidx.car.app.model.Row
+
+fun row(build: Row.Builder.() -> Unit): Row =
+    Row.Builder().apply { build(this) }.build()
+fun itemList(build: ItemList.Builder.() -> Unit): ItemList =
+    ItemList.Builder().apply { build(this) }.build()
+fun pane(build: Pane.Builder.() -> Unit): Pane =
+    Pane.Builder().apply { build(this) }.build()
+fun paneTemplate(pane: Pane, build: PaneTemplate.Builder.() -> Unit): PaneTemplate =
+    PaneTemplate.Builder(pane).apply { build(this) }.build()
+fun place(loc: CarLocation, build: Place.Builder.() -> Unit = {}): Place =
+    Place.Builder(loc).apply { build(this) }.build()
+fun placeListMap(build: PlaceListMapTemplate.Builder.() -> Unit): PlaceListMapTemplate =
+    PlaceListMapTemplate.Builder().apply { build(this) }.build()
+fun action(build: Action.Builder.() -> Unit) =
+    Action.Builder().apply { build(this) }.build()
+fun messageTemplate(explanation: String, build: MessageTemplate.Builder.() -> Unit): MessageTemplate =
+    MessageTemplate.Builder(explanation).apply { build(this) }.build()

@@ -10,24 +10,26 @@ import androidx.car.app.ScreenManager
 import androidx.car.app.Session
 import androidx.car.app.model.Action
 import androidx.car.app.model.CarLocation
-import androidx.car.app.model.ItemList
-import androidx.car.app.model.MessageTemplate
-import androidx.car.app.model.Pane
-import androidx.car.app.model.PaneTemplate
 import androidx.car.app.model.ParkedOnlyOnClickListener
-import androidx.car.app.model.Place
-import androidx.car.app.model.PlaceListMapTemplate
-import androidx.car.app.model.Row
 import androidx.car.app.model.Template
 import androidx.car.app.validation.HostValidator
+import timber.log.Timber
 
 class PolestarCarAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
     override fun onCreateSession(): Session = PolestarSession()
 }
 
+class NoLogging : Timber.Tree() {
+    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
+    }
+}
+
 class PolestarSession : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
+        val tree = if (BuildConfig.DEBUG) Timber.DebugTree() else NoLogging()
+        Timber.plant(tree)
+        Timber.i("Starting!")
         val isGranted =
             carContext.checkSelfPermission(ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         return if (isGranted) {
@@ -42,17 +44,24 @@ class PolestarSession : Session() {
 
 class PolestarScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
-        val itemList = ItemList.Builder()
-            .addItem(
-                Row.Builder().setTitle("Hej").setBrowsable(true).setOnClickListener {
-                    screenManager.push(NoPermissionScreen(carContext))
-                }.build()
-            ).build()
-        val place = Place.Builder(CarLocation.create(60.155, 24.877)).build()
-        return PlaceListMapTemplate.Builder().setHeaderAction(Action.APP_ICON).setItemList(itemList)
-            .setCurrentLocationEnabled(true)
-            .setAnchor(place)
-            .build()
+        val myItems = itemList {
+            addItem(
+                row {
+                    setTitle("Hej")
+                    setBrowsable(true)
+                    setOnClickListener {
+                        screenManager.push(NoPermissionScreen(carContext))
+                    }
+                }
+            )
+        }
+        val myPlace = place(CarLocation.create(60.155, 24.877))
+        return placeListMap {
+            setHeaderAction(Action.APP_ICON)
+            setItemList(myItems)
+            setCurrentLocationEnabled(true)
+            setAnchor(myPlace)
+        }
     }
 }
 
@@ -69,16 +78,36 @@ class RequestPermissionScreen(carContext: CarContext, private val onGranted: () 
             }
         }
 
-        val action = Action.Builder().setTitle("Grant access.").setOnClickListener(pocl).build()
-        return MessageTemplate.Builder("Location usage explanation.").addAction(action)
-            .setHeaderAction(Action.APP_ICON).build()
+        val myAction = action {
+            setTitle("Grant access.")
+            setOnClickListener(pocl)
+        }
+        return messageTemplate("Location usage explanation.") {
+            addAction(myAction)
+            setHeaderAction(Action.APP_ICON)
+        }
     }
 }
 
 class NoPermissionScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
-        val row = Row.Builder().setTitle("Please grant permission to use location.").build()
-        val pane = Pane.Builder().addRow(row).build()
-        return PaneTemplate.Builder(pane).setHeaderAction(Action.APP_ICON).build()
+        val row = row {
+            setTitle("Please grant permission to use location.")
+        }
+        val pane = pane {
+            addRow(row)
+            addAction(
+                action {
+                    setTitle("Try again")
+                    setOnClickListener {
+                        Timber.i("Trying again...")
+                        screenManager.push(RequestPermissionScreen(carContext, onGranted = { screenManager.popToRoot() }))
+                    }
+                }
+            )
+        }
+        return paneTemplate(pane) {
+            setHeaderAction(Action.APP_ICON)
+        }
     }
 }
