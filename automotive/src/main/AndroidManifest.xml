@@ -25,7 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Polestar">
         <meta-data android:name="androidx.car.app.minCarApiLevel"
-            android:value="1" />
+            android:value="4" />
         <service
             android:name=".PolestarCarAppService"
             android:exported="true">
@@ -44,7 +44,14 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+<!--                <category android:name="android.intent.category.APP_MAPS" />-->
             </intent-filter>
+            <!-- Additionally include the intent-filter below ONLY for navigation apps -->
+<!--            <intent-filter>-->
+<!--                <action android:name="androidx.car.app.action.NAVIGATE" />-->
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <data android:scheme="geo" />-->
+<!--            </intent-filter>-->
             <meta-data android:name="distractionOptimized" android:value="true"/>
         </activity>
     </application>

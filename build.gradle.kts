@@ -9,7 +9,3 @@ plugins {
 subprojects {
     apply(plugin = "org.jlleitschuh.gradle.ktlint")
 }
-
-// task clean(type: Delete) {
-//    delete rootProject.buildDir
-// }
