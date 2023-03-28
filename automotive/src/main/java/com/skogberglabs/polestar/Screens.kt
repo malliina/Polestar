@@ -31,11 +31,15 @@ class PlacesScreen(carContext: CarContext) : Screen(carContext) {
             setCurrentLocationEnabled(true)
             setAnchor(myPlace)
             setActionStrip(actionStrip { addAction(Action.PAN) })
+            setOnContentRefreshListener {
+                Timber.i("Refresh!")
+                invalidate()
+            }
         }
     }
 }
 
-class PlaceNavScreen(carContext: CarContext): Screen(carContext) {
+class PlaceNavScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         val myItems = itemList {
             addItem(
@@ -55,15 +59,19 @@ class PlaceNavScreen(carContext: CarContext): Screen(carContext) {
     }
 }
 
-class MapScreen(carContext: CarContext): Screen(carContext) {
+class MapScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template = navigationTemplate {
         setBackgroundColor(CarColor.GREEN)
-        setActionStrip(actionStrip {
-            addAction(Action.PAN)
-            addAction(action {
-                setTitle("Action here")
-            })
-        })
+        setActionStrip(
+            actionStrip {
+                addAction(Action.PAN)
+                addAction(
+                    action {
+                        setTitle("Action here")
+                    }
+                )
+            }
+        )
         setPanModeListener { isPan ->
             Timber.i("Pan $isPan")
         }
