@@ -8,10 +8,25 @@ import androidx.car.app.model.CarColor
 import androidx.car.app.model.CarLocation
 import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
 class PlacesScreen(carContext: CarContext) : Screen(carContext) {
+    val scope = CoroutineScope(Dispatchers.IO)
+    var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
+    val locationJob = scope.launch {
+        LocationSource.instance.locationUpdates.collect { updates ->
+            updates.lastOrNull()?.let { last ->
+                Timber.i("Updating current location...")
+                currentLocation = CarLocation.create(last.latitude, last.longitude)
+                invalidate()
+            }
+        }
+    }
     override fun onGetTemplate(): Template {
         val myItems = itemList {
             addItem(
@@ -24,7 +39,7 @@ class PlacesScreen(carContext: CarContext) : Screen(carContext) {
                 }
             )
         }
-        val myPlace = place(CarLocation.create(60.155, 24.877))
+        val myPlace = place(currentLocation)
         return placeListTemplate {
             setHeaderAction(Action.APP_ICON)
             setItemList(myItems)
