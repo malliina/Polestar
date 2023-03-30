@@ -5,8 +5,10 @@ import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
 import androidx.car.app.model.CarColor
+import androidx.car.app.model.CarIcon
 import androidx.car.app.model.CarLocation
 import androidx.car.app.model.ParkedOnlyOnClickListener
+import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,7 +41,14 @@ class PlacesScreen(carContext: CarContext) : Screen(carContext) {
                 }
             )
         }
-        val myPlace = place(currentLocation)
+        val myPlace = place(currentLocation) {
+            setMarker(
+                placeMarker {
+                    setIcon(CarIcon.APP_ICON, PlaceMarker.TYPE_ICON)
+                    setColor(CarColor.BLUE)
+                }
+            )
+        }
         return placeListTemplate {
             setHeaderAction(Action.APP_ICON)
             setItemList(myItems)
@@ -83,6 +92,9 @@ class MapScreen(carContext: CarContext) : Screen(carContext) {
                 addAction(
                     action {
                         setTitle("Action here")
+                        setOnClickListener {
+                            Timber.i("Clicked action.")
+                        }
                     }
                 )
             }

@@ -18,6 +18,7 @@
         android:required="true" />
 
     <application
+        android:name=".PolestarApp"
         android:allowBackup="true"
         android:appCategory="audio"
         android:icon="@mipmap/ic_launcher"
@@ -36,17 +37,28 @@
             </intent-filter>
         </service>
         <activity
+            android:name=".SignInActivity"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:launchMode="singleTask"
+            android:exported="true"
+            android:label="Car-Tracker">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name="androidx.car.app.activity.CarAppActivity"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
             android:exported="true"
             android:launchMode="singleTask"
             android:label="Polestar">
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+                <!--                <category android:name="android.intent.category.APP_MAPS" />-->
+<!--            </intent-filter>-->
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-<!--                <category android:name="android.intent.category.APP_MAPS" />-->
-            </intent-filter>
             <!-- Additionally include the intent-filter below ONLY for navigation apps -->
 <!--            <intent-filter>-->
 <!--                <action android:name="androidx.car.app.action.NAVIGATE" />-->

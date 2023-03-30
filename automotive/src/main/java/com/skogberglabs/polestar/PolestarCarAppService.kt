@@ -18,18 +18,10 @@ class PolestarCarAppService : CarAppService() {
     override fun onCreateSession(): Session = PolestarSession()
 }
 
-class NoLogging : Timber.Tree() {
-    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-    }
-}
-
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
 class PolestarSession : Session() {
     private lateinit var locations: CarLocationManager
     override fun onCreateScreen(intent: Intent): Screen {
-        val tree = if (BuildConfig.DEBUG) Timber.DebugTree() else NoLogging()
-        Timber.plant(tree)
-        Timber.i("Starting!")
         val isGranted =
             carContext.checkSelfPermission(ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         return if (isGranted) {

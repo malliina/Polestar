@@ -23,15 +23,6 @@ class PrimitiveAdapter {
     fun writeId(s: IdToken): String = s.token
 }
 
-interface Primitive {
-    val value: String
-}
-
-data class IdToken(val token: String) : Primitive {
-    override val value: String get() = token
-    override fun toString(): String = token
-}
-
 fun <T> JsonAdapter<T>.read(json: String): T {
     return this.fromJson(json)
         ?: throw JsonDataException("Moshi returned null when reading '$json'.")

@@ -9,6 +9,7 @@ import androidx.car.app.model.Pane
 import androidx.car.app.model.PaneTemplate
 import androidx.car.app.model.Place
 import androidx.car.app.model.PlaceListMapTemplate
+import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Row
 import androidx.car.app.navigation.model.NavigationTemplate
 import androidx.car.app.navigation.model.PlaceListNavigationTemplate
@@ -26,6 +27,7 @@ fun navigationTemplate(build: NavigationTemplate.Builder.() -> Unit) =
 // fun mapTemplate(build: MapTemplate.Builder.() -> Unit) = ???
 fun place(loc: CarLocation, build: Place.Builder.() -> Unit = {}): Place =
     Place.Builder(loc).apply { build(this) }.build()
+fun placeMarker(build: PlaceMarker.Builder.() -> Unit) = PlaceMarker.Builder().apply(build).build()
 fun placeListTemplate(build: PlaceListMapTemplate.Builder.() -> Unit): PlaceListMapTemplate =
     PlaceListMapTemplate.Builder().apply { build(this) }.build()
 fun placeListNavigationTemplate(build: PlaceListNavigationTemplate.Builder.() -> Unit) =
