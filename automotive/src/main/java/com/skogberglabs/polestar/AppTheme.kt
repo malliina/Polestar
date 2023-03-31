@@ -22,7 +22,6 @@ object Paddings {
     val xs = 4.dp
     val normal = 16.dp
     val xxl = 48.dp
-    val title = 52.dp
 }
 
 val Typography = Typography(

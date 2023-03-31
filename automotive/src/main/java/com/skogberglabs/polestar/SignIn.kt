@@ -5,7 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.car.app.activity.CarAppActivity
-import androidx.car.app.model.CarLocation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,8 +34,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class SignInActivity : ComponentActivity() {
     private val requestCodeSignIn = 100
@@ -44,6 +41,7 @@ class SignInActivity : ComponentActivity() {
     private val profile = ProfileViewModel.instance
     private val scope = CoroutineScope(Dispatchers.IO)
     private lateinit var locationManager: CarLocationManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         client = Google.instance.client(this)
@@ -106,7 +104,7 @@ fun SignIn(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
                     onSignIn()
                 },
                 Modifier
-                    .padding(16.dp)
+                    .padding(Paddings.normal)
                     .widthIn(max = 800.dp)
             ) {
                 Text("Sign in with Google", Modifier.padding(Paddings.normal), fontSize = 32.sp)
@@ -115,7 +113,7 @@ fun SignIn(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
         Button(onClick = {
             val i = Intent(context, CarAppActivity::class.java)
             context.startActivity(i)
-        }, Modifier.padding(48.dp)) {
+        }, Modifier.padding(Paddings.xxl)) {
             Text("Go to map", Modifier.padding(Paddings.normal), fontSize = 32.sp)
         }
         currentLocation?.let { loc ->
@@ -138,7 +136,10 @@ fun SignIn(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
             }
         }
         Spacer(modifier = Modifier.weight(1f))
-        Text("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", Modifier.padding(Paddings.normal))
+        Text(
+            "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            Modifier.padding(Paddings.normal)
+        )
     }
 }
 
