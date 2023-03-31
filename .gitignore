@@ -14,3 +14,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+keystore.jks
+service_account_credential.json
+fastlane/report.xml
