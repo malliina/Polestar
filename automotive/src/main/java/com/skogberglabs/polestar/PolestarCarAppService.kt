@@ -14,22 +14,10 @@ class PolestarCarAppService : CarAppService() {
 
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
 class PolestarSession : Session() {
-    private val locations: CarLocationManager = CarLocationManager(carContext)
+    private lateinit var locations: CarLocationManager
     override fun onCreateScreen(intent: Intent): Screen {
+        locations = CarLocationManager(carContext)
         return if (locations.isGranted()) {
-//            carContext.getCarService(AppManager::class.java).setSurfaceCallback(object :
-//                    SurfaceCallback {
-//                    override fun onScroll(distanceX: Float, distanceY: Float) {
-//                        Timber.i("onScroll")
-//                    }
-//                    override fun onClick(x: Float, y: Float) {
-//                        Timber.i("Click x: $x y: $y")
-//                        super.onClick(x, y)
-//                    }
-//                    override fun onSurfaceAvailable(surfaceContainer: SurfaceContainer) {
-//                        Timber.i("Surface available")
-//                    }
-//                })
             locations.startIfGranted()
             PlacesScreen(carContext)
 //            MapScreen(carContext)

@@ -56,7 +56,9 @@ class PlacesScreen(carContext: CarContext) : Screen(carContext) {
         }
         val backCallback = object: OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val i = Intent(carContext, SignInActivity::class.java)
+                val i = Intent(carContext, SignInActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
                 carContext.startActivity(i)
             }
         }
