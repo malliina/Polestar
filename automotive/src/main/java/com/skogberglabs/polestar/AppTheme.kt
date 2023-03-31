@@ -14,8 +14,16 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+
+object Paddings {
+    val xs = 4.dp
+    val normal = 16.dp
+    val xxl = 48.dp
+    val title = 52.dp
+}
 
 val Typography = Typography(
     bodyLarge = TextStyle(

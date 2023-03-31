@@ -23,7 +23,7 @@ import timber.log.Timber
 
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
 class PlacesScreen(carContext: CarContext) : Screen(carContext) {
-    val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.IO)
     var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
     val locationJob = scope.launch {
         LocationSource.instance.locationUpdates.collect { updates ->

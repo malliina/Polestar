@@ -1,10 +1,12 @@
 package com.skogberglabs.polestar
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import com.google.android.gms.location.LocationAvailability
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -12,6 +14,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import java.util.Date
 
@@ -32,6 +35,7 @@ class LocationSource {
     }
     private val updatesState: MutableStateFlow<List<LocationUpdate>> = MutableStateFlow(emptyList())
     val locationUpdates: Flow<List<LocationUpdate>> = updatesState
+    val currentLocation: Flow<LocationUpdate?> = locationUpdates.map { it.lastOrNull() }
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
 }
 
@@ -44,6 +48,14 @@ class CarLocationManager(private val context: Context) {
             action = LocationUpdatesBroadcastReceiver.ACTION_LOCATIONS
         }
         PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+    }
+
+    fun isGranted() = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    fun startIfGranted() {
+        if (isGranted()) {
+            start()
+        }
     }
 
     @SuppressLint("MissingPermission")

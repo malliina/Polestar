@@ -41,14 +41,18 @@ class Google {
 
     suspend fun signInSilently(ctx: Context) = signInSilently(client(ctx))
 
-    suspend fun signInSilently(c: GoogleSignInClient): UserInfo {
-        val user = c.silentSignIn().await()
-        readUser(user)?.let {
-            ProfileViewModel.instance.update(it)
-            return it
+    suspend fun signInSilently(c: GoogleSignInClient): UserInfo? {
+        try {
+            val user = c.silentSignIn().await()
+            readUser(user)?.let {
+                ProfileViewModel.instance.update(it)
+                return it
+            }
+            Timber.w("Unable to read user info from account. No signed in user?")
+        } catch (e: Exception) {
+            Timber.w(e, "Silent sign in failed exceptionally.")
         }
-        Timber.w("Unable to read user info from account.")
-        throw Exception("No user.")
+        return null
     }
 }
 
