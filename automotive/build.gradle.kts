@@ -12,8 +12,8 @@ android {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 30 // Android 11
         targetSdk = 33
-        versionCode = 5
-        versionName = "1.4"
+        versionCode = 6
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
