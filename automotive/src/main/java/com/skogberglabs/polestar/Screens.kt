@@ -1,8 +1,13 @@
 package com.skogberglabs.polestar
 
 import android.Manifest
+import android.content.Intent
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher
+import androidx.activity.addCallback
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
+import androidx.car.app.activity.CarAppActivity
 import androidx.car.app.model.Action
 import androidx.car.app.model.CarColor
 import androidx.car.app.model.CarIcon
@@ -49,8 +54,15 @@ class PlacesScreen(carContext: CarContext) : Screen(carContext) {
                 }
             )
         }
+        val backCallback = object: OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val i = Intent(carContext, SignInActivity::class.java)
+                carContext.startActivity(i)
+            }
+        }
+        carContext.onBackPressedDispatcher.addCallback(backCallback)
         return placeListTemplate {
-            setHeaderAction(Action.APP_ICON)
+            setHeaderAction(Action.BACK)
             setItemList(myItems)
             setCurrentLocationEnabled(true)
             setAnchor(myPlace)

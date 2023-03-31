@@ -44,7 +44,7 @@ class Google {
     suspend fun signInSilently(c: GoogleSignInClient): UserInfo {
         val user = c.silentSignIn().await()
         readUser(user)?.let {
-//            UserState.instance.update(it)
+            ProfileViewModel.instance.update(it)
             return it
         }
         Timber.w("Unable to read user info from account.")

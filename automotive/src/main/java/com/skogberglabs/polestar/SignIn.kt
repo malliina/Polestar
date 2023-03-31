@@ -3,15 +3,17 @@ package com.skogberglabs.polestar
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.activity.compose.setContent
+import androidx.car.app.activity.CarAppActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,16 +27,22 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class SignInActivity: ComponentActivity() {
+class SignInActivity : ComponentActivity() {
     private val requestCodeSignIn = 100
     private lateinit var client: GoogleSignInClient
     private val profile = ProfileViewModel.instance
-
+    private val scope = CoroutineScope(Dispatchers.IO)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         client = Google.instance.client(this)
+        scope.launch {
+            Google.instance.signInSilently(applicationContext)
+        }
         setContent {
             AppTheme {
                 Surface(Modifier.fillMaxSize()) {
@@ -82,17 +90,23 @@ fun SignIn(vm: ProfileViewModel, onSignIn: () -> Unit) {
         user?.let { u ->
             Text("Signed in as ${u.email}.", fontSize = 32.sp)
         } ?: run {
-            Button(onClick = {
-                Timber.i("Signing in!")
-                onSignIn()
-//            val i = Intent(context, CarAppActivity::class.java)
-//            context.startActivity(i)
-            },
+            Button(
+                onClick = {
+                    Timber.i("Signing in!")
+                    onSignIn()
+                },
                 Modifier
                     .padding(16.dp)
-                    .widthIn(max = 800.dp)) {
+                    .widthIn(max = 800.dp)
+            ) {
                 Text("Sign in with Google", Modifier.padding(16.dp), fontSize = 32.sp)
             }
+        }
+        Button(onClick = {
+            val i = Intent(context, CarAppActivity::class.java)
+            context.startActivity(i)
+        }, Modifier.padding(48.dp)) {
+            Text("Go to map", Modifier.padding(16.dp), fontSize = 32.sp)
         }
     }
 }

@@ -3,7 +3,7 @@ package com.skogberglabs.polestar
 import android.app.Application
 import timber.log.Timber
 
-class PolestarApp: Application() {
+class PolestarApp : Application() {
     override fun onCreate() {
         super.onCreate()
         val tree = if (BuildConfig.DEBUG) Timber.DebugTree() else NoLogging()
