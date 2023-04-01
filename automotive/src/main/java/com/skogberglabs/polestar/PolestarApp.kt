@@ -24,7 +24,7 @@ class PolestarApp : Application() {
         googleClient = Google.build(applicationContext)
         httpClient = CarHttpClient(GoogleTokenSource(googleClient))
         deviceLocationSource = LocationSource.instance
-        locationUploader = LocationUploader(http)
+        locationUploader = LocationUploader(http, UserState.instance)
     }
 }
 

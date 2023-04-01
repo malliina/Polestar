@@ -54,10 +54,10 @@ class LocationSource {
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
 }
 
-class LocationUploader(private val http: CarHttpClient) {
+class LocationUploader(private val http: CarHttpClient, private val source: UserState) {
     private val io = CoroutineScope(Dispatchers.IO)
     @OptIn(ExperimentalCoroutinesApi::class)
-    val message = UserState.instance.userResult.flatMapLatest { user ->
+    val message = source.userResult.flatMapLatest { user ->
         Timber.i("User result $user")
         when (val u = user) {
             is Outcome.Success -> {
