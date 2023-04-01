@@ -45,7 +45,7 @@ class Google {
         try {
             val user = c.silentSignIn().await()
             readUser(user)?.let {
-                ProfileViewModel.instance.update(it)
+                UserState.instance.update(it)
                 return it
             }
             Timber.w("Unable to read user info from account. No signed in user?")

@@ -9,21 +9,23 @@ import androidx.car.app.validation.HostValidator
 
 class PolestarCarAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
-    override fun onCreateSession(): Session = PolestarSession()
+    override fun onCreateSession(): Session {
+        val app = application as PolestarApp
+        return PolestarSession(app.locations, app.locationSource)
+    }
 }
 
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
-class PolestarSession : Session() {
-    private lateinit var locations: CarLocationManager
+class PolestarSession(private val locations: CarLocationManager,
+                      private val locationSource: LocationSource) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
-        locations = CarLocationManager(carContext)
         return if (locations.isGranted()) {
             locations.startIfGranted()
-            PlacesScreen(carContext)
+            PlacesScreen(carContext, locationSource)
 //            MapScreen(carContext)
         } else {
             val sm = carContext.getCarService(ScreenManager::class.java)
-            sm.push(PlacesScreen(carContext))
+            sm.push(PlacesScreen(carContext, locationSource))
             RequestPermissionScreen(carContext, onGranted = { sm.pop() })
         }
     }

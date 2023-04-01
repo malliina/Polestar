@@ -6,6 +6,8 @@ import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.adapter
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalStdlibApi::class)
 object Adapters {
@@ -14,6 +16,9 @@ object Adapters {
         .build()
 
     val errors: JsonAdapter<Errors> = moshi.adapter()
+//    val locationUpdate: JsonAdapter<LocationUpdate> = moshi.adapter()
+    val locationUpdates: JsonAdapter<LocationUpdates> = moshi.adapter()
+    val message: JsonAdapter<SimpleMessage> = moshi.adapter()
 }
 
 class PrimitiveAdapter {
@@ -21,6 +26,10 @@ class PrimitiveAdapter {
     fun id(s: String): IdToken = IdToken(s)
     @ToJson
     fun writeId(s: IdToken): String = s.token
+    @FromJson
+    fun readDateTime(s: String): OffsetDateTime = OffsetDateTime.parse(s)
+    @ToJson
+    fun writeDateTime(s: OffsetDateTime): String = s.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 }
 
 fun <T> JsonAdapter<T>.read(json: String): T {

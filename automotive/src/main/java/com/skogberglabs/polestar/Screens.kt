@@ -22,11 +22,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
-class PlacesScreen(carContext: CarContext) : Screen(carContext) {
+class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Screen(carContext) {
     private val scope = CoroutineScope(Dispatchers.IO)
     var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
     val locationJob = scope.launch {
-        LocationSource.instance.locationUpdates.collect { updates ->
+        locationSource.locationUpdates.collect { updates ->
             updates.lastOrNull()?.let { last ->
                 Timber.i("Updating current location...")
                 currentLocation = CarLocation.create(last.latitude, last.longitude)

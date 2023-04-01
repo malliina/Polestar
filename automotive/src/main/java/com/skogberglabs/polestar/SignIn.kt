@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.car.app.activity.CarAppActivity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +26,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.tasks.Task
@@ -34,26 +34,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.text.DateFormat
+import java.time.format.DateTimeFormatter
 
 class SignInActivity : ComponentActivity() {
     private val requestCodeSignIn = 100
-    private lateinit var client: GoogleSignInClient
-    private val profile = ProfileViewModel.instance
+    private val profile: ProfileViewModel by viewModels()
     private val scope = CoroutineScope(Dispatchers.IO)
-    private lateinit var locationManager: CarLocationManager
 
+    private val userState = UserState.instance
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        client = Google.instance.client(this)
-        locationManager = CarLocationManager(applicationContext)
         scope.launch {
             Google.instance.signInSilently(applicationContext)
         }
-        locationManager.startIfGranted()
+        profile.locations.startIfGranted()
         setContent {
             AppTheme {
                 Surface(Modifier.fillMaxSize()) {
-                    SignIn(profile, LocationSource.instance) { signIn() }
+                    SignIn(profile, profile.locationSource) { signIn() }
                 }
             }
         }
@@ -61,7 +59,7 @@ class SignInActivity : ComponentActivity() {
 
     private fun signIn() {
         Timber.i("Signing in...")
-        val signInIntent = client.signInIntent
+        val signInIntent = profile.google.signInIntent
         startActivityForResult(signInIntent, requestCodeSignIn)
     }
 
@@ -79,7 +77,7 @@ class SignInActivity : ComponentActivity() {
             val account = completedTask.getResult(ApiException::class.java)
             val user = account?.let { a -> Google.readUser(a) }
             Timber.i("Sign in success.")
-            profile.update(user)
+            userState.update(user)
         } catch (e: ApiException) {
             val str = CommonStatusCodes.getStatusCodeString(e.statusCode)
             Timber.w(e, "Sign in failed. Code ${e.statusCode}. $str.")
@@ -118,7 +116,6 @@ fun SignIn(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
         }
         currentLocation?.let { loc ->
             Column(horizontalAlignment = Alignment.Start) {
-                val date = DateFormat.getDateTimeInstance().format(loc.date)
                 LocationText("GPS ${loc.latitude}, ${loc.longitude}")
                 loc.accuracyMeters?.let { accuracy ->
                     LocationText("Accuracy $accuracy meters")
@@ -132,7 +129,7 @@ fun SignIn(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
                 loc.bearingAccuracyDegrees?.let { bacc ->
                     LocationText("Bearing accuracy $bacc degrees")
                 }
-                LocationText(date)
+                LocationText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
             }
         }
         Spacer(modifier = Modifier.weight(1f))

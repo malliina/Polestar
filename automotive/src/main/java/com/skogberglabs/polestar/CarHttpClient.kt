@@ -1,5 +1,6 @@
 package com.skogberglabs.polestar
 
+import android.content.Context
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
 import kotlinx.coroutines.Dispatchers
@@ -11,23 +12,49 @@ import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.internal.closeQuietly
+import timber.log.Timber
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 
-class CarHttpClient {
+interface TokenSource {
+    suspend fun fetchToken(): IdToken?
+
+    companion object {
+        val empty = object : TokenSource {
+            override suspend fun fetchToken(): IdToken? = null
+        }
+    }
+}
+
+class GoogleTokenSource(appContext: Context) : TokenSource {
+    private val google = Google.instance.client(appContext)
+
+    override suspend fun fetchToken(): IdToken? = try {
+        Google.instance.signInSilently(google)?.idToken
+    } catch (e: Exception) {
+        Timber.w(e, "Failed to fetch token")
+        null
+    }
+}
+
+class CarHttpClient(private val tokenSource: TokenSource) {
     companion object {
         private const val Accept = "Accept"
         private const val Authorization = "Authorization"
         private val MediaTypeJson = "application/vnd.car.v1+json".toMediaType()
+//        private val MediaTypeJson = "application/vnd.boat.v2+json".toMediaType()
 
         fun headers(token: IdToken?): Map<String, String> {
             val acceptPair = Accept to MediaTypeJson.toString()
             return if (token != null) mapOf(Authorization to "Bearer $token", acceptPair) else mapOf(acceptPair)
         }
     }
+
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
@@ -35,12 +62,60 @@ class CarHttpClient {
         .callTimeout(60, TimeUnit.SECONDS)
         .build()
 
+    private var token: IdToken? = null
+    private suspend fun fetchToken() =
+        token ?: run {
+            val t = tokenSource.fetchToken()
+            token = t
+            t
+        }
+
     suspend fun <T> get(path: String, adapter: JsonAdapter<T>): T {
         val request = authRequest(Env.baseUrl.append(path)).get().build()
         return execute(request, adapter)
     }
 
+    suspend fun <Req, Res> post(
+        path: String,
+        body: Req,
+        writer: JsonAdapter<Req>,
+        reader: JsonAdapter<Res>
+    ): Res = body(path, body, writer, reader) { req, rb -> req.post(rb) }
+
+    suspend fun <Req, Res> body(
+        path: String,
+        body: Req,
+        writer: JsonAdapter<Req>,
+        reader: JsonAdapter<Res>,
+        install: (Request.Builder, RequestBody) -> Request.Builder
+    ): Res = withContext(Dispatchers.IO) {
+        val url = Env.baseUrl.append(path)
+        val requestBody = writer.toJson(body).toRequestBody(MediaTypeJson)
+        execute(install(authRequest(url), requestBody).build(), reader)
+    }
+
     private suspend fun <T> execute(request: Request, reader: JsonAdapter<T>): T =
+        try {
+            executeOnce(request, reader)
+        } catch (e: ErrorsException) {
+            if (e.isTokenExpired) {
+                Timber.i("JWT is expired. Obtaining a new token and retrying...")
+                val newToken = tokenSource.fetchToken()
+                if (newToken != null) {
+                    token = newToken
+                    val newAttempt =
+                        request.newBuilder().header(Authorization, "Bearer $newToken").build()
+                    executeOnce(newAttempt, reader)
+                } else {
+                    Timber.w("Token expired and unable to renew token. Failing request to '${request.url}'.")
+                    throw e
+                }
+            } else {
+                throw e
+            }
+        }
+
+    private suspend fun <T> executeOnce(request: Request, reader: JsonAdapter<T>): T =
         withContext(Dispatchers.IO) {
             make(client.newCall(request)).use { response ->
                 val body = response.body
@@ -89,7 +164,7 @@ class CarHttpClient {
     }
 
     private suspend fun authRequest(url: FullUrl) =
-        newRequest(url, headers(null))
+        newRequest(url, headers(fetchToken()))
 
     private fun newRequest(url: FullUrl, headers: Map<String, String>): Request.Builder {
         val builder = Request.Builder().url(url.url)
