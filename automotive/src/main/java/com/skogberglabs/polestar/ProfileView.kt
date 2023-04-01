@@ -49,6 +49,7 @@ class ProfileActivity : ComponentActivity() {
             google.signInSilently()
         }
         profile.locations.startIfGranted()
+        Timber.i("Creating Profile activity...")
         setContent {
             AppTheme {
                 Surface(Modifier.fillMaxSize()) {
@@ -73,6 +74,7 @@ class ProfileActivity : ComponentActivity() {
                 google.handleSignIn(account, silent = false)
             } catch (e: ApiException) {
                 Timber.w(e, "Failed to handle sign in.")
+                google.fail(e)
             }
         }
     }

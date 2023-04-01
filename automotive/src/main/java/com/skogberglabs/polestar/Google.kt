@@ -42,6 +42,10 @@ class Google(private val client: GoogleSignInClient) {
         return client.signInIntent
     }
 
+    fun fail(e: Exception) {
+        userState.update(Outcome.Error(e))
+    }
+
     suspend fun signInSilently(): UserInfo? =
         try {
             val user = client.silentSignIn().await()

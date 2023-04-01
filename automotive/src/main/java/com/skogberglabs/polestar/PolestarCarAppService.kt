@@ -28,7 +28,10 @@ class PolestarSession(
         } else {
             val sm = carContext.getCarService(ScreenManager::class.java)
             sm.push(PlacesScreen(carContext, locationSource))
-            RequestPermissionScreen(carContext, onGranted = { sm.pop() })
+            RequestPermissionScreen(carContext, onGranted = {
+                locations.startIfGranted()
+                sm.pop()
+            })
         }
     }
 }
