@@ -13,7 +13,8 @@ class PolestarApp : Application() {
     val google: Google get() = googleClient
     private lateinit var deviceLocationSource: LocationSource
     val locationSource: LocationSource get() = deviceLocationSource
-    private lateinit var uploader: LocationUploader
+    private lateinit var locationUploader: LocationUploader
+    val uploader: LocationUploader get() = locationUploader
 
     override fun onCreate() {
         super.onCreate()
@@ -24,7 +25,7 @@ class PolestarApp : Application() {
         googleClient = Google.build(applicationContext)
         httpClient = CarHttpClient(GoogleTokenSource(googleClient))
         deviceLocationSource = LocationSource.instance
-        uploader = LocationUploader(http)
+        locationUploader = LocationUploader(http)
     }
 }
 

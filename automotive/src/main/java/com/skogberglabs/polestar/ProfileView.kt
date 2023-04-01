@@ -53,7 +53,7 @@ class ProfileActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 Surface(Modifier.fillMaxSize()) {
-                    ProfileView(profile, profile.locationSource) { signIn() }
+                    ProfileView(profile) { signIn() }
                 }
             }
         }
@@ -93,10 +93,11 @@ class ProfileActivity : ComponentActivity() {
 }
 
 @Composable
-fun ProfileView(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
+fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
     val context = LocalContext.current
     val user by vm.user.collectAsStateWithLifecycle()
-    val currentLocation by locs.currentLocation.collectAsStateWithLifecycle(null)
+    val currentLocation by vm.locationSource.currentLocation.collectAsStateWithLifecycle(null)
+    val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
     Column(Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Car-Tracker", Modifier.padding(52.dp), fontSize = 48.sp)
         when (val u = user) {
@@ -158,6 +159,15 @@ fun ProfileView(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit
                     LocationText("Bearing accuracy $bacc degrees")
                 }
                 LocationText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                val message = when (val msg = uploadMessage) {
+                    is Outcome.Success -> msg.result.message
+                    is Outcome.Error -> msg.e.message ?: "Failed to upload. ${msg.e}"
+                    Outcome.Idle -> null
+                    Outcome.Loading -> null
+                }
+                message?.let { msg ->
+                    LocationText(msg, Modifier.padding(vertical = Paddings.normal))
+                }
             }
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -168,5 +178,5 @@ fun ProfileView(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit
     }
 }
 
-@Composable fun LocationText(text: String) =
-    Text(text, Modifier.padding(Paddings.xs), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Start)
+@Composable fun LocationText(text: String, modifier: Modifier = Modifier) =
+    Text(text, modifier.padding(Paddings.xs), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Start)

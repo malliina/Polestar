@@ -27,6 +27,7 @@ class ProfileViewModel(private val appl: Application): AndroidViewModel(appl) {
     val locations = app.locations
     val locationSource = app.locationSource
     val google = app.google
+    val uploadMessage = app.uploader.message
 
     val user: StateFlow<Outcome<UserInfo>> = UserState.instance.userResult
 

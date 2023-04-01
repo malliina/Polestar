@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
@@ -57,16 +58,23 @@ class LocationSource {
 
 class LocationUploader(private val http: CarHttpClient) {
     private val io = CoroutineScope(Dispatchers.IO)
-    val job = io.launch {
+    private val messageState: MutableStateFlow<Outcome<SimpleMessage>> = MutableStateFlow(Outcome.Idle)
+    val message: StateFlow<Outcome<SimpleMessage>> = messageState
+    private val job = io.launch {
         LocationSource.instance.locationUpdates.collect { locs ->
             val json = Adapters.locationUpdates.toJson(LocationUpdates(locs))
             Timber.i("Post $json to /cars/locations")
-            try {
-                http.post("/cars/locations", LocationUpdates(locs), Adapters.locationUpdates, Adapters.message)
+            messageState.value = try {
+                val result = http.post("/cars/locations", LocationUpdates(locs), Adapters.locationUpdates, Adapters.message)
+                Outcome.Success(result)
             } catch (e: Exception) {
                 Timber.i(e, "POST location updates failed.")
+                Outcome.Error(e)
             }
         }
+    }
+    fun stop() {
+        job.cancel()
     }
 }
 
