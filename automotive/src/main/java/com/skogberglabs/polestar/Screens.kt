@@ -3,11 +3,8 @@ package com.skogberglabs.polestar
 import android.Manifest
 import android.content.Intent
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.OnBackPressedDispatcher
-import androidx.activity.addCallback
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
-import androidx.car.app.activity.CarAppActivity
 import androidx.car.app.model.Action
 import androidx.car.app.model.CarColor
 import androidx.car.app.model.CarIcon
@@ -17,7 +14,6 @@ import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -56,7 +52,7 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
         }
         val backCallback = object: OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val i = Intent(carContext, SignInActivity::class.java).apply {
+                val i = Intent(carContext, ProfileActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
                 carContext.startActivity(i)

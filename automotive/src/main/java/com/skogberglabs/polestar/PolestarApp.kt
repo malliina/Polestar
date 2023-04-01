@@ -9,8 +9,8 @@ class PolestarApp : Application() {
     val http: CarHttpClient get() = httpClient
     private lateinit var locationManager: CarLocationManager
     val locations: CarLocationManager get() = locationManager
-    private lateinit var client: GoogleSignInClient
-    val google: GoogleSignInClient get() = client
+    private lateinit var googleClient: Google
+    val google: Google get() = googleClient
     private lateinit var deviceLocationSource: LocationSource
     val locationSource: LocationSource get() = deviceLocationSource
     private lateinit var uploader: LocationUploader
@@ -21,8 +21,8 @@ class PolestarApp : Application() {
         Timber.plant(tree)
         Timber.i("Launching app.")
         locationManager = CarLocationManager(applicationContext)
-        httpClient = CarHttpClient(GoogleTokenSource(applicationContext))
-        client = Google.instance.client(applicationContext)
+        googleClient = Google.build(applicationContext)
+        httpClient = CarHttpClient(GoogleTokenSource(googleClient))
         deviceLocationSource = LocationSource.instance
         uploader = LocationUploader(http)
     }

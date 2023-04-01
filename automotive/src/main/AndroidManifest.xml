@@ -38,7 +38,7 @@
             </intent-filter>
         </service>
         <activity
-            android:name=".SignInActivity"
+            android:name=".ProfileActivity"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
             android:launchMode="singleTask"
             android:exported="true"

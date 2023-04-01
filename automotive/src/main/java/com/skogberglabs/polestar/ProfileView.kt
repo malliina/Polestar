@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,33 +35,34 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.text.DateFormat
 import java.time.format.DateTimeFormatter
 
-class SignInActivity : ComponentActivity() {
+class ProfileActivity : ComponentActivity() {
     private val requestCodeSignIn = 100
     private val profile: ProfileViewModel by viewModels()
     private val scope = CoroutineScope(Dispatchers.IO)
 
     private val userState = UserState.instance
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         scope.launch {
-            Google.instance.signInSilently(applicationContext)
+            profile.google.signInSilently()
         }
         profile.locations.startIfGranted()
         setContent {
             AppTheme {
                 Surface(Modifier.fillMaxSize()) {
-                    SignIn(profile, profile.locationSource) { signIn() }
+                    ProfileView(profile, profile.locationSource) { signIn() }
                 }
             }
         }
     }
 
     private fun signIn() {
+        userState.update(Outcome.Loading)
         Timber.i("Signing in...")
-        val signInIntent = profile.google.signInIntent
+        val signInIntent = profile.google.client.signInIntent
         startActivityForResult(signInIntent, requestCodeSignIn)
     }
 
@@ -76,36 +79,61 @@ class SignInActivity : ComponentActivity() {
         try {
             val account = completedTask.getResult(ApiException::class.java)
             val user = account?.let { a -> Google.readUser(a) }
-            Timber.i("Sign in success.")
-            userState.update(user)
+            val outcome = user?.let {
+                Timber.i("Sign in success.")
+                Outcome.Success(it)
+            } ?: Outcome.Error(Exception("Failed to read user."))
+            userState.update(outcome)
         } catch (e: ApiException) {
             val str = CommonStatusCodes.getStatusCodeString(e.statusCode)
             Timber.w(e, "Sign in failed. Code ${e.statusCode}. $str.")
-//            updateFeedback("Sign in failed.")
+            userState.update(Outcome.Error(e))
         }
     }
 }
 
 @Composable
-fun SignIn(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
+fun ProfileView(vm: ProfileViewModel, locs: LocationSource, onSignIn: () -> Unit) {
     val context = LocalContext.current
     val user by vm.user.collectAsStateWithLifecycle()
     val currentLocation by locs.currentLocation.collectAsStateWithLifecycle(null)
     Column(Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Text("Car-Tracker", Modifier.padding(52.dp), fontSize = 48.sp)
-        user?.let { u ->
-            Text("Signed in as ${u.email}.", fontSize = 32.sp)
-        } ?: run {
-            Button(
-                onClick = {
-                    Timber.i("Signing in!")
-                    onSignIn()
-                },
-                Modifier
-                    .padding(Paddings.normal)
-                    .widthIn(max = 800.dp)
-            ) {
-                Text("Sign in with Google", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+        when (val u = user) {
+            is Outcome.Success -> {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Signed in as ${u.result.email}.", fontSize = 32.sp)
+                    Button(
+                        onClick = { vm.signOut() },
+                        modifier = Modifier.padding(Paddings.xxl),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                        Text("Sign out", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+                    }
+                }
+            }
+            is Outcome.Error -> {
+                when (val ex = u.e) {
+                    is ApiException -> {
+                        Text("Failed to sign in. API exception status code ${ex.statusCode}. ${ex.message} $ex")
+                    }
+                    else -> {
+                        Text("Failed to sign in. ${ex.message} $ex")
+                    }
+                }
+
+            }
+            Outcome.Loading -> CircularProgressIndicator()
+            Outcome.Idle -> {
+                Button(
+                    onClick = {
+                        onSignIn()
+                    },
+                    Modifier
+                        .padding(Paddings.normal)
+                        .widthIn(max = 800.dp)
+                ) {
+                    Text("Sign in with Google", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+                }
             }
         }
         Button(onClick = {

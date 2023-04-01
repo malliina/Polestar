@@ -1,6 +1,5 @@
 package com.skogberglabs.polestar
 
-import android.content.Context
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonDataException
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +30,9 @@ interface TokenSource {
     }
 }
 
-class GoogleTokenSource(appContext: Context) : TokenSource {
-    private val google = Google.instance.client(appContext)
-
+class GoogleTokenSource(private val google: Google) : TokenSource {
     override suspend fun fetchToken(): IdToken? = try {
-        Google.instance.signInSilently(google)?.idToken
+        google.signInSilently()?.idToken
     } catch (e: Exception) {
         Timber.w(e, "Failed to fetch token")
         null

@@ -15,3 +15,10 @@ data class IdToken(val token: String) : Primitive {
 }
 
 data class UserInfo(val email: Email, val idToken: IdToken)
+
+sealed class Outcome<out T> {
+    data class Success<T>(val result: T) : Outcome<T>()
+    data class Error(val e: Exception) : Outcome<Nothing>()
+    object Loading : Outcome<Nothing>()
+    object Idle: Outcome<Nothing>()
+}

@@ -1,6 +1,5 @@
 package com.skogberglabs.polestar
 
-import android.app.Activity
 import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -13,9 +12,11 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class Google {
+class Google(val client: GoogleSignInClient) {
     companion object {
-        val instance = Google()
+        private const val webClientId = "497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com"
+
+        fun build(ctx: Context) = Google(GoogleSignIn.getClient(ctx, options()))
 
         fun readUser(account: GoogleSignInAccount): UserInfo? {
             val idToken = account.idToken
@@ -26,49 +27,63 @@ class Google {
                 }
             }
         }
+
+        private fun options() = GoogleSignInOptions.Builder()
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
     }
 
-    private val webClientId = "497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com"
+    private val userState = UserState.instance
 
-    fun client(activity: Activity): GoogleSignInClient = GoogleSignIn.getClient(activity, options())
-
-    fun client(ctx: Context): GoogleSignInClient = GoogleSignIn.getClient(ctx, options())
-
-    private fun options() = GoogleSignInOptions.Builder()
-        .requestIdToken(webClientId)
-        .requestEmail()
-        .build()
-
-    suspend fun signInSilently(ctx: Context) = signInSilently(client(ctx))
-
-    suspend fun signInSilently(c: GoogleSignInClient): UserInfo? {
+    suspend fun signInSilently(): UserInfo? {
         try {
-            val user = c.silentSignIn().await()
+            val user = client.silentSignIn().await()
             readUser(user)?.let {
-                UserState.instance.update(it)
+                userState.update(Outcome.Success(it))
                 return it
             }
             Timber.w("Unable to read user info from account. No signed in user?")
         } catch (e: Exception) {
             Timber.w(e, "Silent sign in failed exceptionally.")
+            userState.update(Outcome.Error(e))
         }
         return null
     }
+
+    suspend fun signOut(): Outcome.Idle {
+        try {
+            client.signOut().awaitVoid()
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to sign out.")
+        }
+        userState.update(Outcome.Idle)
+        return Outcome.Idle
+    }
 }
 
-suspend fun <T> Task<T>.await(): T {
-    return suspendCoroutine { cont ->
-        addOnCompleteListener { task ->
-            try {
-                val t = task.getResult(ApiException::class.java)
-                if (t != null) {
-                    cont.resume(t)
-                } else {
-                    cont.resumeWithException(Exception("No result in task."))
-                }
-            } catch (e: ApiException) {
-                cont.resumeWithException(e)
+suspend fun <T> Task<T>.await(): T = suspendCoroutine { cont ->
+    addOnCompleteListener { task ->
+        try {
+            val t = task.getResult(ApiException::class.java)
+            if (t != null) {
+                cont.resume(t)
+            } else {
+                cont.resumeWithException(Exception("No result in task."))
             }
+        } catch (e: ApiException) {
+            cont.resumeWithException(e)
+        }
+    }
+}
+
+suspend fun Task<Void>.awaitVoid() = suspendCoroutine { cont ->
+    addOnCompleteListener { task ->
+        try {
+            val t = task.getResult(ApiException::class.java)
+            cont.resume(Unit)
+        } catch (e: ApiException) {
+            cont.resumeWithException(e)
         }
     }
 }

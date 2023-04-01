@@ -2,19 +2,22 @@ package com.skogberglabs.polestar
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 class UserState {
     companion object {
         val instance = UserState()
     }
 
-    private val userState: MutableStateFlow<UserInfo?> = MutableStateFlow(null)
-    val user: StateFlow<UserInfo?> = userState
+    private val current: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Loading)
+    val userResult: StateFlow<Outcome<UserInfo>> = current
 
-    fun update(user: UserInfo?) {
-        userState.value = user
+    fun update(outcome: Outcome<UserInfo>) {
+        current.value = outcome
     }
 }
 
@@ -25,5 +28,12 @@ class ProfileViewModel(private val appl: Application): AndroidViewModel(appl) {
     val locationSource = app.locationSource
     val google = app.google
 
-    val user: StateFlow<UserInfo?> = UserState.instance.user
+    val user: StateFlow<Outcome<UserInfo>> = UserState.instance.userResult
+
+    fun signOut() {
+        viewModelScope.launch {
+            UserState.instance.update(Outcome.Loading)
+            google.signOut()
+        }
+    }
 }
