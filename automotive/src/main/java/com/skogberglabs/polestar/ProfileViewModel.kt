@@ -5,23 +5,24 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class UserState {
     companion object {
         val instance = UserState()
     }
 
-    private val current: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Loading)
+    private val current: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
     val userResult: StateFlow<Outcome<UserInfo>> = current
 
     fun update(outcome: Outcome<UserInfo>) {
         current.value = outcome
+        Timber.i("Updated user with $outcome")
     }
 }
 
-class ProfileViewModel(private val appl: Application): AndroidViewModel(appl) {
+class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl) {
     val app: PolestarApp = appl as PolestarApp
     val http = app.http
     val locations = app.locations
@@ -33,7 +34,6 @@ class ProfileViewModel(private val appl: Application): AndroidViewModel(appl) {
 
     fun signOut() {
         viewModelScope.launch {
-            UserState.instance.update(Outcome.Loading)
             google.signOut()
         }
     }

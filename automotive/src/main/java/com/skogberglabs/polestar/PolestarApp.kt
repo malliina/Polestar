@@ -1,7 +1,6 @@
 package com.skogberglabs.polestar
 
 import android.app.Application
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import timber.log.Timber
 
 class PolestarApp : Application() {

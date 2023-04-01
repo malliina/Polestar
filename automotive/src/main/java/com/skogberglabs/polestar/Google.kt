@@ -1,6 +1,7 @@
 package com.skogberglabs.polestar
 
 import android.content.Context
+import android.content.Intent
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -12,7 +13,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class Google(val client: GoogleSignInClient) {
+class Google(private val client: GoogleSignInClient) {
     companion object {
         private const val webClientId = "497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com"
 
@@ -36,28 +37,49 @@ class Google(val client: GoogleSignInClient) {
 
     private val userState = UserState.instance
 
-    suspend fun signInSilently(): UserInfo? {
+    fun startSignIn(): Intent {
+        userState.update(Outcome.Loading)
+        return client.signInIntent
+    }
+
+    suspend fun signInSilently(): UserInfo? =
         try {
             val user = client.silentSignIn().await()
-            readUser(user)?.let {
+            handleSignIn(user, silent = true)
+        } catch (e: Exception) {
+            // "error" might be "Sign in required", so we don't fail this exceptionally
+            Timber.w(e, "Silent sign in failed exceptionally.")
+            null
+        }
+
+    fun handleSignIn(account: GoogleSignInAccount, silent: Boolean): UserInfo? {
+        try {
+            readUser(account)?.let {
                 userState.update(Outcome.Success(it))
                 return it
             }
-            Timber.w("Unable to read user info from account. No signed in user?")
+            // I think this never happens, instead the exceptional path is taken
+            Timber.w("Unable to read user info from account.")
+            userState.update(Outcome.Error(Exception("Unable to read signed in user.")))
         } catch (e: Exception) {
-            Timber.w(e, "Silent sign in failed exceptionally.")
-            userState.update(Outcome.Error(e))
+            // "error" might be "Sign in required", so we don't fail this exceptionally
+            val word = if (silent) "Silent" else "Non-silent"
+            Timber.w(e, "$word sign in failed exceptionally.")
+            val outcome = if (silent) Outcome.Idle else Outcome.Error(e)
+            userState.update(outcome)
         }
         return null
     }
 
     suspend fun signOut(): Outcome.Idle {
         try {
+            userState.update(Outcome.Loading)
             client.signOut().awaitVoid()
         } catch (e: Exception) {
             Timber.e(e, "Failed to sign out.")
+        } finally {
+            userState.update(Outcome.Idle)
         }
-        userState.update(Outcome.Idle)
         return Outcome.Idle
     }
 }
@@ -80,7 +102,7 @@ suspend fun <T> Task<T>.await(): T = suspendCoroutine { cont ->
 suspend fun Task<Void>.awaitVoid() = suspendCoroutine { cont ->
     addOnCompleteListener { task ->
         try {
-            val t = task.getResult(ApiException::class.java)
+            task.getResult(ApiException::class.java)
             cont.resume(Unit)
         } catch (e: ApiException) {
             cont.resumeWithException(e)

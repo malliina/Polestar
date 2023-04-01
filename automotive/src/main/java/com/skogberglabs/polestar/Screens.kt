@@ -50,7 +50,7 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
                 }
             )
         }
-        val backCallback = object: OnBackPressedCallback(true) {
+        val backCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val i = Intent(carContext, ProfileActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK

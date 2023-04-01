@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,10 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
-import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,12 +41,12 @@ class ProfileActivity : ComponentActivity() {
     private val profile: ProfileViewModel by viewModels()
     private val scope = CoroutineScope(Dispatchers.IO)
 
-    private val userState = UserState.instance
+    private val google: Google get() = profile.google
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         scope.launch {
-            profile.google.signInSilently()
+            google.signInSilently()
         }
         profile.locations.startIfGranted()
         setContent {
@@ -60,10 +59,8 @@ class ProfileActivity : ComponentActivity() {
     }
 
     private fun signIn() {
-        userState.update(Outcome.Loading)
         Timber.i("Signing in...")
-        val signInIntent = profile.google.client.signInIntent
-        startActivityForResult(signInIntent, requestCodeSignIn)
+        startActivityForResult(google.startSignIn(), requestCodeSignIn)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -71,23 +68,12 @@ class ProfileActivity : ComponentActivity() {
         Timber.i("Got activity result of request $requestCode. Result code $resultCode.")
         if (requestCode == requestCodeSignIn) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            handleSignInResult(task)
-        }
-    }
-
-    private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
-        try {
-            val account = completedTask.getResult(ApiException::class.java)
-            val user = account?.let { a -> Google.readUser(a) }
-            val outcome = user?.let {
-                Timber.i("Sign in success.")
-                Outcome.Success(it)
-            } ?: Outcome.Error(Exception("Failed to read user."))
-            userState.update(outcome)
-        } catch (e: ApiException) {
-            val str = CommonStatusCodes.getStatusCodeString(e.statusCode)
-            Timber.w(e, "Sign in failed. Code ${e.statusCode}. $str.")
-            userState.update(Outcome.Error(e))
+            try {
+                val account = task.getResult(ApiException::class.java)
+                google.handleSignIn(account, silent = false)
+            } catch (e: ApiException) {
+                Timber.w(e, "Failed to handle sign in.")
+            }
         }
     }
 }
@@ -102,40 +88,29 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
         Text("Car-Tracker", Modifier.padding(52.dp), fontSize = 48.sp)
         when (val u = user) {
             is Outcome.Success -> {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Signed in as ${u.result.email}.", fontSize = 32.sp)
-                    Button(
-                        onClick = { vm.signOut() },
-                        modifier = Modifier.padding(Paddings.xxl),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                        Text("Sign out", Modifier.padding(Paddings.normal), fontSize = 32.sp)
-                    }
+                Text("Signed in as ${u.result.email}.", fontSize = 32.sp)
+                Button(
+                    onClick = { vm.signOut() },
+                    modifier = Modifier.padding(Paddings.xxl),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Sign out", Modifier.padding(Paddings.normal), fontSize = 32.sp)
                 }
             }
             is Outcome.Error -> {
+                SignInButton(onSignIn)
                 when (val ex = u.e) {
                     is ApiException -> {
-                        Text("Failed to sign in. API exception status code ${ex.statusCode}. ${ex.message} $ex")
+                        val str = CommonStatusCodes.getStatusCodeString(ex.statusCode)
+                        Text("Failed to sign in. API exception status code '${ex.statusCode}': $str. ${ex.message} $ex")
                     }
                     else -> {
                         Text("Failed to sign in. ${ex.message} $ex")
                     }
                 }
-
             }
             Outcome.Loading -> CircularProgressIndicator()
-            Outcome.Idle -> {
-                Button(
-                    onClick = {
-                        onSignIn()
-                    },
-                    Modifier
-                        .padding(Paddings.normal)
-                        .widthIn(max = 800.dp)
-                ) {
-                    Text("Sign in with Google", Modifier.padding(Paddings.normal), fontSize = 32.sp)
-                }
-            }
+            Outcome.Idle -> SignInButton(onSignIn)
         }
         Button(onClick = {
             val i = Intent(context, CarAppActivity::class.java)
@@ -144,8 +119,9 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
             Text("Go to map", Modifier.padding(Paddings.normal), fontSize = 32.sp)
         }
         currentLocation?.let { loc ->
-            Column(horizontalAlignment = Alignment.Start) {
-                LocationText("GPS ${loc.latitude}, ${loc.longitude}")
+            Column(Modifier.width(800.dp), horizontalAlignment = Alignment.Start) {
+                // String.format("%.2f", d)
+                LocationText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}")
                 loc.accuracyMeters?.let { accuracy ->
                     LocationText("Accuracy $accuracy meters")
                 }
@@ -178,5 +154,23 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
     }
 }
 
+@Composable fun SignInButton(onSignIn: () -> Unit) {
+    Button(
+        onClick = { onSignIn() },
+        Modifier
+            .padding(Paddings.normal)
+            .widthIn(max = 800.dp)
+    ) {
+        Text("Sign in with Google", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+    }
+}
+
 @Composable fun LocationText(text: String, modifier: Modifier = Modifier) =
-    Text(text, modifier.padding(Paddings.xs), style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Start)
+    Text(
+        text,
+        modifier.padding(Paddings.xs),
+        style = MaterialTheme.typography.titleLarge,
+        textAlign = TextAlign.Start
+    )
+
+fun Double.formatted(n: Int): String = String.format("%.${n}f", this)

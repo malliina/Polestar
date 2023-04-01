@@ -16,8 +16,10 @@ class PolestarCarAppService : CarAppService() {
 }
 
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
-class PolestarSession(private val locations: CarLocationManager,
-                      private val locationSource: LocationSource) : Session() {
+class PolestarSession(
+    private val locations: CarLocationManager,
+    private val locationSource: LocationSource
+) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
         return if (locations.isGranted()) {
             locations.startIfGranted()

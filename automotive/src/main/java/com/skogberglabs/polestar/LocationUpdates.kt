@@ -15,20 +15,18 @@ import com.google.android.gms.location.Priority
 import com.squareup.moshi.JsonClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
-import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.util.Date
 
 // Inspiration from https://github.com/android/location-samples/blob/main/LocationUpdatesBackgroundKotlin/app/src/main/java/com/google/android/gms/location/sample/locationupdatesbackgroundkotlin/data/MyLocationManager.kt
 @JsonClass(generateAdapter = true)
@@ -58,24 +56,36 @@ class LocationSource {
 
 class LocationUploader(private val http: CarHttpClient) {
     private val io = CoroutineScope(Dispatchers.IO)
-    private val messageState: MutableStateFlow<Outcome<SimpleMessage>> = MutableStateFlow(Outcome.Idle)
-    val message: StateFlow<Outcome<SimpleMessage>> = messageState
-    private val job = io.launch {
-        LocationSource.instance.locationUpdates.collect { locs ->
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val message = UserState.instance.userResult.flatMapLatest { user ->
+        Timber.i("User result $user")
+        when (val u = user) {
+            is Outcome.Success -> {
+                Timber.i("Logged in as ${u.result.email}, sending locations...")
+                sendLocations()
+            }
+            else -> flowOf(Outcome.Idle)
+        }
+    }.shareIn(io, SharingStarted.Eagerly, 1)
+
+    private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
+        LocationSource.instance.locationUpdates.map { locs ->
             val json = Adapters.locationUpdates.toJson(LocationUpdates(locs))
-            Timber.i("Post $json to /cars/locations")
-            messageState.value = try {
-                val result = http.post("/cars/locations", LocationUpdates(locs), Adapters.locationUpdates, Adapters.message)
+            val path = "/cars/locations"
+            Timber.i("Post $json to $path")
+            try {
+                val result = http.post(
+                    path,
+                    LocationUpdates(locs),
+                    Adapters.locationUpdates,
+                    Adapters.message
+                )
                 Outcome.Success(result)
             } catch (e: Exception) {
                 Timber.i(e, "POST location updates failed.")
                 Outcome.Error(e)
             }
         }
-    }
-    fun stop() {
-        job.cancel()
-    }
 }
 
 class CarLocationManager(private val context: Context) {
