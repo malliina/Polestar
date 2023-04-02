@@ -21,4 +21,10 @@ sealed class Outcome<out T> {
     data class Error(val e: Exception) : Outcome<Nothing>()
     object Loading : Outcome<Nothing>()
     object Idle : Outcome<Nothing>()
+    fun toOption(): T? = when (this) {
+        is Success -> this.result
+        is Error -> null
+        Idle -> null
+        Loading -> null
+    }
 }

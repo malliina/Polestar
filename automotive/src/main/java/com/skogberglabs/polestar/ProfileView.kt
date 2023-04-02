@@ -6,12 +6,28 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.car.app.activity.CarAppActivity
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowColumn
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -80,23 +97,54 @@ class ProfileActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
     val context = LocalContext.current
     val user by vm.user.collectAsStateWithLifecycle()
+    val profile by vm.profile.collectAsStateWithLifecycle(null)
+    val carId = profile?.activeCar?.id
     val currentLocation by vm.locationSource.currentLocation.collectAsStateWithLifecycle(null)
     val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
-    Column(Modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    val isSignedIn = user.toOption() != null
+    Column(
+        Modifier
+            .padding(horizontal = Paddings.xxl)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Text("Car-Tracker", Modifier.padding(52.dp), fontSize = 48.sp)
         when (val u = user) {
             is Outcome.Success -> {
                 Text("Signed in as ${u.result.email}.", fontSize = 32.sp)
-                Button(
-                    onClick = { vm.signOut() },
-                    modifier = Modifier.padding(Paddings.xxl),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Sign out", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+                profile?.let { p ->
+                    val msg = p.activeCar?.let { car -> "Driving ${car.name}." } ?: run {
+                        if (p.hasCars) "Select car to continue." else "No cars."
+                    }
+                    Text(msg,
+                        Modifier.padding(Paddings.large),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 28.sp)
+                    FlowRow {
+                        p.user.boats.forEach { boat ->
+                            Box(Modifier.padding(Paddings.normal)) {
+                                Box(
+                                    Modifier
+                                        .border(if (boat.id == carId) 8.dp else 2.dp, Color.Blue)
+                                        .sizeIn(minWidth = 256.dp, minHeight = 128.dp)
+                                        .clickable { vm.selectCar(boat.id) },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        boat.name,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        textAlign = TextAlign.Center,
+                                        fontSize = 32.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
             is Outcome.Error -> {
@@ -114,14 +162,13 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
             Outcome.Loading -> CircularProgressIndicator()
             Outcome.Idle -> SignInButton(onSignIn)
         }
-        Button(onClick = {
-            val i = Intent(context, CarAppActivity::class.java)
-            context.startActivity(i)
-        }, Modifier.padding(Paddings.xxl)) {
-            Text("Go to map", Modifier.padding(Paddings.normal), fontSize = 32.sp)
-        }
         currentLocation?.let { loc ->
-            Column(Modifier.width(800.dp), horizontalAlignment = Alignment.Start) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Paddings.large),
+                horizontalAlignment = Alignment.Start
+            ) {
                 // String.format("%.2f", d)
                 LocationText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}")
                 loc.accuracyMeters?.let { accuracy ->
@@ -149,6 +196,22 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
             }
         }
         Spacer(modifier = Modifier.weight(1f))
+        Button(onClick = {
+            val i = Intent(context, CarAppActivity::class.java)
+            context.startActivity(i)
+        }, Modifier.padding(Paddings.xxl)) {
+            Text("Go to map", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        if (isSignedIn) {
+            Button(
+                onClick = { vm.signOut() },
+                modifier = Modifier.padding(Paddings.xxl),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Sign out", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+            }
+        }
         Text(
             "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
             Modifier.padding(Paddings.normal)

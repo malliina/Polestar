@@ -4,6 +4,8 @@ import android.app.Application
 import timber.log.Timber
 
 class PolestarApp : Application() {
+    private lateinit var prefs: LocalDataSource
+    val preferences: LocalDataSource get() = prefs
     private lateinit var httpClient: CarHttpClient
     val http: CarHttpClient get() = httpClient
     private lateinit var locationManager: CarLocationManager
@@ -20,11 +22,12 @@ class PolestarApp : Application() {
         val tree = if (BuildConfig.DEBUG) Timber.DebugTree() else NoLogging()
         Timber.plant(tree)
         Timber.i("Launching app.")
+        prefs = LocalDataSource(applicationContext)
         locationManager = CarLocationManager(applicationContext)
         googleClient = Google.build(applicationContext)
         httpClient = CarHttpClient(GoogleTokenSource(googleClient))
         deviceLocationSource = LocationSource.instance
-        locationUploader = LocationUploader(http, UserState.instance)
+        locationUploader = LocationUploader(http, UserState.instance, preferences)
     }
 }
 

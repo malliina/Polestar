@@ -19,6 +19,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -41,7 +43,7 @@ data class LocationUpdate(
 )
 
 @JsonClass(generateAdapter = true)
-data class LocationUpdates(val updates: List<LocationUpdate>)
+data class LocationUpdates(val updates: List<LocationUpdate>, val carId: String)
 
 class LocationSource {
     companion object {
@@ -51,13 +53,18 @@ class LocationSource {
     private val updatesState: MutableStateFlow<List<LocationUpdate>> = MutableStateFlow(emptyList())
     val locationUpdates = updatesState.shareIn(scope, SharingStarted.Lazily, 1)
     val currentLocation: Flow<LocationUpdate?> = locationUpdates.map { it.lastOrNull() }
+
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
 }
 
-class LocationUploader(private val http: CarHttpClient, private val source: UserState) {
+class LocationUploader(
+    private val http: CarHttpClient,
+    private val userState: UserState,
+    private val prefs: LocalDataSource
+) {
     private val io = CoroutineScope(Dispatchers.IO)
     @OptIn(ExperimentalCoroutinesApi::class)
-    val message = source.userResult.flatMapLatest { user ->
+    val message = userState.userResult.flatMapLatest { user ->
         Timber.i("User result $user")
         when (val u = user) {
             is Outcome.Success -> {
@@ -68,21 +75,20 @@ class LocationUploader(private val http: CarHttpClient, private val source: User
         }
     }.shareIn(io, SharingStarted.Eagerly, 1)
 
+    private val carIds = prefs.userPreferencesFlow().map { it.carId }
     private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
-        LocationSource.instance.locationUpdates.map { locs ->
-            val json = Adapters.locationUpdates.toJson(LocationUpdates(locs))
+        LocationSource.instance.locationUpdates.combine(carIds.filterNotNull()) { locs, id ->
             val path = "/cars/locations"
-            Timber.i("Post $json to $path")
             try {
                 val result = http.post(
                     path,
-                    LocationUpdates(locs),
+                    LocationUpdates(locs, id),
                     Adapters.locationUpdates,
                     Adapters.message
                 )
                 Outcome.Success(result)
             } catch (e: Exception) {
-                Timber.i(e, "POST location updates failed.")
+                Timber.w(e, "Failed to POST location updates to '$path'.")
                 Outcome.Error(e)
             }
         }

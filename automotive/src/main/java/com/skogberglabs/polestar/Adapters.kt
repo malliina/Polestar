@@ -19,9 +19,14 @@ object Adapters {
 //    val locationUpdate: JsonAdapter<LocationUpdate> = moshi.adapter()
     val locationUpdates: JsonAdapter<LocationUpdates> = moshi.adapter()
     val message: JsonAdapter<SimpleMessage> = moshi.adapter()
+    val userContainer: JsonAdapter<UserContainer> = moshi.adapter()
 }
 
 class PrimitiveAdapter {
+    @FromJson
+    fun email(s: String): Email = Email(s)
+    @ToJson
+    fun writeEmail(s: Email): String = s.email
     @FromJson
     fun id(s: String): IdToken = IdToken(s)
     @ToJson
