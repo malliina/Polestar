@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <!-- For PlaceListMapTemplate -->
     <uses-permission android:name="androidx.car.app.MAP_TEMPLATES"/>
 
@@ -37,6 +37,8 @@
                 <category android:name="androidx.car.app.category.NAVIGATION"/>
             </intent-filter>
         </service>
+        <service android:foregroundServiceType="location"
+            android:name=".LocationService" />
         <activity
             android:name=".ProfileActivity"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"

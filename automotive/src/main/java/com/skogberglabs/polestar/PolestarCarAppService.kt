@@ -22,7 +22,6 @@ class PolestarSession(
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
         return if (locations.isGranted()) {
-            locations.startIfGranted()
             PlacesScreen(carContext, locationSource)
 //            MapScreen(carContext)
         } else {

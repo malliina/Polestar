@@ -60,7 +60,8 @@ class LocationSource {
 class LocationUploader(
     private val http: CarHttpClient,
     private val userState: UserState,
-    private val prefs: LocalDataSource
+    private val prefs: LocalDataSource,
+    private val locations: LocationSource
 ) {
     private val io = CoroutineScope(Dispatchers.IO)
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -77,7 +78,7 @@ class LocationUploader(
 
     private val carIds = prefs.userPreferencesFlow().map { it.carId }
     private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
-        LocationSource.instance.locationUpdates.combine(carIds.filterNotNull()) { locs, id ->
+        locations.locationUpdates.combine(carIds.filterNotNull()) { locs, id ->
             val path = "/cars/locations"
             try {
                 val result = http.post(
@@ -96,8 +97,12 @@ class LocationUploader(
 
 class CarLocationManager(private val context: Context) {
     private val client = LocationServices.getFusedLocationProviderClient(context)
-    private val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
-        .setMinUpdateIntervalMillis(1000).build()
+    private val intervalMillis = 5000L
+    private val locationsPerBatch = 5
+    private val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
+        .setMinUpdateIntervalMillis(1000)
+        .setMaxUpdateDelayMillis(intervalMillis * locationsPerBatch) // batching, check the docs
+        .build()
     private val pendingIntent: PendingIntent by lazy {
         val intent = Intent(context, LocationUpdatesBroadcastReceiver::class.java).apply {
             action = LocationUpdatesBroadcastReceiver.ACTION_LOCATIONS

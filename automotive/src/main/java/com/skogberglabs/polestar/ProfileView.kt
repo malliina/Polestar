@@ -65,7 +65,6 @@ class ProfileActivity : ComponentActivity() {
         scope.launch {
             google.signInSilently()
         }
-        profile.locations.startIfGranted()
         Timber.i("Creating Profile activity...")
         setContent {
             AppTheme {
@@ -169,7 +168,6 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
                     .padding(vertical = Paddings.large),
                 horizontalAlignment = Alignment.Start
             ) {
-                // String.format("%.2f", d)
                 LocationText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}")
                 loc.accuracyMeters?.let { accuracy ->
                     LocationText("Accuracy $accuracy meters")

@@ -93,8 +93,6 @@ class CarHttpClient(private val tokenSource: TokenSource) {
 
     private suspend fun <T> execute(request: Request, reader: JsonAdapter<T>): T =
         try {
-            val h = request.header(Authorization)
-            Timber.i("Send with authorization '$h'...")
             executeOnce(request, reader)
         } catch (e: ErrorsException) {
             if (e.isTokenExpired) {

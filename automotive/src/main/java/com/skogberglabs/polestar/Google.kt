@@ -13,11 +13,12 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class Google(private val client: GoogleSignInClient) {
+class Google(private val client: GoogleSignInClient, private val userState: UserState) {
     companion object {
         private const val webClientId = "497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com"
 
-        fun build(ctx: Context) = Google(GoogleSignIn.getClient(ctx, options()))
+        fun build(ctx: Context, userState: UserState) =
+            Google(GoogleSignIn.getClient(ctx, options()), userState)
 
         fun readUser(account: GoogleSignInAccount): UserInfo? {
             val idToken = account.idToken
@@ -35,8 +36,6 @@ class Google(private val client: GoogleSignInClient) {
             .build()
     }
 
-    private val userState = UserState.instance
-
     fun startSignIn(): Intent {
         userState.update(Outcome.Loading)
         return client.signInIntent
@@ -48,11 +47,13 @@ class Google(private val client: GoogleSignInClient) {
 
     suspend fun signInSilently(): UserInfo? =
         try {
+            userState.update(Outcome.Loading)
             val user = client.silentSignIn().await()
             handleSignIn(user, silent = true)
         } catch (e: Exception) {
             // "error" might be "Sign in required", so we don't fail this exceptionally
             Timber.w(e, "Silent sign in failed exceptionally.")
+            userState.update(Outcome.Idle)
             null
         }
 
@@ -75,7 +76,7 @@ class Google(private val client: GoogleSignInClient) {
         return null
     }
 
-    suspend fun signOut(): Outcome.Idle {
+    suspend fun signOut() {
         try {
             userState.update(Outcome.Loading)
             client.signOut().awaitVoid()
@@ -84,7 +85,6 @@ class Google(private val client: GoogleSignInClient) {
         } finally {
             userState.update(Outcome.Idle)
         }
-        return Outcome.Idle
     }
 }
 

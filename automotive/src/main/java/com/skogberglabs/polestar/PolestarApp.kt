@@ -16,6 +16,7 @@ class PolestarApp : Application() {
     val locationSource: LocationSource get() = deviceLocationSource
     private lateinit var locationUploader: LocationUploader
     val uploader: LocationUploader get() = locationUploader
+    val userState = UserState.instance
 
     override fun onCreate() {
         super.onCreate()
@@ -24,10 +25,11 @@ class PolestarApp : Application() {
         Timber.i("Launching app.")
         prefs = LocalDataSource(applicationContext)
         locationManager = CarLocationManager(applicationContext)
-        googleClient = Google.build(applicationContext)
+        googleClient = Google.build(applicationContext, userState)
         httpClient = CarHttpClient(GoogleTokenSource(googleClient))
         deviceLocationSource = LocationSource.instance
-        locationUploader = LocationUploader(http, UserState.instance, preferences)
+        locationUploader = LocationUploader(http, userState, preferences, deviceLocationSource)
+        locationManager.startIfGranted()
     }
 }
 

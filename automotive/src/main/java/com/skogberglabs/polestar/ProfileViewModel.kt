@@ -36,12 +36,11 @@ data class ProfileInfo(val user: ApiUserInfo, val carId: String?) {
 class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl) {
     val app: PolestarApp = appl as PolestarApp
     val http = app.http
-    val locations = app.locations
     val locationSource = app.locationSource
     val google = app.google
     val uploadMessage = app.uploader.message
 
-    val user: StateFlow<Outcome<UserInfo>> = UserState.instance.userResult
+    val user: StateFlow<Outcome<UserInfo>> = app.userState.userResult
     private val activeCar = app.preferences.userPreferencesFlow().map { it.carId }
     val profile: Flow<ProfileInfo?> = user.mapLatest { user ->
         user.toOption()?.let {
