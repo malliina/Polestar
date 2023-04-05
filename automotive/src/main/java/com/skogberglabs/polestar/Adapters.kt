@@ -16,7 +16,6 @@ object Adapters {
         .build()
 
     val errors: JsonAdapter<Errors> = moshi.adapter()
-//    val locationUpdate: JsonAdapter<LocationUpdate> = moshi.adapter()
     val locationUpdates: JsonAdapter<LocationUpdates> = moshi.adapter()
     val message: JsonAdapter<SimpleMessage> = moshi.adapter()
     val userContainer: JsonAdapter<UserContainer> = moshi.adapter()

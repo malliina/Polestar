@@ -38,7 +38,7 @@
             </intent-filter>
         </service>
         <service android:foregroundServiceType="location"
-            android:name=".LocationService" />
+            android:name=".CarLocationService" />
         <activity
             android:name=".ProfileActivity"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"

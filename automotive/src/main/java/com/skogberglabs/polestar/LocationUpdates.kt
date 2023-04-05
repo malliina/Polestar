@@ -1,17 +1,11 @@
 package com.skogberglabs.polestar
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import com.google.android.gms.location.LocationAvailability
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
+import com.skogberglabs.polestar.Utils.appId
 import com.squareup.moshi.JsonClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -95,44 +89,9 @@ class LocationUploader(
         }
 }
 
-class CarLocationManager(private val context: Context) {
-    private val client = LocationServices.getFusedLocationProviderClient(context)
-    private val intervalMillis = 5000L
-    private val locationsPerBatch = 5
-    private val request = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
-        .setMinUpdateIntervalMillis(1000)
-        .setMaxUpdateDelayMillis(intervalMillis * locationsPerBatch) // batching, check the docs
-        .build()
-    private val pendingIntent: PendingIntent by lazy {
-        val intent = Intent(context, LocationUpdatesBroadcastReceiver::class.java).apply {
-            action = LocationUpdatesBroadcastReceiver.ACTION_LOCATIONS
-        }
-        PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
-    }
-
-    fun isGranted(): Boolean =
-        context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-
-    fun startIfGranted() {
-        if (isGranted()) {
-            start()
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    fun start() {
-        client.requestLocationUpdates(request, pendingIntent)
-        Timber.i("Requested location updates.")
-    }
-
-    fun stop() {
-        client.removeLocationUpdates(pendingIntent)
-    }
-}
-
 class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
     companion object {
-        const val ACTION_LOCATIONS = "com.skogberglabs.polestar.action.locations"
+        val ACTION_LOCATIONS = appId("LOCATIONS")
     }
 
     override fun onReceive(context: Context, intent: Intent) {

@@ -8,8 +8,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -42,12 +43,22 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl) {
 
     val user: StateFlow<Outcome<UserInfo>> = app.userState.userResult
     private val activeCar = app.preferences.userPreferencesFlow().map { it.carId }
-    val profile: Flow<ProfileInfo?> = user.mapLatest { user ->
-        user.toOption()?.let {
-            me().user
+    val profile: Flow<Outcome<ProfileInfo?>> = user.flatMapLatest { user ->
+        flow {
+            emit(Outcome.Loading)
+            val u = user.toOption()?.let {
+                me().user
+            }
+            emit(Outcome.Success(u))
         }
-    }.combine(activeCar) { user, carId -> user?.let { ProfileInfo(it, carId) } }
-
+    }.combine(activeCar) { user, carId ->
+        when (val u = user) {
+            is Outcome.Success -> Outcome.Success(u.result?.let { ProfileInfo(it, carId) })
+            is Outcome.Error -> Outcome.Error(u.e)
+            Outcome.Idle -> Outcome.Idle
+            Outcome.Loading -> Outcome.Loading
+        }
+    }
     private suspend fun me() = http.get("/users/me", Adapters.userContainer)
 
     fun selectCar(id: String) {

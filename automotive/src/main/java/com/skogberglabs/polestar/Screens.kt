@@ -14,15 +14,19 @@ import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.time.Duration.Companion.seconds
 
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
 class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Screen(carContext) {
     private val scope = CoroutineScope(Dispatchers.IO)
     var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
+    @OptIn(FlowPreview::class)
     val locationJob = scope.launch {
-        locationSource.locationUpdates.collect { updates ->
+        locationSource.locationUpdates.debounce(10.seconds).collect { updates ->
             updates.lastOrNull()?.let { last ->
                 Timber.i("Updating current location...")
                 currentLocation = CarLocation.create(last.latitude, last.longitude)
@@ -34,10 +38,19 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
         val myItems = itemList {
             addItem(
                 row {
-                    setTitle("Places")
+                    setTitle("Navigation only")
                     setBrowsable(true)
                     setOnClickListener {
-                        screenManager.push(NoPermissionScreen(carContext))
+                        screenManager.push(NavigationScreen(carContext))
+                    }
+                }
+            )
+            addItem(
+                row {
+                    setTitle("Map only")
+                    setBrowsable(true)
+                    setOnClickListener {
+                        screenManager.push(MapScreen(carContext))
                     }
                 }
             )
@@ -52,10 +65,14 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
         }
         val backCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val i = Intent(carContext, ProfileActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                if (screenManager.stackSize == 1) {
+                    val i = Intent(carContext, ProfileActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    carContext.startActivity(i)
+                } else {
+                    screenManager.pop()
                 }
-                carContext.startActivity(i)
             }
         }
         carContext.onBackPressedDispatcher.addCallback(backCallback)
@@ -93,11 +110,22 @@ class PlaceNavScreen(carContext: CarContext) : Screen(carContext) {
     }
 }
 
-class MapScreen(carContext: CarContext) : Screen(carContext) {
+class MapScreen(carContext: CarContext): Screen(carContext) {
+    override fun onGetTemplate(): Template = mapTemplate {
+        setPane(pane {
+            addAction(Action.BACK)
+            addRow(row {
+                setTitle("This shows a map.")
+            })
+        })
+    }
+}
+
+class NavigationScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template = navigationTemplate {
-        setBackgroundColor(CarColor.GREEN)
         setActionStrip(
             actionStrip {
+                addAction(Action.BACK)
                 addAction(Action.PAN)
                 addAction(
                     action {
