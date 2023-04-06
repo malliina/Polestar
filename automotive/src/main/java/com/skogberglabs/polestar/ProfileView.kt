@@ -6,13 +6,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.car.app.activity.CarAppActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -93,7 +93,6 @@ class ProfileActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
     val context = LocalContext.current
@@ -125,7 +124,9 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                                 style = MaterialTheme.typography.titleLarge,
                                 fontSize = 28.sp
                             )
-                            LazyRow {
+                            LazyRow(
+                                Modifier.fillMaxWidth().padding(Paddings.small),
+                                horizontalArrangement = Arrangement.spacedBy(Paddings.small)) {
                                 items(p.user.boats) { boat ->
                                     Box(
                                         Modifier
@@ -133,7 +134,7 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                                                 if (boat.id == carId) 8.dp else 2.dp,
                                                 Color.Blue
                                             )
-                                            .sizeIn(minWidth = 256.dp, minHeight = 128.dp)
+                                            .sizeIn(minWidth = 220.dp, minHeight = 128.dp)
                                             .clickable { vm.selectCar(boat.id) },
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -231,7 +232,6 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
 fun ProfilePreview() {
     MaterialTheme {
         ProfileView(ProfileViewModelInterface.preview) {
-            
         }
     }
 }

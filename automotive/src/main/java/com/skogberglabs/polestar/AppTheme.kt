@@ -20,6 +20,7 @@ import androidx.core.view.WindowCompat
 
 object Paddings {
     val xs = 4.dp
+    val small = 8.dp
     val normal = 16.dp
     val large = 24.dp
     val xxl = 48.dp

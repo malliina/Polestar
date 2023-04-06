@@ -25,8 +25,8 @@ fun paneTemplate(pane: Pane, build: PaneTemplate.Builder.() -> Unit): PaneTempla
     PaneTemplate.Builder(pane).apply(build).build()
 fun navigationTemplate(build: NavigationTemplate.Builder.() -> Unit) =
     NavigationTemplate.Builder().apply(build).build()
- fun mapTemplate(build: MapTemplate.Builder.() -> Unit) =
-     MapTemplate.Builder().apply(build).build()
+fun mapTemplate(build: MapTemplate.Builder.() -> Unit) =
+    MapTemplate.Builder().apply(build).build()
 fun place(loc: CarLocation, build: Place.Builder.() -> Unit = {}): Place =
     Place.Builder(loc).apply(build).build()
 fun placeMarker(build: PlaceMarker.Builder.() -> Unit) = PlaceMarker.Builder().apply(build).build()

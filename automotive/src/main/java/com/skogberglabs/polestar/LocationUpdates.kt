@@ -43,7 +43,7 @@ interface LocationSourceInterface {
     val currentLocation: Flow<LocationUpdate?>
 }
 
-class LocationSource: LocationSourceInterface {
+class LocationSource : LocationSourceInterface {
     companion object {
         val instance = LocationSource()
     }

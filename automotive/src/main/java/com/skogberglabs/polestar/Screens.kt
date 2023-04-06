@@ -110,14 +110,18 @@ class PlaceNavScreen(carContext: CarContext) : Screen(carContext) {
     }
 }
 
-class MapScreen(carContext: CarContext): Screen(carContext) {
+class MapScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template = mapTemplate {
-        setPane(pane {
-            addAction(Action.BACK)
-            addRow(row {
-                setTitle("This shows a map.")
-            })
-        })
+        setPane(
+            pane {
+                addAction(Action.BACK)
+                addRow(
+                    row {
+                        setTitle("This shows a map.")
+                    }
+                )
+            }
+        )
     }
 }
 

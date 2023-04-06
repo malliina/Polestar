@@ -21,6 +21,12 @@ sealed class Outcome<out T> {
     data class Error(val e: Exception) : Outcome<Nothing>()
     object Loading : Outcome<Nothing>()
     object Idle : Outcome<Nothing>()
+    fun <U>map(f: (T) -> U): Outcome<U> = when(this) {
+        is Success -> Success(f(result))
+        is Error -> Error(e)
+        Idle -> Idle
+        Loading -> Loading
+    }
     fun toOption(): T? = when (this) {
         is Success -> this.result
         is Error -> null

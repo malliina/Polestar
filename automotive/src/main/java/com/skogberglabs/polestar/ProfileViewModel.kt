@@ -1,7 +1,6 @@
 package com.skogberglabs.polestar
 
 import android.app.Application
-import androidx.compose.runtime.MutableState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,7 +45,7 @@ interface ProfileViewModelInterface {
     fun signOut()
 
     companion object {
-        val preview = object: ProfileViewModelInterface {
+        val preview = object : ProfileViewModelInterface {
             override val user: StateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
             override val profile: Flow<Outcome<ProfileInfo?>> = MutableStateFlow(Outcome.Idle)
             override val uploadMessage: SharedFlow<Outcome<SimpleMessage>> = MutableSharedFlow()
@@ -72,20 +71,18 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), 
     override val profile: Flow<Outcome<ProfileInfo?>> = user.flatMapLatest { user ->
         flow {
             emit(Outcome.Loading)
-            val u = user.toOption()?.let {
-                me().user
-            }
-            emit(Outcome.Success(u))
+            emit(me().map { it.user })
         }
     }.combine(activeCar) { user, carId ->
-        when (val u = user) {
-            is Outcome.Success -> Outcome.Success(u.result?.let { ProfileInfo(it, carId) })
-            is Outcome.Error -> Outcome.Error(u.e)
-            Outcome.Idle -> Outcome.Idle
-            Outcome.Loading -> Outcome.Loading
-        }
+        user.map { ProfileInfo(it, carId) }
     }
-    private suspend fun me() = http.get("/users/me", Adapters.userContainer)
+    private suspend fun me() =
+        try {
+            Outcome.Success(http.get("/users/me", Adapters.userContainer))
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to load profile.")
+            Outcome.Error(e)
+        }
 
     override fun selectCar(id: String) {
         viewModelScope.launch {
