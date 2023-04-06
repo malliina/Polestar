@@ -63,6 +63,7 @@ android {
 val autoVersion = "1.4.0-alpha01"
 
 dependencies {
+    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
     val composeBom = platform("androidx.compose:compose-bom:2023.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -79,6 +80,7 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.gms:play-services-auth:20.4.1")
+    debugImplementation("androidx.compose.ui:ui-tooling:1.4.0")
     val moshiVersion = "1.14.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")

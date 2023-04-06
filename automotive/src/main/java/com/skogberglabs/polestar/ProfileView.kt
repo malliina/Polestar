@@ -8,16 +8,20 @@ import androidx.activity.viewModels
 import androidx.car.app.activity.CarAppActivity
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -33,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -90,7 +95,7 @@ class ProfileActivity : ComponentActivity() {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
+fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
     val context = LocalContext.current
     val user by vm.user.collectAsStateWithLifecycle()
     val profile by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
@@ -104,7 +109,7 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
             .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Car-Tracker", Modifier.padding(52.dp), fontSize = 48.sp)
+        Text("Car-Tracker", Modifier.padding(Paddings.xxl), fontSize = 48.sp)
         when (val u = user) {
             is Outcome.Success -> {
                 Text("Signed in as ${u.result.email}.", fontSize = 32.sp)
@@ -120,26 +125,24 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
                                 style = MaterialTheme.typography.titleLarge,
                                 fontSize = 28.sp
                             )
-                            FlowRow {
-                                p.user.boats.forEach { boat ->
-                                    Box(Modifier.padding(Paddings.normal)) {
-                                        Box(
-                                            Modifier
-                                                .border(
-                                                    if (boat.id == carId) 8.dp else 2.dp,
-                                                    Color.Blue
-                                                )
-                                                .sizeIn(minWidth = 256.dp, minHeight = 128.dp)
-                                                .clickable { vm.selectCar(boat.id) },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                boat.name,
-                                                style = MaterialTheme.typography.titleLarge,
-                                                textAlign = TextAlign.Center,
-                                                fontSize = 32.sp
+                            LazyRow {
+                                items(p.user.boats) { boat ->
+                                    Box(
+                                        Modifier
+                                            .border(
+                                                if (boat.id == carId) 8.dp else 2.dp,
+                                                Color.Blue
                                             )
-                                        }
+                                            .sizeIn(minWidth = 256.dp, minHeight = 128.dp)
+                                            .clickable { vm.selectCar(boat.id) },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            boat.name,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            textAlign = TextAlign.Center,
+                                            fontSize = 32.sp
+                                        )
                                     }
                                 }
                             }
@@ -172,37 +175,34 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
                     .padding(vertical = Paddings.large),
                 horizontalAlignment = Alignment.Start
             ) {
-                LocationText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}")
-                loc.accuracyMeters?.let { accuracy ->
-                    LocationText("Accuracy $accuracy meters")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    val accuracy = loc.accuracyMeters?.let { " accuracy $it meters" } ?: ""
+                    LocationText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}$accuracy")
                 }
-                loc.altitudeMeters?.let { altitude ->
-                    LocationText("Altitude $altitude meters")
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    loc.altitudeMeters?.let { altitude ->
+                        LocationText("Altitude $altitude meters")
+                    }
+                    loc.bearing?.let { bearing ->
+                        val accuracyText = loc.bearingAccuracyDegrees?.let { " accuracy $it degrees" } ?: ""
+                        LocationText("Bearing $bearing$accuracyText")
+                    }
                 }
-                loc.bearing?.let { bearing ->
-                    LocationText("Bearing $bearing")
-                }
-                loc.bearingAccuracyDegrees?.let { bacc ->
-                    LocationText("Bearing accuracy $bacc degrees")
-                }
-                LocationText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-                val message = when (val msg = uploadMessage) {
-                    is Outcome.Success -> msg.result.message
-                    is Outcome.Error -> msg.e.message ?: "Failed to upload. ${msg.e}"
-                    Outcome.Idle -> null
-                    Outcome.Loading -> null
-                }
-                message?.let { msg ->
-                    LocationText(msg, Modifier.padding(vertical = Paddings.normal))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    LocationText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                    val message = when (val msg = uploadMessage) {
+                        is Outcome.Success -> msg.result.message
+                        is Outcome.Error -> msg.e.message ?: "Failed to upload. ${msg.e}"
+                        Outcome.Idle -> null
+                        Outcome.Loading -> null
+                    }
+                    message?.let { msg ->
+                        LocationText(msg)
+                    }
                 }
             }
         }
         Spacer(modifier = Modifier.weight(1f))
-//        Button(onClick = {
-//            context.startForegroundService(Intent(context, CarLocationService::class.java))
-//        }) {
-//            Text("Start service")
-//        }
         Button(onClick = {
             val i = Intent(context, CarAppActivity::class.java)
             context.startActivity(i)
@@ -223,6 +223,16 @@ fun ProfileView(vm: ProfileViewModel, onSignIn: () -> Unit) {
             "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
             Modifier.padding(Paddings.normal)
         )
+    }
+}
+
+@Preview
+@Composable
+fun ProfilePreview() {
+    MaterialTheme {
+        ProfileView(ProfileViewModelInterface.preview) {
+            
+        }
     }
 }
 

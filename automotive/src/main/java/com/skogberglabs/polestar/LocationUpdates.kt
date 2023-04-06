@@ -39,14 +39,18 @@ data class LocationUpdate(
 @JsonClass(generateAdapter = true)
 data class LocationUpdates(val updates: List<LocationUpdate>, val carId: String)
 
-class LocationSource {
+interface LocationSourceInterface {
+    val currentLocation: Flow<LocationUpdate?>
+}
+
+class LocationSource: LocationSourceInterface {
     companion object {
         val instance = LocationSource()
     }
     private val scope = CoroutineScope(Dispatchers.IO)
     private val updatesState: MutableStateFlow<List<LocationUpdate>> = MutableStateFlow(emptyList())
     val locationUpdates = updatesState.shareIn(scope, SharingStarted.Lazily, 1)
-    val currentLocation: Flow<LocationUpdate?> = locationUpdates.map { it.lastOrNull() }
+    override val currentLocation: Flow<LocationUpdate?> = locationUpdates.map { it.lastOrNull() }
 
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
 }
