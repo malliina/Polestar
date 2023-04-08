@@ -60,7 +60,7 @@ class CarHttpClient(private val tokenSource: TokenSource) {
         .build()
 
     private var token: IdToken? = null
-    private suspend fun fetchToken() =
+    private suspend fun fetchToken(): IdToken? =
         token ?: run {
             val t = tokenSource.fetchToken()
             token = t
@@ -124,7 +124,11 @@ class CarHttpClient(private val tokenSource: TokenSource) {
                     }
                 } else {
                     val errors = body?.let { b ->
-                        try { Adapters.errors.read(b.string()) } catch (e: Exception) { null }
+                        try {
+                            val str = b.string()
+                            Timber.i("URI ${request.url} errored with body $str")
+                            Adapters.errors.read(str)
+                        } catch (e: Exception) { null }
                     }
                     errors?.let { throw ErrorsException(it, response.code, request) } ?: run {
                         throw StatusException(response.code, request)

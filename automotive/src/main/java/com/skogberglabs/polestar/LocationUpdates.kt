@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -55,6 +57,7 @@ class LocationSource : LocationSourceInterface {
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LocationUploader(
     private val http: CarHttpClient,
     private val userState: UserState,
@@ -62,12 +65,10 @@ class LocationUploader(
     private val locations: LocationSource
 ) {
     private val io = CoroutineScope(Dispatchers.IO)
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val message = userState.userResult.flatMapLatest { user ->
-        Timber.i("User result $user")
-        when (val u = user) {
+    val message = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
+        when (user) {
             is Outcome.Success -> {
-                Timber.i("Logged in as ${u.result.email}, sending locations...")
+                Timber.i("Logged in as ${user.result.email}, sending locations...")
                 sendLocations()
             }
             else -> flowOf(Outcome.Idle)

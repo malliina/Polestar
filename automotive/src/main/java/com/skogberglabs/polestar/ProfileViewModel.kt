@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -26,7 +28,7 @@ class UserState {
 
     fun update(outcome: Outcome<UserInfo>) {
         current.value = outcome
-        Timber.i("Updated user with $outcome")
+//        Timber.i("Updated user with $outcome")
     }
 }
 
@@ -68,10 +70,13 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), 
 
     override val user: StateFlow<Outcome<UserInfo>> = app.userState.userResult
     private val activeCar = app.preferences.userPreferencesFlow().map { it.carId }
-    override val profile: Flow<Outcome<ProfileInfo?>> = user.flatMapLatest { user ->
-        flow {
-            emit(Outcome.Loading)
-            emit(me().map { it.user })
+    override val profile: Flow<Outcome<ProfileInfo?>> = user.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
+        when (user) {
+            is Outcome.Success -> flow {
+                emit(Outcome.Loading)
+                emit(me().map { it.user })
+            }
+            else -> flow { Outcome.Idle }
         }
     }.combine(activeCar) { user, carId ->
         user.map { ProfileInfo(it, carId) }

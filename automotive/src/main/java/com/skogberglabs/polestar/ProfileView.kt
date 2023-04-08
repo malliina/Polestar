@@ -6,13 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.car.app.activity.CarAppActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -126,7 +124,8 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                             )
                             LazyRow(
                                 Modifier.fillMaxWidth().padding(Paddings.small),
-                                horizontalArrangement = Arrangement.spacedBy(Paddings.small)) {
+                                horizontalArrangement = Arrangement.spacedBy(Paddings.small)
+                            ) {
                                 items(p.user.boats) { boat ->
                                     Box(
                                         Modifier
@@ -151,7 +150,13 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                     }
                     Outcome.Idle -> Text("")
                     Outcome.Loading -> CircularProgressIndicator(Modifier.padding(Paddings.xxl))
-                    is Outcome.Error -> Text("Failed to load profile.")
+                    is Outcome.Error -> Text(
+                        "Failed to load profile.",
+                        Modifier.padding(Paddings.large),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 28.sp
+                    )
                 }
             }
             is Outcome.Error -> {
@@ -191,14 +196,11 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     LocationText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-                    val message = when (val msg = uploadMessage) {
-                        is Outcome.Success -> msg.result.message
-                        is Outcome.Error -> msg.e.message ?: "Failed to upload. ${msg.e}"
-                        Outcome.Idle -> null
-                        Outcome.Loading -> null
-                    }
-                    message?.let { msg ->
-                        LocationText(msg)
+                    when (val msg = uploadMessage) {
+                        is Outcome.Success -> LocationText(msg.result.message)
+                        is Outcome.Error -> LocationText(msg.e.message ?: "Failed to upload. ${msg.e}", color = MaterialTheme.colorScheme.error)
+                        Outcome.Idle -> Text("")
+                        Outcome.Loading -> Text("")
                     }
                 }
             }
@@ -247,10 +249,11 @@ fun ProfilePreview() {
     }
 }
 
-@Composable fun LocationText(text: String, modifier: Modifier = Modifier) =
+@Composable fun LocationText(text: String, modifier: Modifier = Modifier, color: Color = Color.Unspecified) =
     Text(
         text,
         modifier.padding(Paddings.xs),
+        color = color,
         style = MaterialTheme.typography.titleLarge,
         textAlign = TextAlign.Start
     )
