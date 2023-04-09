@@ -46,6 +46,10 @@ class CarHttpClient(private val tokenSource: TokenSource) {
         private val MediaTypeJson = "application/vnd.car.v1+json".toMediaType()
 //        private val MediaTypeJson = "application/vnd.boat.v2+json".toMediaType()
 
+        // OkHttp automatically advertises gzip compression, but Azure returns HTTP 502 for failed
+        // POST requests where gzip support is advertised. This disables it as a workaround.
+        val postPutHeaders = mapOf("Accept-Encoding" to "identity")
+
         fun headers(token: IdToken?): Map<String, String> {
             val acceptPair = Accept to MediaTypeJson.toString()
             return if (token != null) mapOf(Authorization to "Bearer $token", acceptPair) else mapOf(acceptPair)
@@ -88,7 +92,8 @@ class CarHttpClient(private val tokenSource: TokenSource) {
     ): Res = withContext(Dispatchers.IO) {
         val url = Env.baseUrl.append(path)
         val requestBody = writer.toJson(body).toRequestBody(MediaTypeJson)
-        execute(install(authRequest(url), requestBody).build(), reader)
+        val builder = installHeaders(postPutHeaders, authRequest(url))
+        execute(install(builder, requestBody).build(), reader)
     }
 
     private suspend fun <T> execute(request: Request, reader: JsonAdapter<T>): T =
@@ -104,7 +109,7 @@ class CarHttpClient(private val tokenSource: TokenSource) {
                         request.newBuilder().header(Authorization, "Bearer $newToken").build()
                     executeOnce(newAttempt, reader)
                 } else {
-                    Timber.w("Token expired and unable to renew token. Failing request to '${request.url}'.")
+                    Timber.w("Token expired and unable to renew token. Failing request ${request.method} ${request.url}.")
                     throw e
                 }
             } else {
@@ -126,11 +131,14 @@ class CarHttpClient(private val tokenSource: TokenSource) {
                     val errors = body?.let { b ->
                         try {
                             val str = b.string()
-                            Timber.i("URI ${request.url} errored with body $str")
+                            Timber.w("Request ${request.method} ${request.url} errored with body $str")
                             Adapters.errors.read(str)
                         } catch (e: Exception) { null }
                     }
-                    errors?.let { throw ErrorsException(it, response.code, request) } ?: run {
+                    errors?.let {
+                        Timber.w("Throwing error.")
+                        throw ErrorsException(it, response.code, request)
+                    } ?: run {
                         throw StatusException(response.code, request)
                     }
                 }
@@ -166,9 +174,11 @@ class CarHttpClient(private val tokenSource: TokenSource) {
 
     private suspend fun authRequest(url: FullUrl) =
         newRequest(url, headers(fetchToken()))
-
     private fun newRequest(url: FullUrl, headers: Map<String, String>): Request.Builder {
         val builder = Request.Builder().url(url.url)
+        return installHeaders(headers, builder)
+    }
+    private fun installHeaders(headers: Map<String, String>, builder: Request.Builder): Request.Builder {
         for ((k, v) in headers) {
             builder.header(k, v)
         }
