@@ -210,7 +210,7 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
             val i = Intent(context, CarAppActivity::class.java)
             context.startActivity(i)
         }, Modifier.padding(Paddings.xxl)) {
-            Text("Go to map", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+            Text(if (context.isLocationGranted()) "Go to map" else "Grant location permission", Modifier.padding(Paddings.normal), fontSize = 32.sp)
         }
         Spacer(modifier = Modifier.weight(1f))
         if (isSignedIn) {

@@ -1,6 +1,8 @@
 package com.skogberglabs.polestar
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
@@ -24,35 +26,38 @@ class RequestPermissionScreen(carContext: CarContext, private val onGranted: () 
         }
 
         val myAction = action {
-            setTitle("Grant access.")
+            setTitle("Grant location access")
             setOnClickListener(pocl)
         }
-        return messageTemplate("Location usage explanation.") {
+        return messageTemplate("This app needs access to location in order to track the car.") {
             addAction(myAction)
-            setHeaderAction(Action.APP_ICON)
+            setHeaderAction(Action.BACK)
         }
     }
 }
 
 class NoPermissionScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
-        val row = row {
-            setTitle("Please grant permission to use location.")
-        }
-        val pane = pane {
-            addRow(row)
-            addAction(
-                action {
-                    setTitle("Try again")
-                    setOnClickListener {
-                        Timber.i("Trying again...")
-                        screenManager.push(RequestPermissionScreen(carContext, onGranted = { screenManager.popToRoot() }))
-                    }
+        val openSettingsAction = action {
+            setTitle("Open Settings")
+            setOnClickListener {
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-            )
+                carContext.startActivity(intent)
+            }
         }
-        return paneTemplate(pane) {
-            setHeaderAction(Action.APP_ICON)
+        val tryAgainAction = action {
+            setTitle("Try again")
+            setOnClickListener {
+                Timber.i("Trying again...")
+                screenManager.push(RequestPermissionScreen(carContext, onGranted = { screenManager.popToRoot() }))
+            }
+        }
+        return messageTemplate("Please open Settings and grant app-level permissions for this app to use location.") {
+            addAction(openSettingsAction)
+            addAction(tryAgainAction)
+            setHeaderAction(Action.BACK)
         }
     }
 }

@@ -7,6 +7,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
@@ -45,7 +46,7 @@ class CarLocationService : Service() {
             stop()
         } else {
             if (!started) {
-                if (isGranted()) {
+                if (applicationContext.isLocationGranted()) {
                     client.requestLocationUpdates(locationRequest, pendingIntent)
                     started = true
                 }
@@ -95,9 +96,6 @@ class CarLocationService : Service() {
         manager.createNotificationChannel(channel)
     }
 
-    fun isGranted(): Boolean =
-        applicationContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-
     fun stop() {
         client.removeLocationUpdates(pendingIntent)
     }
@@ -107,3 +105,6 @@ class CarLocationService : Service() {
         return null
     }
 }
+
+fun Context.isLocationGranted(): Boolean =
+    checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED

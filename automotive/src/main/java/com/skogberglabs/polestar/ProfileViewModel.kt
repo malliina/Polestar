@@ -82,10 +82,7 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), 
     }
     private suspend fun me() =
         try {
-            Timber.i("Loading me...")
-            val res = Outcome.Success(http.get("/users/me", Adapters.userContainer))
-            Timber.i("Loaded me, got $res...")
-            res
+            Outcome.Success(http.get("/users/me", Adapters.userContainer))
         } catch (e: Exception) {
             Timber.e(e, "Failed to load profile.")
             Outcome.Error(e)

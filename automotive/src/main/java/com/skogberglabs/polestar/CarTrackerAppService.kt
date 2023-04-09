@@ -23,21 +23,19 @@ class CarTrackerSession(
     private val locationSource: LocationSource
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
-        return if (isGranted()) {
+        return if (carContext.isLocationGranted()) {
             PlacesScreen(carContext, locationSource)
         } else {
             val sm = carContext.getCarService(ScreenManager::class.java)
             sm.push(PlacesScreen(carContext, locationSource))
             RequestPermissionScreen(carContext, onGranted = {
                 carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                sm.pop()
-//                val i = Intent(carContext, ProfileActivity::class.java).apply {
-//                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-//                }
-//                carContext.startActivity(i)
+//                sm.pop()
+                val i = Intent(carContext, ProfileActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                carContext.startActivity(i)
             })
         }
     }
-    private fun isGranted(): Boolean =
-        carContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 }
