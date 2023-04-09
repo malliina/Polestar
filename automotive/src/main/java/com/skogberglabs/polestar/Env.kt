@@ -1,11 +1,12 @@
 package com.skogberglabs.polestar
 
-class Env {
+data class EnvConf(val domain: String, val secure: Boolean) {
+    val baseUrl = FullUrl(if (secure) "https" else "http", domain, "")
+    val socketsUrl = FullUrl(if (secure) "wss" else "ws", domain, "/ws/updates")
+
     companion object {
-        private const val BackendDomain = "api.boat-tracker.com"
-        val baseUrl = FullUrl.https(BackendDomain, "")
-//        private const val BackendDomain = "10.0.2.2:9000"
-//        val baseUrl = FullUrl.http(BackendDomain, "")
-        val socketsUrl = FullUrl.wss(BackendDomain, "/ws/updates")
+        private val prod = EnvConf("api.boat-tracker.com", secure = true)
+        private val dev = EnvConf("10.0.2.2:9000", secure = false)
+        val current = prod
     }
 }

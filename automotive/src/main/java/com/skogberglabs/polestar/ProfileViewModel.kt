@@ -28,7 +28,6 @@ class UserState {
 
     fun update(outcome: Outcome<UserInfo>) {
         current.value = outcome
-//        Timber.i("Updated user with $outcome")
     }
 }
 
@@ -62,7 +61,7 @@ interface ProfileViewModelInterface {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), ProfileViewModelInterface {
-    val app: PolestarApp = appl as PolestarApp
+    val app: CarTrackerApp = appl as CarTrackerApp
     val http = app.http
     override val locationSource = app.locationSource
     val google = app.google

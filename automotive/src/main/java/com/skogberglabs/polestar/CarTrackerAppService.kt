@@ -7,18 +7,19 @@ import androidx.car.app.CarAppService
 import androidx.car.app.Screen
 import androidx.car.app.ScreenManager
 import androidx.car.app.Session
+import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.validation.HostValidator
 
-class PolestarCarAppService : CarAppService() {
+class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
     override fun onCreateSession(): Session {
-        val app = application as PolestarApp
-        return PolestarSession(app.locationSource)
+        val app = application as CarTrackerApp
+        return CarTrackerSession(app.locationSource)
     }
 }
 
-@androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
-class PolestarSession(
+@androidx.annotation.OptIn(ExperimentalCarApi::class)
+class CarTrackerSession(
     private val locationSource: LocationSource
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
@@ -30,6 +31,10 @@ class PolestarSession(
             RequestPermissionScreen(carContext, onGranted = {
                 carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
                 sm.pop()
+//                val i = Intent(carContext, ProfileActivity::class.java).apply {
+//                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+//                }
+//                carContext.startActivity(i)
             })
         }
     }

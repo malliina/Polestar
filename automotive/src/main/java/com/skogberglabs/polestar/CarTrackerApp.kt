@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Intent
 import timber.log.Timber
 
-class PolestarApp : Application() {
+class CarTrackerApp : Application() {
     private lateinit var prefs: LocalDataSource
     val preferences: LocalDataSource get() = prefs
     private lateinit var httpClient: CarHttpClient

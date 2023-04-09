@@ -28,7 +28,7 @@ class CarLocationService : Service() {
     companion object {
         val LOCATIONS_CHANNEL = appId("LOCATIONS_CHANNEL")
         val STOP_LOCATIONS = appId("STOP_LOCATIONS")
-        val NOTIFICATION_ID = 123
+        const val NOTIFICATION_ID = 123
     }
 
     override fun onCreate() {

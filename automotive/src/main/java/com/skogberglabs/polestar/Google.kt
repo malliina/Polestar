@@ -48,8 +48,9 @@ class Google(private val client: GoogleSignInClient, private val userState: User
     suspend fun signInSilently(): UserInfo? =
         try {
             userState.update(Outcome.Loading)
-            val user = client.silentSignIn().await()
-            handleSignIn(user, silent = true)
+            val task = client.silentSignIn()
+            val account = if (task.isSuccessful) task.result else task.await()
+            handleSignIn(account, silent = true)
         } catch (e: Exception) {
             // "error" might be "Sign in required", so we don't fail this exceptionally
             Timber.w(e, "Silent sign in failed exceptionally.")

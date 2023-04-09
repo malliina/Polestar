@@ -39,7 +39,7 @@ class GoogleTokenSource(private val google: Google) : TokenSource {
     }
 }
 
-class CarHttpClient(private val tokenSource: TokenSource) {
+class CarHttpClient(private val tokenSource: TokenSource, val env: EnvConf = EnvConf.current) {
     companion object {
         private const val Accept = "Accept"
         private const val Authorization = "Authorization"
@@ -72,7 +72,7 @@ class CarHttpClient(private val tokenSource: TokenSource) {
         }
 
     suspend fun <T> get(path: String, adapter: JsonAdapter<T>): T {
-        val request = authRequest(Env.baseUrl.append(path)).get().build()
+        val request = authRequest(env.baseUrl.append(path)).get().build()
         return execute(request, adapter)
     }
 
@@ -90,7 +90,7 @@ class CarHttpClient(private val tokenSource: TokenSource) {
         reader: JsonAdapter<Res>,
         install: (Request.Builder, RequestBody) -> Request.Builder
     ): Res = withContext(Dispatchers.IO) {
-        val url = Env.baseUrl.append(path)
+        val url = env.baseUrl.append(path)
         val requestBody = writer.toJson(body).toRequestBody(MediaTypeJson)
         val builder = installHeaders(postPutHeaders, authRequest(url))
         execute(install(builder, requestBody).build(), reader)
