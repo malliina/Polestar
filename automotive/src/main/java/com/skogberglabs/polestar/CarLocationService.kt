@@ -11,11 +11,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
-import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.skogberglabs.polestar.Utils.appId
@@ -30,8 +27,8 @@ class CarLocationService : Service() {
     private lateinit var locationRequest: LocationRequest
 
     companion object {
-        val LOCATIONS_CHANNEL = appId("LOCATIONS_CHANNEL")
-        val STOP_LOCATIONS = appId("STOP_LOCATIONS")
+        val LOCATIONS_CHANNEL = appId("channels.location")
+        val STOP_LOCATIONS = appId("action.locations.stop")
         const val NOTIFICATION_ID = 123
     }
 
@@ -44,13 +41,13 @@ class CarLocationService : Service() {
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        Timber.i("Got start command...")
+        Timber.i("Got start command with action ${intent?.action}...")
         if (intent?.action == STOP_LOCATIONS) {
             stop()
         } else {
             if (!started) {
                 if (applicationContext.isLocationGranted()) {
-//                    client.requestLocationUpdates(locationRequest, pendingIntent)
+                    client.requestLocationUpdates(locationRequest, pendingIntent)
                     started = true
                     Timber.i("Started location service")
                 }

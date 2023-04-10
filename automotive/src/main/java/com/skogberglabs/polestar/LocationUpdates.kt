@@ -102,7 +102,7 @@ class LocationUploader(
 
 class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
     companion object {
-        val ACTION_LOCATIONS = appId("LOCATIONS")
+        val ACTION_LOCATIONS = appId("action.locations")
     }
 
     override fun onReceive(context: Context, intent: Intent) {
