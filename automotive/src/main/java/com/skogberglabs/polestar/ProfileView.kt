@@ -100,7 +100,7 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
     val currentLocation by vm.locationSource.currentLocation.collectAsStateWithLifecycle(null)
     val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
     val isSignedIn = user.toOption() != null
-    val carState by vm.carState.collectAsStateWithLifecycle(null)
+    val carState by vm.carState.collectAsStateWithLifecycle()
     Column(
         Modifier
             .padding(horizontal = Paddings.xxl)
@@ -208,9 +208,29 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                 }
             }
         }
-        carState?.let { state ->
-            if (!state.isEmpty) {
-                ProfileText(Adapters.carState.toJson(state))
+        if (!carState.isEmpty) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                carState.batteryLevel?.let { energy ->
+                    ProfileText("Battery level ${energy.describeKWh}")
+                }
+                carState.batteryCapacity?.let { capacity ->
+                    ProfileText("Capacity ${capacity.describeKWh}")
+                }
+                carState.rangeRemaining?.let { distance ->
+                    ProfileText("Range ${distance.describeKm}")
+                }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                carState.speed?.let { speed ->
+                    ProfileText("Speed ${speed.describeKmh}")
+                }
+                carState.outsideTemperature?.let { temperature ->
+                    ProfileText("Outside temperature ${temperature.describeCelsius}")
+                }
+                carState.nightMode?.let { nightMode ->
+                    val mode = if (nightMode) "Night" else "Day"
+                    ProfileText("$mode mode")
+                }
             }
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -219,8 +239,7 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
             context.startActivity(i)
         }, Modifier.padding(Paddings.xxl)) {
             val label =
-                if (!context.isLocationGranted()) "Grant location permission"
-                else if (!context.isCarPermissionGranted()) "Grant car permissions"
+                if (!context.isAllPermissionsGranted()) "Grant permissions"
                 else "Go to map"
             Text(
                 label,
@@ -275,3 +294,4 @@ fun ProfilePreview() {
     )
 
 fun Double.formatted(n: Int): String = String.format("%.${n}f", this)
+fun Float.formatted(n: Int): String = String.format("%.${n}f", this)

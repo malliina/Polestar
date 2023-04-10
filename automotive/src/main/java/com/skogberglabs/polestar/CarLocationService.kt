@@ -11,8 +11,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.skogberglabs.polestar.Utils.appId
@@ -47,8 +50,9 @@ class CarLocationService : Service() {
         } else {
             if (!started) {
                 if (applicationContext.isLocationGranted()) {
-                    client.requestLocationUpdates(locationRequest, pendingIntent)
+//                    client.requestLocationUpdates(locationRequest, pendingIntent)
                     started = true
+                    Timber.i("Started location service")
                 }
             }
         }
@@ -109,6 +113,10 @@ class CarLocationService : Service() {
 fun Context.isLocationGranted(): Boolean =
     checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-fun Context.isCarPermissionGranted(): Boolean = CarListener.permissions.all { permission ->
+fun Context.isAllPermissionsGranted(): Boolean = PermissionContent.allPermissions.all { permission ->
     checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+}
+
+fun Context.notGrantedPermissions(): List<String> = PermissionContent.allPermissions.filter { permission ->
+    checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED
 }

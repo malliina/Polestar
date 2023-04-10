@@ -58,9 +58,7 @@ class CarListener(private val context: Context) {
                                 Timber.i("Model year is ${v.value as Int}")
                             }
                         VehiclePropertyIds.NIGHT_MODE ->
-                            it.also {
-                                Timber.i("Night mode is ${v.value as Boolean}")
-                            }
+                            it.copy(nightMode = v.value as Boolean)
                         else -> {
                             Timber.i("Property ${v.propertyId} changed, but ignoring.")
                             it

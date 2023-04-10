@@ -12,15 +12,11 @@ import timber.log.Timber
 
 data class PermissionContent(val title: String, val message: String, val permissions: List<String>) {
     companion object {
-        val car = PermissionContent(
-            "Grant app access to car",
-            "This app needs access to car properties in order to store them to your Car-Tracker account.",
-            CarListener.permissions
-        )
-        val location = PermissionContent(
-            "Grant location access",
-            "This app needs access to location in order to track the car.",
-            listOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val allPermissions = CarListener.permissions + listOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        val all = PermissionContent(
+            "Grant app access to location and car",
+            "This app needs access to location and car properties in order to store them to your Car-Tracker account.",
+            allPermissions
         )
     }
 }

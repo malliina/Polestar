@@ -21,18 +21,27 @@ class CarTrackerSession(
     private val locationSource: LocationSource
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
-        return if (!carContext.isLocationGranted()) {
-            RequestPermissionScreen(carContext, PermissionContent.location, onGranted = {
+        return if (carContext.isAllPermissionsGranted()) {
+            PlacesScreen(carContext, locationSource)
+        } else {
+            val content = PermissionContent.all.copy(permissions = carContext.notGrantedPermissions())
+            RequestPermissionScreen(carContext, content) {
                 carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
                 goToProfile()
-            })
-        } else if (!carContext.isCarPermissionGranted()) {
-            RequestPermissionScreen(carContext, PermissionContent.car, onGranted = {
-                goToProfile()
-            })
-        } else {
-            PlacesScreen(carContext, locationSource)
+            }
         }
+//        return if (!carContext.isLocationGranted()) {
+//            RequestPermissionScreen(carContext, PermissionContent.location, onGranted = {
+//                carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+//                goToProfile()
+//            })
+//        } else if (!carContext.isCarPermissionGranted()) {
+//            RequestPermissionScreen(carContext, PermissionContent.car, onGranted = {
+//                goToProfile()
+//            })
+//        } else {
+//            PlacesScreen(carContext, locationSource)
+//        }
     }
 
     private fun goToProfile() {
