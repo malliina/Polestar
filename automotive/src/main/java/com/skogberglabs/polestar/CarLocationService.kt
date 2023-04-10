@@ -108,3 +108,7 @@ class CarLocationService : Service() {
 
 fun Context.isLocationGranted(): Boolean =
     checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+fun Context.isCarPermissionGranted(): Boolean = CarListener.permissions.all { permission ->
+    checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+}

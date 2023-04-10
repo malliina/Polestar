@@ -5,6 +5,8 @@ import android.content.Intent
 import timber.log.Timber
 
 class CarTrackerApp : Application() {
+    private lateinit var carListener: CarListener
+    val carInfo: CarListener get() = carListener
     private lateinit var prefs: LocalDataSource
     val preferences: LocalDataSource get() = prefs
     private lateinit var httpClient: CarHttpClient
@@ -22,12 +24,14 @@ class CarTrackerApp : Application() {
         val tree = if (BuildConfig.DEBUG) Timber.DebugTree() else NoLogging()
         Timber.plant(tree)
         Timber.i("Launching app.")
+        carListener = CarListener(applicationContext)
         prefs = LocalDataSource(applicationContext)
         googleClient = Google.build(applicationContext, userState)
         httpClient = CarHttpClient(GoogleTokenSource(googleClient))
         deviceLocationSource = LocationSource.instance
         locationUploader = LocationUploader(http, userState, preferences, deviceLocationSource)
         startForegroundService(Intent(applicationContext, CarLocationService::class.java))
+        carListener.connect()
     }
 }
 

@@ -19,6 +19,7 @@ object Adapters {
     val locationUpdates: JsonAdapter<LocationUpdates> = moshi.adapter()
     val message: JsonAdapter<SimpleMessage> = moshi.adapter()
     val userContainer: JsonAdapter<UserContainer> = moshi.adapter()
+    val carState: JsonAdapter<CarState> = moshi.adapter()
 }
 
 class PrimitiveAdapter {
@@ -31,9 +32,42 @@ class PrimitiveAdapter {
     @ToJson
     fun writeId(s: IdToken): String = s.token
     @FromJson
-    fun readDateTime(s: String): OffsetDateTime = OffsetDateTime.parse(s)
+    fun dateTime(s: String): OffsetDateTime = OffsetDateTime.parse(s)
     @ToJson
     fun writeDateTime(s: OffsetDateTime): String = s.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    @FromJson
+    fun power(f: Float): Power = Power(f)
+    @ToJson
+    fun writePower(p: Power): Float = p.watts
+    @FromJson
+    fun energy(f: Float): Energy = Energy(f)
+    @ToJson
+    fun writeEnergy(p: Energy): Float = p.wattHours
+    @FromJson
+    fun distance(f: Float): Distance = Distance(f)
+    @ToJson
+    fun writeDistance(p: Distance): Float = p.meters
+    @FromJson
+    fun temperature(f: Float): Temperature = Temperature(f)
+    @ToJson
+    fun writeTemperature(p: Temperature): Float = p.celsius
+    @FromJson
+    fun pressure(f: Float): Pressure = Pressure(f)
+    @ToJson
+    fun writePressure(p: Pressure): Float = p.pascals
+    @FromJson
+    fun speed(f: Float): Speed = Speed(f)
+    @ToJson
+    fun writeSpeed(p: Speed): Float = p.metersPerSecond
+    @FromJson
+    fun rpm(f: Int): Rpm = Rpm(f)
+    @ToJson
+    fun writeRpm(p: Rpm): Int = p.rpm
+    @FromJson
+    fun gear(i: Int): Gear =
+        Gear.values().firstOrNull { v -> v.value == i } ?: throw JsonDataException("Invalid gear: '$i'.")
+    @ToJson
+    fun writeGear(p: Gear): Int = p.value
 }
 
 fun <T> JsonAdapter<T>.read(json: String): T {

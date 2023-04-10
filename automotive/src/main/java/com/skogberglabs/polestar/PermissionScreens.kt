@@ -10,33 +10,51 @@ import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
 import timber.log.Timber
 
-class RequestPermissionScreen(carContext: CarContext, private val onGranted: () -> Unit) :
+data class PermissionContent(val title: String, val message: String, val permissions: List<String>) {
+    companion object {
+        val car = PermissionContent(
+            "Grant app access to car",
+            "This app needs access to car properties in order to store them to your Car-Tracker account.",
+            CarListener.permissions
+        )
+        val location = PermissionContent(
+            "Grant location access",
+            "This app needs access to location in order to track the car.",
+            listOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        )
+    }
+}
+
+class RequestPermissionScreen(carContext: CarContext, val content: PermissionContent, private val onGranted: () -> Unit) :
     Screen(carContext) {
     override fun onGetTemplate(): Template {
+        Screens.installProfileRootBackBehavior(this)
         val pocl = ParkedOnlyOnClickListener.create {
-            carContext.requestPermissions(
-                listOf(Manifest.permission.ACCESS_FINE_LOCATION)
-            ) { grantedPermissions, rejectedPermissions ->
+            carContext.requestPermissions(content.permissions) { grantedPermissions, rejectedPermissions ->
                 if (grantedPermissions.isNotEmpty()) {
+                    val str = grantedPermissions.joinToString(separator = ", ")
+                    Timber.i("Granted permissions: $str.")
                     onGranted()
                 } else {
-                    screenManager.push(NoPermissionScreen(carContext))
+                    val str = rejectedPermissions.joinToString(separator = ", ")
+                    Timber.i("Rejected permissions: $str.")
+                    screenManager.push(NoPermissionScreen(carContext, content))
                 }
             }
         }
 
         val myAction = action {
-            setTitle("Grant location access")
+            setTitle(content.title)
             setOnClickListener(pocl)
         }
-        return messageTemplate("This app needs access to location in order to track the car.") {
+        return messageTemplate(content.message) {
             addAction(myAction)
             setHeaderAction(Action.BACK)
         }
     }
 }
 
-class NoPermissionScreen(carContext: CarContext) : Screen(carContext) {
+class NoPermissionScreen(carContext: CarContext, val content: PermissionContent) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         val openSettingsAction = action {
             setTitle("Open Settings")
@@ -51,10 +69,10 @@ class NoPermissionScreen(carContext: CarContext) : Screen(carContext) {
             setTitle("Try again")
             setOnClickListener {
                 Timber.i("Trying again...")
-                screenManager.push(RequestPermissionScreen(carContext, onGranted = { screenManager.popToRoot() }))
+                screenManager.push(RequestPermissionScreen(carContext, content, onGranted = { screenManager.popToRoot() }))
             }
         }
-        return messageTemplate("Please open Settings and grant app-level permissions for this app to use location.") {
+        return messageTemplate("Please open Settings and grant app-level permissions for this app.") {
             addAction(openSettingsAction)
             addAction(tryAgainAction)
             setHeaderAction(Action.BACK)

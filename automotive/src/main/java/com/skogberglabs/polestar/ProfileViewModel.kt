@@ -11,9 +11,11 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -41,7 +43,7 @@ interface ProfileViewModelInterface {
     val profile: Flow<Outcome<ProfileInfo?>>
     val uploadMessage: SharedFlow<Outcome<SimpleMessage>>
     val locationSource: LocationSourceInterface
-
+    val carState: StateFlow<CarState>
     fun selectCar(id: String)
     fun signOut()
 
@@ -53,6 +55,7 @@ interface ProfileViewModelInterface {
             override val locationSource: LocationSourceInterface = object : LocationSourceInterface {
                 override val currentLocation: Flow<LocationUpdate?> = MutableStateFlow(null)
             }
+            override val carState: StateFlow<CarState> = MutableStateFlow(CarState.empty)
             override fun selectCar(id: String) {}
             override fun signOut() {}
         }
@@ -66,6 +69,7 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), 
     override val locationSource = app.locationSource
     val google = app.google
     override val uploadMessage = app.uploader.message
+    override val carState = app.carInfo.carInfo
 
     override val user: StateFlow<Outcome<UserInfo>> = app.userState.userResult
     private val activeCar = app.preferences.userPreferencesFlow().map { it.carId }

@@ -100,6 +100,7 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
     val currentLocation by vm.locationSource.currentLocation.collectAsStateWithLifecycle(null)
     val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
     val isSignedIn = user.toOption() != null
+    val carState by vm.carState.collectAsStateWithLifecycle(null)
     Column(
         Modifier
             .padding(horizontal = Paddings.xxl)
@@ -123,7 +124,9 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                                 fontSize = 28.sp
                             )
                             LazyRow(
-                                Modifier.fillMaxWidth().padding(Paddings.small),
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(Paddings.small),
                                 horizontalArrangement = Arrangement.spacedBy(Paddings.small)
                             ) {
                                 items(p.user.boats) { boat ->
@@ -183,26 +186,31 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
             ) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     val accuracy = loc.accuracyMeters?.let { " accuracy $it meters" } ?: ""
-                    LocationText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}$accuracy")
+                    ProfileText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}$accuracy")
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     loc.altitudeMeters?.let { altitude ->
-                        LocationText("Altitude $altitude meters")
+                        ProfileText("Altitude $altitude meters")
                     }
                     loc.bearing?.let { bearing ->
                         val accuracyText = loc.bearingAccuracyDegrees?.let { " accuracy $it degrees" } ?: ""
-                        LocationText("Bearing $bearing$accuracyText")
+                        ProfileText("Bearing $bearing$accuracyText")
                     }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    LocationText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                    ProfileText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                     when (val msg = uploadMessage) {
-                        is Outcome.Success -> LocationText(msg.result.message)
-                        is Outcome.Error -> LocationText(msg.e.message ?: "Failed to upload. ${msg.e}", color = MaterialTheme.colorScheme.error)
+                        is Outcome.Success -> ProfileText(msg.result.message)
+                        is Outcome.Error -> ProfileText(msg.e.message ?: "Failed to upload. ${msg.e}", color = MaterialTheme.colorScheme.error)
                         Outcome.Idle -> Text("")
                         Outcome.Loading -> Text("")
                     }
                 }
+            }
+        }
+        carState?.let { state ->
+            if (!state.isEmpty) {
+                ProfileText(Adapters.carState.toJson(state))
             }
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -210,7 +218,15 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
             val i = Intent(context, CarAppActivity::class.java)
             context.startActivity(i)
         }, Modifier.padding(Paddings.xxl)) {
-            Text(if (context.isLocationGranted()) "Go to map" else "Grant location permission", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+            val label =
+                if (!context.isLocationGranted()) "Grant location permission"
+                else if (!context.isCarPermissionGranted()) "Grant car permissions"
+                else "Go to map"
+            Text(
+                label,
+                Modifier.padding(Paddings.normal),
+                fontSize = 32.sp
+            )
         }
         Spacer(modifier = Modifier.weight(1f))
         if (isSignedIn) {
@@ -249,7 +265,7 @@ fun ProfilePreview() {
     }
 }
 
-@Composable fun LocationText(text: String, modifier: Modifier = Modifier, color: Color = Color.Unspecified) =
+@Composable fun ProfileText(text: String, modifier: Modifier = Modifier, color: Color = Color.Unspecified) =
     Text(
         text,
         modifier.padding(Paddings.xs),

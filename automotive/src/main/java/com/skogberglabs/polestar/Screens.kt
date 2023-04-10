@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.seconds
 @androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
 class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Screen(carContext) {
     private val scope = CoroutineScope(Dispatchers.IO)
-    var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
+    private var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
     @OptIn(FlowPreview::class)
     val locationJob = scope.launch {
         locationSource.locationUpdates.debounce(10.seconds).collect { updates ->
@@ -33,6 +33,7 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
         }
     }
     override fun onGetTemplate(): Template {
+        Screens.installProfileRootBackBehavior(this)
         val myItems = itemList {
             addItem(
                 row {
@@ -61,19 +62,6 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
                 }
             )
         }
-        val backCallback = object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                if (screenManager.stackSize == 1) {
-                    val i = Intent(carContext, ProfileActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    carContext.startActivity(i)
-                } else {
-                    screenManager.pop()
-                }
-            }
-        }
-        carContext.onBackPressedDispatcher.addCallback(backCallback)
         return placeListTemplate {
             setHeaderAction(Action.BACK)
             setItemList(myItems)
@@ -88,6 +76,26 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
     }
 }
 
+object Screens {
+    fun installProfileRootBackBehavior(screen: Screen) {
+        val carContext = screen.carContext
+        val screenManager = screen.screenManager
+        val backCallback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (screenManager.stackSize == 1) {
+                    val i = Intent(carContext, ProfileActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    carContext.startActivity(i)
+                } else {
+                    screenManager.pop()
+                }
+            }
+        }
+        carContext.onBackPressedDispatcher.addCallback(backCallback)
+    }
+}
+
 class PlaceNavScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         val myItems = itemList {
@@ -96,7 +104,7 @@ class PlaceNavScreen(carContext: CarContext) : Screen(carContext) {
                     setTitle("My places")
                     setBrowsable(true)
                     setOnClickListener {
-                        screenManager.push(NoPermissionScreen(carContext))
+                        screenManager.push(NoPermissionScreen(carContext, PermissionContent.location))
                     }
                 }
             )

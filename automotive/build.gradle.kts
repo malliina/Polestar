@@ -12,8 +12,8 @@ android {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 30 // Android 11
         targetSdk = 33
-        versionCode = 18
-        versionName = "1.16.0"
+        versionCode = 19
+        versionName = "1.17.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -58,12 +58,14 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.4.4"
     }
+    useLibrary("android.car")
 }
 
 val autoVersion = "1.4.0-alpha01"
+val composeUiVersion = "1.4.1"
 
 dependencies {
-    implementation("androidx.compose.ui:ui-tooling-preview:1.4.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:$composeUiVersion")
     val composeBom = platform("androidx.compose:compose-bom:2023.03.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -80,7 +82,7 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.android.gms:play-services-auth:20.4.1")
-    debugImplementation("androidx.compose.ui:ui-tooling:1.4.0")
+    debugImplementation("androidx.compose.ui:ui-tooling:$composeUiVersion")
     val moshiVersion = "1.14.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")

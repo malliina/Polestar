@@ -1,8 +1,6 @@
 package com.skogberglabs.polestar
 
-import android.Manifest
 import android.content.Intent
-import android.content.pm.PackageManager
 import androidx.car.app.CarAppService
 import androidx.car.app.Screen
 import androidx.car.app.ScreenManager
@@ -23,19 +21,24 @@ class CarTrackerSession(
     private val locationSource: LocationSource
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
-        return if (carContext.isLocationGranted()) {
-            PlacesScreen(carContext, locationSource)
-        } else {
-            val sm = carContext.getCarService(ScreenManager::class.java)
-            sm.push(PlacesScreen(carContext, locationSource))
-            RequestPermissionScreen(carContext, onGranted = {
+        return if (!carContext.isLocationGranted()) {
+            RequestPermissionScreen(carContext, PermissionContent.location, onGranted = {
                 carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-//                sm.pop()
-                val i = Intent(carContext, ProfileActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                carContext.startActivity(i)
+                goToProfile()
             })
+        } else if (!carContext.isCarPermissionGranted()) {
+            RequestPermissionScreen(carContext, PermissionContent.car, onGranted = {
+                goToProfile()
+            })
+        } else {
+            PlacesScreen(carContext, locationSource)
         }
+    }
+
+    private fun goToProfile() {
+        val i = Intent(carContext, ProfileActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        carContext.startActivity(i)
     }
 }

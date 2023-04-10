@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -50,11 +51,14 @@ class LocationSource : LocationSourceInterface {
         val instance = LocationSource()
     }
     private val scope = CoroutineScope(Dispatchers.IO)
+    private val locationServicesAvailability: MutableStateFlow<Boolean?> = MutableStateFlow(null)
     private val updatesState: MutableStateFlow<List<LocationUpdate>> = MutableStateFlow(emptyList())
-    val locationUpdates = updatesState.shareIn(scope, SharingStarted.Lazily, 1)
+    val locationUpdates: SharedFlow<List<LocationUpdate>> = updatesState.shareIn(scope, SharingStarted.Lazily, 1)
     override val currentLocation: Flow<LocationUpdate?> = locationUpdates.map { it.lastOrNull() }
+    val locationServicesAvailable: Flow<Boolean?> = locationServicesAvailability.shareIn(scope, SharingStarted.Lazily, 1)
 
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
+    fun availability(isAvailable: Boolean) = locationServicesAvailability.tryEmit(isAvailable)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -121,6 +125,7 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
                 }
             } ?: run {
                 LocationAvailability.extractLocationAvailability(intent)?.let { locationAvailability ->
+                    locs.availability(locationAvailability.isLocationAvailable)
                     if (!locationAvailability.isLocationAvailable) {
                         Timber.i("Location services are not available.")
                     } else {
