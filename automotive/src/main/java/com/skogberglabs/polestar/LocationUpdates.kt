@@ -40,7 +40,7 @@ data class LocationUpdate(
 )
 
 @JsonClass(generateAdapter = true)
-data class LocationUpdates(val updates: List<LocationUpdate>, val carId: String)
+data class LocationUpdates(val updates: List<LocationUpdate>, val carId: String, val car: CarState)
 
 interface LocationSourceInterface {
     val currentLocation: Flow<LocationUpdate?>
@@ -66,7 +66,8 @@ class LocationUploader(
     private val http: CarHttpClient,
     private val userState: UserState,
     private val prefs: LocalDataSource,
-    private val locations: LocationSource
+    private val locations: LocationSource,
+    private val carListener: CarListener
 ) {
     private val io = CoroutineScope(Dispatchers.IO)
     val message = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
@@ -80,13 +81,14 @@ class LocationUploader(
     }.shareIn(io, SharingStarted.Eagerly, 1)
 
     private val carIds = prefs.userPreferencesFlow().map { it.carId }
+    val a = carListener.carInfo.value
     private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
         locations.locationUpdates.combine(carIds.filterNotNull()) { locs, id ->
             val path = "/cars/locations"
             try {
                 val result = http.post(
                     path,
-                    LocationUpdates(locs, id),
+                    LocationUpdates(locs, id, carListener.carInfo.value),
                     Adapters.locationUpdates,
                     Adapters.message
                 )
