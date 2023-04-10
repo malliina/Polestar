@@ -79,11 +79,11 @@ class CarListener(private val context: Context) {
         VehiclePropertyIds.EV_BATTERY_LEVEL,
         VehiclePropertyIds.PERF_VEHICLE_SPEED,
         VehiclePropertyIds.RANGE_REMAINING,
-        VehiclePropertyIds.INFO_EV_BATTERY_CAPACITY,
-        VehiclePropertyIds.INFO_MAKE,
-        VehiclePropertyIds.INFO_MODEL,
-        VehiclePropertyIds.INFO_MODEL_YEAR,
-        VehiclePropertyIds.NIGHT_MODE
+//        VehiclePropertyIds.INFO_EV_BATTERY_CAPACITY,
+//        VehiclePropertyIds.INFO_MAKE,
+//        VehiclePropertyIds.INFO_MODEL,
+//        VehiclePropertyIds.INFO_MODEL_YEAR,
+//        VehiclePropertyIds.NIGHT_MODE
     )
     private val vehiclePropsUnused = listOf(
         VehicleProp(VehiclePropertyIds.HVAC_TEMPERATURE_CURRENT, dataUnit = DataUnit.Celsius),
