@@ -30,7 +30,7 @@ class CarListener(private val context: Context) {
             if (v.status == CarPropertyValue.STATUS_AVAILABLE) {
 //                Timber.i("Property ${v.propertyId} changed to ${v.value}.")
                 carState.update {
-                    when (v.propertyId) {
+                    val updated = when (v.propertyId) {
                         VehiclePropertyIds.ENV_OUTSIDE_TEMPERATURE ->
                             it.copy(outsideTemperature = (v.value as Float).celsius)
                         VehiclePropertyIds.EV_BATTERY_LEVEL ->
@@ -43,20 +43,8 @@ class CarListener(private val context: Context) {
                             it.copy(batteryCapacity = (v.value as Float).wattHours)
                         VehiclePropertyIds.CURRENT_GEAR ->
                             Gear.find(v.value as Int)?.let { gear ->
-                                it.copy(gear = gear)
+                                it.copy(gear = gear).updateTime()
                             } ?: it
-                        VehiclePropertyIds.INFO_MAKE ->
-                            it.also {
-                                Timber.i("Make is ${v.value as String}")
-                            }
-                        VehiclePropertyIds.INFO_MODEL ->
-                            it.also {
-                                Timber.i("Model is ${v.value as String}")
-                            }
-                        VehiclePropertyIds.INFO_MODEL_YEAR ->
-                            it.also {
-                                Timber.i("Model year is ${v.value as Int}")
-                            }
                         VehiclePropertyIds.NIGHT_MODE ->
                             it.copy(nightMode = v.value as Boolean)
                         else -> {
@@ -64,6 +52,7 @@ class CarListener(private val context: Context) {
                             it
                         }
                     }
+                    updated.updateTime()
                 }
             } else {
                 Timber.i("Property ${v.propertyId} in status ${v.status}.")
@@ -79,11 +68,12 @@ class CarListener(private val context: Context) {
         VehiclePropertyIds.EV_BATTERY_LEVEL,
         VehiclePropertyIds.PERF_VEHICLE_SPEED,
         VehiclePropertyIds.RANGE_REMAINING,
+        VehiclePropertyIds.NIGHT_MODE,
+        VehiclePropertyIds.CURRENT_GEAR
 //        VehiclePropertyIds.INFO_EV_BATTERY_CAPACITY,
 //        VehiclePropertyIds.INFO_MAKE,
 //        VehiclePropertyIds.INFO_MODEL,
 //        VehiclePropertyIds.INFO_MODEL_YEAR,
-//        VehiclePropertyIds.NIGHT_MODE
     )
     private val vehiclePropsUnused = listOf(
         VehicleProp(VehiclePropertyIds.HVAC_TEMPERATURE_CURRENT, dataUnit = DataUnit.Celsius),

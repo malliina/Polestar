@@ -1,7 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-kapt")
+    //id("kotlin-kapt")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -59,10 +60,13 @@ android {
         kotlinCompilerExtensionVersion = "1.4.4"
     }
     useLibrary("android.car")
+    kotlin {
+        jvmToolchain(8)
+    }
 }
 
 val autoVersion = "1.4.0-alpha01"
-val composeUiVersion = "1.4.1"
+val composeUiVersion = "1.4.2"
 
 dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:$composeUiVersion")
@@ -70,22 +74,23 @@ dependencies {
     implementation(composeBom)
     androidTestImplementation(composeBom)
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.activity:activity-compose:1.7.0")
+    implementation("androidx.activity:activity-compose:1.7.1")
 
     implementation("androidx.car.app:app:$autoVersion")
     implementation("androidx.car.app:app-automotive:$autoVersion")
-    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.10.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
     implementation("androidx.navigation:navigation-compose:2.5.3")
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.google.android.gms:play-services-location:21.0.1")
-    implementation("com.google.android.gms:play-services-auth:20.4.1")
+    implementation("com.google.android.gms:play-services-auth:20.5.0")
     debugImplementation("androidx.compose.ui:ui-tooling:$composeUiVersion")
     val moshiVersion = "1.14.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
-    kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
+    //kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
+    ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.car.app:app-testing:$autoVersion")

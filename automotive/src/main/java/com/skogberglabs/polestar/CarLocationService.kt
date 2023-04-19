@@ -15,6 +15,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.skogberglabs.polestar.Utils.appAction
 import com.skogberglabs.polestar.Utils.appId
 import timber.log.Timber
 
@@ -27,8 +28,8 @@ class CarLocationService : Service() {
     private lateinit var locationRequest: LocationRequest
 
     companion object {
-        val LOCATIONS_CHANNEL = appId("channels.location")
-        val STOP_LOCATIONS = appId("action.locations.stop")
+        val LOCATIONS_CHANNEL = appId("channels.LOCATION")
+        val STOP_LOCATIONS = appAction("STOP_LOCATIONS")
         const val NOTIFICATION_ID = 123
     }
 

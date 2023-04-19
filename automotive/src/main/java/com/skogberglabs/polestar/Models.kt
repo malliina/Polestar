@@ -1,5 +1,23 @@
 package com.skogberglabs.polestar
 
+import com.squareup.moshi.JsonClass
+import java.time.OffsetDateTime
+
+// Inspiration from https://github.com/android/location-samples/blob/main/LocationUpdatesBackgroundKotlin/app/src/main/java/com/google/android/gms/location/sample/locationupdatesbackgroundkotlin/data/MyLocationManager.kt
+@JsonClass(generateAdapter = true)
+data class LocationUpdate(
+    val longitude: Double,
+    val latitude: Double,
+    val altitudeMeters: Double?,
+    val accuracyMeters: Float?,
+    val bearing: Float?,
+    val bearingAccuracyDegrees: Float?,
+    val date: OffsetDateTime
+)
+
+@JsonClass(generateAdapter = true)
+data class LocationUpdates(val updates: List<LocationUpdate>, val carId: String, val car: CarState)
+
 interface Primitive {
     val value: String
 }

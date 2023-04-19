@@ -1,6 +1,7 @@
 package com.skogberglabs.polestar
 
 import com.squareup.moshi.JsonClass
+import java.time.OffsetDateTime
 
 data class Power(val watts: Float)
 data class Energy(val wattHours: Float) {
@@ -45,12 +46,14 @@ data class CarState(
     val speed: Speed?,
     val rangeRemaining: Distance?,
     val gear: Gear?,
-    val nightMode: Boolean?
+    val nightMode: Boolean?,
+    val updated: OffsetDateTime?
 ) {
     companion object {
-        val empty = CarState(null, null, null, null, null, null, null)
+        val empty = CarState(null, null, null, null, null, null, null, null)
     }
     val isEmpty: Boolean get() = this == empty
+    fun updateTime(): CarState = copy(updated = OffsetDateTime.now())
 }
 
 enum class PropertyType {
