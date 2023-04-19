@@ -15,6 +15,7 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
 
     companion object {
         val ACTION_LOCATIONS = Utils.appAction("LOCATIONS")
+        val BOOT_COMPLETED = Intent.ACTION_BOOT_COMPLETED
     }
 
     override fun onReceive(context: Context, intent: Intent) {

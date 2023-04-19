@@ -30,12 +30,20 @@ class CarLocationService : Service() {
     companion object {
         val LOCATIONS_CHANNEL = appId("channels.LOCATION")
         val STOP_LOCATIONS = appAction("STOP_LOCATIONS")
-        const val NOTIFICATION_ID = 123
+
+        fun createNotificationChannels(context: Context) {
+            val channel = NotificationChannel(LOCATIONS_CHANNEL, "Car notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            val bootChannel = NotificationChannel(BootEventReceiver.BOOT_CHANNEL, "App boot notifications", NotificationManager.IMPORTANCE_HIGH)
+            val manager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannels(listOf(channel, bootChannel))
+        }
     }
 
     override fun onCreate() {
         super.onCreate()
         Timber.i("Creating service...")
+        val manager = applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.cancel(NotificationIds.BOOT_ID)
         prepareLocations()
     }
 
@@ -54,8 +62,7 @@ class CarLocationService : Service() {
                 }
             }
         }
-        createNotificationChannel()
-        startForeground(NOTIFICATION_ID, notification())
+        startForeground(NotificationIds.FOREGROUND_ID, notification())
         return START_STICKY
     }
 
@@ -90,12 +97,6 @@ class CarLocationService : Service() {
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
             .build()
-    }
-
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(LOCATIONS_CHANNEL, "Car notifications", NotificationManager.IMPORTANCE_DEFAULT)
-        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(channel)
     }
 
     fun stop() {

@@ -35,7 +35,6 @@ class LocationUploader(
     }.shareIn(io, SharingStarted.Eagerly, 1)
 
     private val carIds = prefs.userPreferencesFlow().map { it.carId }
-    val a = carListener.carInfo.value
     private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
         locations.locationUpdates
             .filter { it.isNotEmpty() }

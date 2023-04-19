@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- For PlaceListMapTemplate -->
     <uses-permission android:name="androidx.car.app.MAP_TEMPLATES"/>
@@ -67,14 +68,15 @@
             android:label="Car-Tracker">
             <meta-data android:name="distractionOptimized" android:value="true"/>
         </activity>
+        <receiver android:name=".BootEventReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
         <receiver android:name=".LocationUpdatesBroadcastReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="com.skogberglabs.polestar.action.LOCATIONS" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
         </receiver>
     </application>
-
 </manifest>

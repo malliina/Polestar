@@ -28,6 +28,7 @@ class CarTrackerApp : Application() {
         prefs = LocalDataSource(applicationContext)
         googleClient = Google.build(applicationContext, userState)
         httpClient = CarHttpClient(GoogleTokenSource(googleClient))
+        CarLocationService.createNotificationChannels(applicationContext)
         deviceLocationSource = LocationSource.instance
         locationUploader = LocationUploader(http, userState, preferences, deviceLocationSource, carListener)
         startForegroundService(Intent(applicationContext, CarLocationService::class.java))
