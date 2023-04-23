@@ -35,7 +35,10 @@ class CarLocationService : Service() {
             val channel = NotificationChannel(LOCATIONS_CHANNEL, "Car notifications", NotificationManager.IMPORTANCE_DEFAULT)
             val bootChannel = NotificationChannel(BootEventReceiver.BOOT_CHANNEL, "App boot notifications", NotificationManager.IMPORTANCE_HIGH)
             val manager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannels(listOf(channel, bootChannel))
+            val channels = listOf(channel, bootChannel)
+            manager.createNotificationChannels(channels)
+            val ids = channels.joinToString(separator = ", ") { it.id }
+            Timber.i("Created notification channels $ids")
         }
     }
 
@@ -50,7 +53,8 @@ class CarLocationService : Service() {
     @SuppressLint("MissingPermission")
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        Timber.i("Got start command with action ${intent?.action}...")
+        val describe = intent?.action ?: "no action"
+        Timber.i("Got start command with $describe...")
         if (intent?.action == STOP_LOCATIONS) {
             stop()
         } else {

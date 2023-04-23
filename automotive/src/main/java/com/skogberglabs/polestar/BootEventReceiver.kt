@@ -9,7 +9,7 @@ import android.content.Context
 import android.content.Intent
 import timber.log.Timber
 
-class BootEventReceiver: BroadcastReceiver() {
+class BootEventReceiver : BroadcastReceiver() {
     companion object {
         val BOOT_CHANNEL = Utils.appId("channels.BOOT")
     }

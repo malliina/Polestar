@@ -4,6 +4,7 @@ import com.squareup.moshi.JsonClass
 import java.time.OffsetDateTime
 
 // Inspiration from https://github.com/android/location-samples/blob/main/LocationUpdatesBackgroundKotlin/app/src/main/java/com/google/android/gms/location/sample/locationupdatesbackgroundkotlin/data/MyLocationManager.kt
+
 @JsonClass(generateAdapter = true)
 data class LocationUpdate(
     val longitude: Double,
@@ -13,10 +14,29 @@ data class LocationUpdate(
     val bearing: Float?,
     val bearingAccuracyDegrees: Float?,
     val date: OffsetDateTime
+) {
+    fun toPoint(car: CarState) = CarPoint(longitude, latitude, altitudeMeters, accuracyMeters, bearing, bearingAccuracyDegrees, car.speed, car.batteryLevel, car.batteryCapacity, car.rangeRemaining, car.outsideTemperature, car.nightMode, date)
+}
+
+@JsonClass(generateAdapter = true)
+data class CarPoint(
+    val longitude: Double,
+    val latitude: Double,
+    val altitudeMeters: Double?,
+    val accuracyMeters: Float?,
+    val bearing: Float?,
+    val bearingAccuracyDegrees: Float?,
+    val speed: Speed?,
+    val batteryLevel: Energy?,
+    val batteryCapacity: Energy?,
+    val rangeRemaining: Distance?,
+    val outsideTemperature: Temperature?,
+    val nightMode: Boolean?,
+    val date: OffsetDateTime
 )
 
 @JsonClass(generateAdapter = true)
-data class LocationUpdates(val updates: List<LocationUpdate>, val carId: String, val car: CarState)
+data class LocationUpdates(val updates: List<CarPoint>, val carId: String)
 
 interface Primitive {
     val value: String

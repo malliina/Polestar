@@ -23,6 +23,7 @@ class LocationUploader(
     private val locations: LocationSource,
     private val carListener: CarListener
 ) {
+    val path = "/cars/locations"
     private val io = CoroutineScope(Dispatchers.IO)
     val message = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
         when (user) {
@@ -39,11 +40,10 @@ class LocationUploader(
         locations.locationUpdates
             .filter { it.isNotEmpty() }
             .combine(carIds.filterNotNull()) { locs, id ->
-            val path = "/cars/locations"
             try {
                 val result = http.post(
                     path,
-                    LocationUpdates(locs, id, carListener.carInfo.value),
+                    LocationUpdates(locs.map { it.toPoint(carListener.carInfo.value) }, id),
                     Adapters.locationUpdates,
                     Adapters.message
                 )
