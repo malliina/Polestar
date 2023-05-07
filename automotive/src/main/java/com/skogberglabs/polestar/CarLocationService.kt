@@ -19,6 +19,9 @@ import com.skogberglabs.polestar.Utils.appAction
 import com.skogberglabs.polestar.Utils.appId
 import timber.log.Timber
 
+/**
+ * Foreground service.
+ */
 class CarLocationService : Service() {
     private val intervalMillis = 5000L
     private val locationsPerBatch = 5

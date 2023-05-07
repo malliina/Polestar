@@ -12,8 +12,8 @@ android {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 30 // Android 11
         targetSdk = 33
-        versionCode = 22
-        versionName = "1.19.1"
+        versionCode = 23
+        versionName = "1.19.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -65,7 +65,7 @@ android {
 }
 
 val autoVersion = "1.4.0-alpha01"
-val composeUiVersion = "1.4.2"
+val composeUiVersion = "1.4.3"
 
 dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:$composeUiVersion")
@@ -88,7 +88,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling:$composeUiVersion")
     val moshiVersion = "1.14.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
-    //kapt("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     testImplementation("junit:junit:4.13.2")

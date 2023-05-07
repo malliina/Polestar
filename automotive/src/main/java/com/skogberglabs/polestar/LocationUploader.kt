@@ -23,7 +23,7 @@ class LocationUploader(
     private val locations: LocationSource,
     private val carListener: CarListener
 ) {
-    val path = "/cars/locations"
+    private val path = "/cars/locations"
     private val io = CoroutineScope(Dispatchers.IO)
     val message = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
         when (user) {

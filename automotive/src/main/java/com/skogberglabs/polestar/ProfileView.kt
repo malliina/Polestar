@@ -21,9 +21,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +51,7 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
     val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
     val isSignedIn = user.toOption() != null
     val carState by vm.carState.collectAsStateWithLifecycle()
+    var isCarSelectionOpen by remember { mutableStateOf(false) }
     Column(
         Modifier
             .padding(horizontal = Paddings.xxl)
@@ -60,38 +65,45 @@ fun ProfileView(vm: ProfileViewModelInterface, onSignIn: () -> Unit) {
                 when (val profileOutcome = profile) {
                     is Outcome.Success -> {
                         profileOutcome.result?.let { p ->
+                            val noCarSelected = p.activeCar == null
                             val msg = p.activeCar?.let { car -> "Driving ${car.name}." } ?: run {
                                 if (p.hasCars) "Select car to continue." else "No cars."
                             }
-                            Text(
-                                msg,
-                                Modifier.padding(Paddings.large),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontSize = 28.sp
-                            )
-                            LazyRow(
-                                Modifier
-                                    .fillMaxWidth()
-                                    .padding(Paddings.small),
-                                horizontalArrangement = Arrangement.spacedBy(Paddings.small)
-                            ) {
-                                items(p.user.boats) { boat ->
-                                    Box(
-                                        Modifier
-                                            .border(
-                                                if (boat.id == carId) 8.dp else 2.dp,
-                                                Color.Blue
+                            Row(Modifier.padding(Paddings.large), horizontalArrangement = Arrangement.spacedBy(Paddings.xxl)) {
+                                Text(
+                                    msg,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontSize = 28.sp
+                                )
+                                OutlinedButton(onClick = { isCarSelectionOpen = !isCarSelectionOpen }) {
+                                    Text(if (isCarSelectionOpen) "Close selection" else "Change car.")
+                                }
+                            }
+                            if (isCarSelectionOpen || noCarSelected) {
+                                LazyRow(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(Paddings.small),
+                                    horizontalArrangement = Arrangement.spacedBy(Paddings.small)
+                                ) {
+                                    items(p.user.boats) { boat ->
+                                        Box(
+                                            Modifier
+                                                .border(
+                                                    if (boat.id == carId) 8.dp else 2.dp,
+                                                    Color.Blue
+                                                )
+                                                .sizeIn(minWidth = 220.dp, minHeight = 128.dp)
+                                                .clickable { vm.selectCar(boat.id) },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                boat.name,
+                                                style = MaterialTheme.typography.titleLarge,
+                                                textAlign = TextAlign.Center,
+                                                fontSize = 32.sp
                                             )
-                                            .sizeIn(minWidth = 220.dp, minHeight = 128.dp)
-                                            .clickable { vm.selectCar(boat.id) },
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            boat.name,
-                                            style = MaterialTheme.typography.titleLarge,
-                                            textAlign = TextAlign.Center,
-                                            fontSize = 32.sp
-                                        )
+                                        }
                                     }
                                 }
                             }
