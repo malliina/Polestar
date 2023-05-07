@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.time.Duration.Companion.seconds
 
 class UserState {
     companion object {
@@ -75,22 +78,25 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), 
     private val activeCar = app.preferences.userPreferencesFlow().map { it.carId }
     override val profile: Flow<Outcome<ProfileInfo?>> = user.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
         when (user) {
-            is Outcome.Success -> flow {
-                emit(Outcome.Loading)
-                emit(me().map { it.user })
-            }
+            is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
             else -> flow { Outcome.Idle }
         }
     }.combine(activeCar) { user, carId ->
         user.map { ProfileInfo(it, carId) }
     }
-    private suspend fun me() =
+
+    private suspend fun meFlow(): Flow<Outcome<UserContainer>> = flow {
         try {
-            Outcome.Success(http.get("/users/me", Adapters.userContainer))
+            emit(Outcome.Loading)
+            val response = http.get("/users/me", Adapters.userContainer)
+            emit(Outcome.Success(response))
         } catch (e: Exception) {
-            Timber.e(e, "Failed to load profile.")
-            Outcome.Error(e)
+            Timber.e(e, "Failed to load profile. Retrying soon...")
+            emit(Outcome.Error(e))
+            delay(30.seconds)
+            emitAll(meFlow())
         }
+    }
 
     override fun selectCar(id: String) {
         viewModelScope.launch {
