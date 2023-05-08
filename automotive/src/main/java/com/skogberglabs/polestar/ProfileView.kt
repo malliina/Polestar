@@ -2,11 +2,7 @@ package com.skogberglabs.polestar
 
 import android.content.Intent
 import androidx.car.app.activity.CarAppActivity
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,19 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,14 +28,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,27 +42,6 @@ import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import java.time.format.DateTimeFormatter
-
-@Composable
-fun ErrorText(message: String) {
-    Text(
-        message,
-        Modifier.padding(Paddings.large),
-        color = MaterialTheme.colorScheme.error,
-        style = MaterialTheme.typography.titleLarge,
-        fontSize = 28.sp
-    )
-}
-
-@Composable
-fun ReadableText(message: String, modifier: Modifier = Modifier) {
-    Text(
-        message,
-        modifier,
-        style = MaterialTheme.typography.titleLarge,
-        fontSize = 28.sp
-    )
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,7 +94,7 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                             }
                         }
                         Outcome.Idle -> Text("")
-                        Outcome.Loading -> CircularProgressIndicator(Modifier.padding(Paddings.xxl))
+                        Outcome.Loading -> CarProgressBar()
                         is Outcome.Error -> ErrorText("Failed to load profile.")
                     }
                 }
@@ -144,7 +110,7 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                         }
                     }
                 }
-                Outcome.Loading -> CircularProgressIndicator(Modifier.padding(Paddings.xxl))
+                Outcome.Loading -> CarProgressBar()
                 Outcome.Idle -> SignInButton(onSignIn)
             }
             Divider(Modifier.padding(vertical = Paddings.large))

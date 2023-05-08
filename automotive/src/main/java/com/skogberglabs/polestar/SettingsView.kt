@@ -15,8 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,11 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-
-@Composable
-fun TitleText(title: String) {
-    Text(title, fontSize = 48.sp)
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,13 +91,13 @@ fun SettingsView(vm: ProfileViewModelInterface, navController: NavController) {
                             }
                         }
                     } else {
-                        Text("No cars.")
+                        ReadableText("No cars.", Modifier.padding(pd))
                     }
                 }
             }
-            Outcome.Loading -> CircularProgressIndicator(Modifier.padding(Paddings.xxl))
-            is Outcome.Error -> ErrorText("Failed to load profile.")
-            else -> ErrorText("Nothing to see here.")
+            Outcome.Loading -> CarProgressBar(Modifier.padding(pd))
+            is Outcome.Error -> ErrorText("Failed to load profile.", Modifier.padding(pd))
+            else -> ErrorText("Nothing to see here.", Modifier.padding(pd))
         }
     }
 }
