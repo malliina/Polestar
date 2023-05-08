@@ -1,8 +1,10 @@
 package com.skogberglabs.polestar
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.car.app.CarContext
+import androidx.car.app.CarToast
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
 import androidx.car.app.model.CarColor
@@ -50,6 +52,15 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Scr
                     setBrowsable(true)
                     setOnClickListener {
                         screenManager.push(MapScreen(carContext))
+                    }
+                }
+            )
+            addItem(
+                row {
+                    setTitle("Custom screen")
+                    setBrowsable(true)
+                    setOnClickListener {
+                        screenManager.push(CustomScreen(carContext))
                     }
                 }
             )
@@ -128,6 +139,37 @@ class MapScreen(carContext: CarContext) : Screen(carContext) {
                 )
             }
         )
+    }
+}
+
+class CustomScreen(carContext: CarContext) : Screen(carContext) {
+    override fun onGetTemplate(): Template = paneTemplate(pane {
+        addRow(row {
+            setTitle("Hej")
+        })
+        addAction(
+            action {
+                setTitle("Primary action")
+                setOnClickListener {
+                    CarToast.makeText(carContext, "Clicked action", CarToast.LENGTH_SHORT).show()
+                }
+                setFlags(Action.FLAG_PRIMARY)
+            }
+        )
+        addAction(
+            action {
+                setTitle("Secondary action")
+                setOnClickListener {
+                    CarToast.makeText(carContext, "Clicked secondary action", CarToast.LENGTH_SHORT).show()
+                }
+            }
+        )
+        addRow(row {
+            setTitle("Hej again")
+        })
+    }) {
+        setTitle("This is a pane template")
+        setHeaderAction(Action.BACK)
     }
 }
 
