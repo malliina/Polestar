@@ -68,8 +68,8 @@ class CarListener(private val context: Context) {
         VehiclePropertyIds.EV_BATTERY_LEVEL,
         VehiclePropertyIds.PERF_VEHICLE_SPEED,
         VehiclePropertyIds.RANGE_REMAINING,
-        VehiclePropertyIds.NIGHT_MODE,
-        VehiclePropertyIds.CURRENT_GEAR
+        VehiclePropertyIds.NIGHT_MODE
+//        VehiclePropertyIds.CURRENT_GEAR
 //        VehiclePropertyIds.INFO_EV_BATTERY_CAPACITY,
 //        VehiclePropertyIds.INFO_MAKE,
 //        VehiclePropertyIds.INFO_MODEL,
