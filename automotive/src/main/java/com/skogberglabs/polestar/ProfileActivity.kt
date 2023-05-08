@@ -8,6 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.CoroutineScope
@@ -27,12 +28,11 @@ class ProfileActivity : ComponentActivity() {
         scope.launch {
             google.signInSilently()
         }
-        Timber.i("Creating Profile activity...")
+        Timber.i("Creating activity...")
         setContent {
             AppTheme {
-                Surface(Modifier.fillMaxSize()) {
-                    ProfileView(profile) { signIn() }
-                }
+                val navController = rememberNavController()
+                CarTrackerNavGraph(profile, onSignIn = { signIn() }, navController)
             }
         }
     }
