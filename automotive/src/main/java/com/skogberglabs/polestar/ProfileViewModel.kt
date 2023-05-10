@@ -53,7 +53,8 @@ interface ProfileViewModelInterface {
     companion object {
         val preview = object : ProfileViewModelInterface {
             override val user: StateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
-            override val profile: Flow<Outcome<ProfileInfo?>> = MutableStateFlow(Outcome.Idle)
+            val cars = ProfileInfo(ApiUserInfo(Email("a@b.com"), listOf(CarInfo("a", "Mos", 1L), CarInfo("b", "Tesla", 1L), CarInfo("a", "Toyota", 1L), CarInfo("a", "Rivian", 1L), CarInfo("a", "Cybertruck", 1L))), null)
+            override val profile: Flow<Outcome<ProfileInfo?>> = MutableStateFlow(Outcome.Success(cars))
             override val uploadMessage: SharedFlow<Outcome<SimpleMessage>> = MutableSharedFlow()
             override val locationSource: LocationSourceInterface = object : LocationSourceInterface {
                 override val currentLocation: Flow<LocationUpdate?> = MutableStateFlow(null)
