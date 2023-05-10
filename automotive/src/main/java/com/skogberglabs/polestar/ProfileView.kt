@@ -5,9 +5,11 @@ import androidx.car.app.activity.CarAppActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -43,6 +45,15 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
 import java.time.format.DateTimeFormatter
 
+@Composable
+fun SpacedRow(content: @Composable RowScope.() -> Unit) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        content = content
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onSignIn: () -> Unit) {
@@ -73,21 +84,26 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(Paddings.xxl)
                 .padding(pd)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (val u = user) {
                 is Outcome.Success -> {
-                    Text("Signed in as ${u.result.email}.", modifier = Modifier.padding(Paddings.large), fontSize = 32.sp)
+                    Text(
+                        "Signed in as ${u.result.email}.",
+                        modifier = Modifier.padding(Paddings.large),
+                        fontSize = 32.sp
+                    )
                     when (val profileOutcome = profile) {
                         is Outcome.Success -> {
                             profileOutcome.result?.let { p ->
                                 p.activeCar?.let { car ->
                                     ReadableText("Driving ${car.name}.")
                                 } ?: run {
-                                    OutlinedButton(onClick = { navController.navigate(NavRoutes.SETTINGS) }, modifier = Modifier.padding(Paddings.large)) {
+                                    OutlinedButton(
+                                        onClick = { navController.navigate(NavRoutes.SETTINGS) },
+                                        modifier = Modifier.padding(Paddings.large)) {
                                         Text("Select car")
                                     }
                                 }
@@ -116,11 +132,11 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
             Divider(Modifier.padding(vertical = Paddings.large))
             Column(Modifier.padding(Paddings.xxl)) {
                 currentLocation?.let { loc ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SpacedRow {
                         val accuracy = loc.accuracyMeters?.let { " accuracy $it meters" } ?: ""
                         ProfileText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}$accuracy")
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SpacedRow {
                         loc.altitudeMeters?.let { altitude ->
                             ProfileText("Altitude $altitude meters")
                         }
@@ -129,7 +145,7 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                             ProfileText("Bearing $bearing$accuracyText")
                         }
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SpacedRow {
                         ProfileText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                         when (val msg = uploadMessage) {
                             is Outcome.Success -> ProfileText(msg.result.message)
@@ -140,7 +156,7 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                     }
                 }
                 if (!carState.isEmpty) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SpacedRow {
                         carState.batteryLevel?.let { energy ->
                             ProfileText("Battery level ${energy.describeKWh}")
                         }
@@ -151,7 +167,7 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                             ProfileText("Range ${distance.describeKm}")
                         }
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    SpacedRow {
                         carState.speed?.let { speed ->
                             ProfileText("Speed ${speed.describeKmh}")
                         }
@@ -195,6 +211,7 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                 "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 Modifier.padding(Paddings.normal)
             )
+            Spacer(modifier = Modifier.height(Paddings.large))
         }
     }
 }
