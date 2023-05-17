@@ -43,6 +43,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -147,9 +148,9 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                     }
                     SpacedRow {
                         ProfileText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-                        when (val msg = uploadMessage) {
-                            is Outcome.Success -> ProfileText(msg.result.message)
-                            is Outcome.Error -> ProfileText(msg.e.message ?: "Failed to upload. ${msg.e}", color = MaterialTheme.colorScheme.error)
+                        when (val outcome = uploadMessage) {
+                            is Outcome.Success -> ProfileText("Got '${outcome.result.message}'.")
+                            is Outcome.Error -> ProfileText(outcome.e.message ?: "Failed to upload. ${outcome.e}", color = MaterialTheme.colorScheme.error)
                             Outcome.Idle -> Text("")
                             Outcome.Loading -> Text("")
                         }

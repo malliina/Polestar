@@ -47,9 +47,10 @@ class LocationUploader(
                     Adapters.locationUpdates,
                     Adapters.message
                 )
+                Timber.i("Uploaded ${locs.size} locations to $path.")
                 Outcome.Success(result)
             } catch (e: Exception) {
-                Timber.w(e, "Failed to POST location updates to '$path'.")
+                Timber.w(e, "Failed to POST location updates to $path.")
                 Outcome.Error(e)
             }
         }
