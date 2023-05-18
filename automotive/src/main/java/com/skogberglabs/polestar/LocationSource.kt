@@ -20,7 +20,7 @@ class LocationSource : LocationSourceInterface {
     private val scope = CoroutineScope(Dispatchers.IO)
     private val locationServicesAvailability: MutableStateFlow<Boolean?> = MutableStateFlow(null)
     private val updatesState: MutableStateFlow<List<LocationUpdate>> = MutableStateFlow(emptyList())
-    val locationUpdates: SharedFlow<List<LocationUpdate>> = updatesState.shareIn(scope, SharingStarted.Lazily, 1)
+    val locationUpdates: SharedFlow<List<LocationUpdate>> = updatesState.shareIn(scope, SharingStarted.Eagerly, replay = 1)
     override val currentLocation: Flow<LocationUpdate?> = locationUpdates.map { it.lastOrNull() }
     val locationServicesAvailable: Flow<Boolean?> = locationServicesAvailability.shareIn(scope, SharingStarted.Lazily, 1)
 

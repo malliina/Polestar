@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -25,7 +26,7 @@ class LocationUploader(
 ) {
     private val path = "/cars/locations"
     private val io = CoroutineScope(Dispatchers.IO)
-    val message = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
+    val message: SharedFlow<Outcome<SimpleMessage>> = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
         when (user) {
             is Outcome.Success -> {
                 Timber.i("Logged in as ${user.result.email}, sending locations...")
@@ -33,7 +34,7 @@ class LocationUploader(
             }
             else -> flowOf(Outcome.Idle)
         }
-    }.shareIn(io, SharingStarted.Eagerly, 1)
+    }.shareIn(io, SharingStarted.Eagerly, replay = 1)
 
     private val carIds = prefs.userPreferencesFlow().map { it.carId }
     private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
