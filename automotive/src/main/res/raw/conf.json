@@ -1,0 +1,142 @@
+{
+  "languages": [
+    {
+      "appName": "Car-Tracker",
+      "language": {
+        "code": "en-US",
+        "name": "English"
+      },
+      "profile": {
+        "signedInAs": "Signed in as",
+        "driving": "Driving",
+        "chooseLanguage": "Select language",
+        "signInWith": "Sign in with",
+        "signOut": "Sign out",
+        "failedToLoadProfile": "Failed to load profile.",
+        "failedToSignIn": "Failed to sign in.",
+        "goToMap": "Go to map",
+        "version": "Version",
+        "nothingHere": "Nothing to see here."
+      },
+      "settings": {
+        "title": "Settings",
+        "openSettings": "Open Settings",
+        "selectCar": "Select car",
+        "noCars": "No cars."
+      },
+      "permissions": {
+        "grantCta": "Grant permissions",
+        "grantAccess": "Grant app access to location and car",
+        "explanation": "This app needs access to location and car properties in order to store them to your Car-Tracker account.",
+        "tryAgain": "Try again",
+        "openSettingsText": "Please open Settings and grant app-level permissions for this app."
+      },
+      "stats": {
+        "speed": "Speed",
+        "altitude": "Altitude",
+        "nightMode": "Night mode",
+        "dayMode": "Day mode",
+        "bearing": "Bearing",
+        "accuracy": "Accuracy",
+        "degrees": "degrees",
+        "meters": "meters",
+        "batteryLevel": "Battery level",
+        "capacity": "Capacity",
+        "range": "Range",
+        "outsideTemperature": "Temperature outside"
+      }
+    },
+    {
+      "appName": "Car-Tracker",
+      "language": {
+        "code": "sv-SE",
+        "name": "Svenska"
+      },
+      "profile": {
+        "signedInAs": "Inloggad som",
+        "driving": "Du kör",
+        "chooseLanguage": "Välj språk",
+        "signInWith": "Logga in med",
+        "signOut": "Logga ut",
+        "failedToLoadProfile": "Laddning av profil misslyckades.",
+        "failedToSignIn": "Inloggning misslyckades.",
+        "goToMap": "Karta",
+        "version": "Version",
+        "nothingHere": "Ingenting här."
+      },
+      "settings": {
+        "title": "Inställningar",
+        "openSettings": "Öppna inställningar",
+        "selectCar": "Välj bil",
+        "noCars": "Inga bilar."
+      },
+      "permissions": {
+        "grantCta": "Ge rättigheter",
+        "grantAccess": "Ge appen rättigheter till plats och bildata",
+        "explanation": "Appen behöver rättigheter för att kunna spara plats och bildata till ditt Car-Tracker konto.",
+        "tryAgain": "Pröva på nytt",
+        "openSettingsText": "Öppna inställningar och ge appen rättigheter."
+      },
+      "stats": {
+        "speed": "Hastighet",
+        "altitude": "Höjd",
+        "nightMode": "Nattläge",
+        "dayMode": "Dagläge",
+        "bearing": "Bearing",
+        "accuracy": "Accuracy",
+        "degrees": "degrees",
+        "meters": "meters",
+        "batteryLevel": "Batterinivå",
+        "capacity": "Kapacitet",
+        "range": "Räckvidd",
+        "outsideTemperature": "Temperatur ute"
+      }
+    },
+    {
+      "appName": "Car-Tracker",
+      "language": {
+        "code": "fi-FI",
+        "name": "Suomeksi"
+      },
+      "profile": {
+        "signedInAs": "Käyttäjätunnus",
+        "driving": "Ajat autoa",
+        "chooseLanguage": "Valitse kieli",
+        "signInWith": "Kirjaudu palvelulla",
+        "signOut": "Kirjaudu ulos",
+        "failedToLoadProfile": "Käyttäjätietojen lataus epäonnistui.",
+        "failedToSignIn": "Kirjautuminen epäonnistui.",
+        "goToMap": "Kartta",
+        "version": "Version",
+        "nothingHere": "Täällä ei ole mitään."
+      },
+      "settings": {
+        "title": "Asetukset",
+        "openSettings": "Avaa asetukset",
+        "selectCar": "Valitse auto",
+        "noCars": "Ei autoja."
+      },
+      "permissions": {
+        "grantCta": "Anna oikeuksia",
+        "grantAccess": "Anna sovellukselle oikeudet lukea auton sijainti ja muut tiedot",
+        "explanation": "Sovellus tarvitsee oikeuksia tallentaakseen sijainti- ja muut tiedot Car-Tracker-tilillesi.",
+        "tryAgain": "Kokeile uudelleen",
+        "openSettingsText": "Avaa asetukset ja anna sovellukselle oikeuksia."
+      },
+      "stats": {
+        "speed": "Nopeus",
+        "altitude": "Korkeus",
+        "nightMode": "Yötila",
+        "dayMode": "Päivätila",
+        "bearing": "Suunta",
+        "accuracy": "Tarkkuus",
+        "degrees": "astetta",
+        "meters": "metriä",
+        "batteryLevel": "Akun varaus",
+        "capacity": "Kapasiteetti",
+        "range": "Toimintamatka",
+        "outsideTemperature": "Ulkolämpötila"
+      }
+    }
+  ]
+}

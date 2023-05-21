@@ -20,6 +20,7 @@ object Adapters {
     val message: JsonAdapter<SimpleMessage> = moshi.adapter()
     val userContainer: JsonAdapter<UserContainer> = moshi.adapter()
     val carState: JsonAdapter<CarState> = moshi.adapter()
+    val carConf: JsonAdapter<CarConf> = moshi.adapter()
 }
 
 class PrimitiveAdapter {

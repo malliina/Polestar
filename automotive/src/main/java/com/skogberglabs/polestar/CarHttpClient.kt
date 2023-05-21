@@ -39,7 +39,7 @@ class GoogleTokenSource(private val google: Google) : TokenSource {
     }
 }
 
-class CarHttpClient(private val tokenSource: TokenSource, val env: EnvConf = EnvConf.current) {
+class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvConf = EnvConf.current) {
     companion object {
         private const val Accept = "Accept"
         private const val Authorization = "Authorization"

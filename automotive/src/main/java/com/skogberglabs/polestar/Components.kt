@@ -1,10 +1,12 @@
 package com.skogberglabs.polestar
 
+import androidx.car.app.hardware.common.CarUnit.CarDistanceUnit
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,4 +44,9 @@ fun CarProgressBar(modifier: Modifier = Modifier) {
     Row(Modifier.fillMaxWidth().padding(Paddings.xxl).then(modifier), horizontalArrangement = Arrangement.Center) {
         CircularProgressIndicator()
     }
+}
+
+@Composable
+fun CarDivider() {
+    Divider(Modifier.padding(vertical = Paddings.large))
 }

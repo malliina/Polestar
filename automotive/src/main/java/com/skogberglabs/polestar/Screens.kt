@@ -1,7 +1,6 @@
 package com.skogberglabs.polestar
 
 import android.content.Intent
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.car.app.CarContext
 import androidx.car.app.CarToast
@@ -94,7 +93,7 @@ object Screens {
         val backCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (screenManager.stackSize == 1) {
-                    val i = Intent(carContext, ProfileActivity::class.java).apply {
+                    val i = Intent(carContext, CarActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     }
                     carContext.startActivity(i)

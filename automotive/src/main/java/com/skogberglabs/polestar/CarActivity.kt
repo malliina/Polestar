@@ -5,9 +5,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
@@ -16,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class ProfileActivity : ComponentActivity() {
+class CarActivity : ComponentActivity() {
     private val requestCodeSignIn = 100
     private val profile: ProfileViewModel by viewModels()
     private val scope = CoroutineScope(Dispatchers.IO)
@@ -27,12 +24,13 @@ class ProfileActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         scope.launch {
             google.signInSilently()
+            profile.prepare()
         }
         Timber.i("Creating activity...")
         setContent {
             AppTheme {
                 val navController = rememberNavController()
-                CarTrackerNavGraph(profile, onSignIn = { signIn() }, navController)
+                CarNavGraph(profile, onSignIn = { signIn() }, navController)
             }
         }
     }

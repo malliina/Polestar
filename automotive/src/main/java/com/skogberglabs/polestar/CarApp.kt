@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Intent
 import timber.log.Timber
 
-class CarTrackerApp : Application() {
+class CarApp : Application() {
     private lateinit var carListener: CarListener
     val carInfo: CarListener get() = carListener
     private lateinit var prefs: LocalDataSource

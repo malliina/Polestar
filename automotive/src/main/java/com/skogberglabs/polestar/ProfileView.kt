@@ -43,7 +43,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
-import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -57,7 +56,7 @@ fun SpacedRow(content: @Composable RowScope.() -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onSignIn: () -> Unit) {
+fun ProfileView(lang: CarLang, vm: ProfileViewModelInterface, navController: NavController, onSignIn: () -> Unit) {
     val context = LocalContext.current
     val user by vm.user.collectAsStateWithLifecycle()
     val profile by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
@@ -65,11 +64,13 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
     val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
     val isSignedIn = user.toOption() != null
     val carState by vm.carState.collectAsStateWithLifecycle()
+    val plang = lang.profile
+    val slang = lang.stats
     Scaffold(
         modifier = Modifier,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { TitleText("Car-Tracker") },
+                title = { TitleText(lang.appName) },
                 modifier = Modifier.padding(Paddings.normal),
                 actions = {
                     IconButton(onClick = { navController.navigate(NavRoutes.SETTINGS) }, modifier = Modifier.size(64.dp)) {
@@ -92,7 +93,7 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
             when (val u = user) {
                 is Outcome.Success -> {
                     Text(
-                        "Signed in as ${u.result.email}.",
+                        "${lang.profile.signedInAs} ${u.result.email}.",
                         modifier = Modifier.padding(Paddings.large),
                         fontSize = 32.sp
                     )
@@ -100,57 +101,57 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                         is Outcome.Success -> {
                             profileOutcome.result?.let { p ->
                                 p.activeCar?.let { car ->
-                                    ReadableText("Driving ${car.name}.")
+                                    ReadableText("${plang.driving} ${car.name}.")
                                 } ?: run {
                                     OutlinedButton(
                                         onClick = { navController.navigate(NavRoutes.SETTINGS) },
                                         modifier = Modifier.padding(Paddings.large)) {
-                                        Text("Select car")
+                                        Text(lang.settings.selectCar)
                                     }
                                 }
                             }
                         }
                         Outcome.Idle -> Text("")
                         Outcome.Loading -> CarProgressBar()
-                        is Outcome.Error -> ErrorText("Failed to load profile.")
+                        is Outcome.Error -> ErrorText(plang.failedToLoadProfile)
                     }
                 }
                 is Outcome.Error -> {
-                    SignInButton(onSignIn)
+                    SignInButton("${plang.signInWith} Google", onSignIn)
                     when (val ex = u.e) {
                         is ApiException -> {
                             val str = CommonStatusCodes.getStatusCodeString(ex.statusCode)
-                            Text("Failed to sign in. API exception status code '${ex.statusCode}': $str. ${ex.message} $ex")
+                            Text("${plang.failedToSignIn} '${ex.statusCode}': $str. ${ex.message} $ex")
                         }
                         else -> {
-                            Text("Failed to sign in. ${ex.message} $ex")
+                            Text("${plang.failedToSignIn} ${ex.message} $ex")
                         }
                     }
                 }
                 Outcome.Loading -> CarProgressBar()
-                Outcome.Idle -> SignInButton(onSignIn)
+                Outcome.Idle -> SignInButton("${plang.signInWith} Google", onSignIn)
             }
-            Divider(Modifier.padding(vertical = Paddings.large))
+            CarDivider()
             Column(Modifier.padding(Paddings.xxl)) {
                 currentLocation?.let { loc ->
                     SpacedRow {
-                        val accuracy = loc.accuracyMeters?.let { " accuracy $it meters" } ?: ""
+                        val accuracy = loc.accuracyMeters?.let { " ${slang.accuracy.lowercase()} $it ${slang.meters}" } ?: ""
                         ProfileText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}$accuracy")
                     }
                     SpacedRow {
                         loc.altitudeMeters?.let { altitude ->
-                            ProfileText("Altitude $altitude meters")
+                            ProfileText("${slang.altitude} $altitude ${slang.meters}")
                         }
                         loc.bearing?.let { bearing ->
-                            val accuracyText = loc.bearingAccuracyDegrees?.let { " accuracy $it degrees" } ?: ""
-                            ProfileText("Bearing $bearing$accuracyText")
+                            val accuracyText = loc.bearingAccuracyDegrees?.let { " ${slang.accuracy.lowercase()} $it ${slang.degrees}" } ?: ""
+                            ProfileText("${slang.bearing} $bearing$accuracyText")
                         }
                     }
                     SpacedRow {
                         ProfileText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
                         when (val outcome = uploadMessage) {
-                            is Outcome.Success -> ProfileText("Got '${outcome.result.message}'.")
-                            is Outcome.Error -> ProfileText(outcome.e.message ?: "Failed to upload. ${outcome.e}", color = MaterialTheme.colorScheme.error)
+                            is Outcome.Success -> ProfileText("'${outcome.result.message}'.")
+                            is Outcome.Error -> ProfileText(outcome.e.message ?: "${outcome.e}", color = MaterialTheme.colorScheme.error)
                             Outcome.Idle -> Text("")
                             Outcome.Loading -> Text("")
                         }
@@ -159,38 +160,37 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                 if (!carState.isEmpty) {
                     SpacedRow {
                         carState.batteryLevel?.let { energy ->
-                            ProfileText("Battery level ${energy.describeKWh}")
+                            ProfileText("${slang.batteryLevel} ${energy.describeKWh}")
                         }
                         carState.batteryCapacity?.let { capacity ->
-                            ProfileText("Capacity ${capacity.describeKWh}")
+                            ProfileText("${slang.capacity} ${capacity.describeKWh}")
                         }
                         carState.rangeRemaining?.let { distance ->
-                            ProfileText("Range ${distance.describeKm}")
+                            ProfileText("${slang.range} ${distance.describeKm}")
                         }
                     }
                     SpacedRow {
                         carState.speed?.let { speed ->
-                            ProfileText("Speed ${speed.describeKmh}")
+                            ProfileText("${slang.speed} ${speed.describeKmh}")
                         }
                         carState.outsideTemperature?.let { temperature ->
-                            ProfileText("Outside temperature ${temperature.describeCelsius}")
+                            ProfileText("${slang.outsideTemperature} ${temperature.describeCelsius}")
                         }
                         carState.nightMode?.let { nightMode ->
-                            val mode = if (nightMode) "Night" else "Day"
-                            ProfileText("$mode mode")
+                            ProfileText(if (nightMode) slang.nightMode else slang.dayMode)
                         }
                     }
                 }
             }
-            Divider(Modifier.padding(vertical = Paddings.large))
+            CarDivider()
             Spacer(modifier = Modifier.weight(1f))
             Button(onClick = {
                 val i = Intent(context, CarAppActivity::class.java)
                 context.startActivity(i)
             }, Modifier.padding(Paddings.xxl)) {
                 val label =
-                    if (!context.isAllPermissionsGranted()) "Grant permissions"
-                    else "Go to map"
+                    if (!context.isAllPermissionsGranted()) lang.permissions.grantCta
+                    else plang.goToMap
                 Text(
                     label,
                     Modifier.padding(Paddings.normal),
@@ -198,18 +198,18 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            Divider(Modifier.padding(vertical = Paddings.large))
+            CarDivider()
             if (isSignedIn) {
                 Button(
                     onClick = { vm.signOut() },
                     modifier = Modifier.padding(Paddings.xxl),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Sign out", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+                    Text(plang.signOut, Modifier.padding(Paddings.normal), fontSize = 32.sp)
                 }
             }
             Text(
-                "Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                "${plang.version} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 Modifier.padding(Paddings.normal)
             )
             Spacer(modifier = Modifier.height(Paddings.large))
@@ -220,20 +220,22 @@ fun ProfileView(vm: ProfileViewModelInterface, navController: NavController, onS
 @Preview
 @Composable
 fun ProfilePreview() {
+    val ctx = LocalContext.current
+    val conf = Previews.lang(ctx)
     MaterialTheme {
-        ProfileView(ProfileViewModelInterface.preview, rememberNavController()) {
+        ProfileView(conf, ProfileViewModelInterface.preview(ctx), rememberNavController()) {
         }
     }
 }
 
-@Composable fun SignInButton(onSignIn: () -> Unit) {
+@Composable fun SignInButton(label: String, onSignIn: () -> Unit) {
     Button(
         onClick = { onSignIn() },
         Modifier
             .padding(Paddings.normal)
             .widthIn(max = 800.dp)
     ) {
-        Text("Sign in with Google", Modifier.padding(Paddings.normal), fontSize = 32.sp)
+        Text(label, Modifier.padding(Paddings.normal), fontSize = 32.sp)
     }
 }
 

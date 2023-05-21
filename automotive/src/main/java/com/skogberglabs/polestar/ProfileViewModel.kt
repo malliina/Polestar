@@ -1,6 +1,7 @@
 package com.skogberglabs.polestar
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,16 +41,24 @@ data class ProfileInfo(val user: ApiUserInfo, val carId: String?) {
 }
 
 interface ProfileViewModelInterface {
+    val conf: Flow<Outcome<CarLang>>
+    val languages: Flow<List<CarLanguage>>
+    val savedLanguage: Flow<String?>
     val user: StateFlow<Outcome<UserInfo>>
     val profile: Flow<Outcome<ProfileInfo?>>
     val uploadMessage: SharedFlow<Outcome<SimpleMessage>>
     val locationSource: LocationSourceInterface
     val carState: StateFlow<CarState>
+    suspend fun prepare()
     fun selectCar(id: String)
+    fun saveLanguage(code: String)
     fun signOut()
 
     companion object {
-        val preview = object : ProfileViewModelInterface {
+        fun preview(ctx: Context) = object : ProfileViewModelInterface {
+            override val conf: Flow<Outcome<CarLang>> = MutableStateFlow(Outcome.Idle)
+            override val languages: Flow<List<CarLanguage>> = MutableStateFlow(Previews.conf(ctx).languages.map { it.language })
+            override val savedLanguage: Flow<String?> = MutableStateFlow(null)
             override val user: StateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
             val cars = ProfileInfo(ApiUserInfo(Email("a@b.com"), listOf(CarInfo("a", "Mos", 1L), CarInfo("b", "Tesla", 1L), CarInfo("a", "Toyota", 1L), CarInfo("a", "Rivian", 1L), CarInfo("a", "Cybertruck", 1L))), null)
             override val profile: Flow<Outcome<ProfileInfo?>> = MutableStateFlow(Outcome.Success(cars))
@@ -58,7 +67,9 @@ interface ProfileViewModelInterface {
                 override val currentLocation: Flow<LocationUpdate?> = MutableStateFlow(null)
             }
             override val carState: StateFlow<CarState> = MutableStateFlow(CarState.empty)
+            override suspend fun prepare() {}
             override fun selectCar(id: String) {}
+            override fun saveLanguage(code: String) {}
             override fun signOut() {}
         }
     }
@@ -66,7 +77,7 @@ interface ProfileViewModelInterface {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), ProfileViewModelInterface {
-    val app: CarTrackerApp = appl as CarTrackerApp
+    val app: CarApp = appl as CarApp
     val http = app.http
     override val locationSource = app.locationSource
     val google = app.google
@@ -83,6 +94,13 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), 
     }.combine(activeCar) { user, carId ->
         user.map { ProfileInfo(it, carId) }
     }
+    private val confs: MutableStateFlow<CarConf> = MutableStateFlow(CarConf(emptyList()))
+    override val savedLanguage: Flow<String?> = app.preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
+    override val languages: Flow<List<CarLanguage>> = confs.map { c -> c.languages.map { l -> l.language } }
+    override val conf: Flow<Outcome<CarLang>> = confs.combine(savedLanguage) { confs, saved ->
+        val attempt = confs.languages.firstOrNull { it.language.code == saved } ?: confs.languages.firstOrNull()
+        attempt?.let { Outcome.Success(it) } ?: Outcome.Loading
+    }
 
     private suspend fun meFlow(): Flow<Outcome<UserContainer>> = flow {
         try {
@@ -97,9 +115,20 @@ class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), 
         }
     }
 
+    override suspend fun prepare() {
+        val response = http.get("/cars/conf", Adapters.carConf)
+        confs.emit(response)
+    }
+
     override fun selectCar(id: String) {
         viewModelScope.launch {
             app.preferences.saveCarId(id)
+        }
+    }
+
+    override fun saveLanguage(code: String) {
+        viewModelScope.launch {
+            app.preferences.saveLanguage(code)
         }
     }
 

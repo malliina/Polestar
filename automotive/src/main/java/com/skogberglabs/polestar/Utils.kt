@@ -6,6 +6,6 @@ object Utils {
 }
 
 object NotificationIds {
-    val FOREGROUND_ID = 123
-    val BOOT_ID = 124
+    const val FOREGROUND_ID = 123
+    const val BOOT_ID = 124
 }

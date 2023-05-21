@@ -11,14 +11,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
-import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationTokenSource
 import com.skogberglabs.polestar.Utils.appAction
 import com.skogberglabs.polestar.Utils.appId
 import kotlinx.coroutines.CoroutineScope
@@ -37,7 +33,7 @@ class CarLocationService : Service() {
     private lateinit var pendingIntent: PendingIntent
     private lateinit var locationRequest: LocationRequest
     private val scope = CoroutineScope(Dispatchers.IO)
-    val app: CarTrackerApp get() = application as CarTrackerApp
+    val app: CarApp get() = application as CarApp
 
     companion object {
         val LOCATIONS_CHANNEL = appId("channels.LOCATION")

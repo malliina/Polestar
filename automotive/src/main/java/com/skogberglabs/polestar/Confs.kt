@@ -1,5 +1,8 @@
 package com.skogberglabs.polestar
 
+import com.squareup.moshi.JsonClass
+
+@JsonClass(generateAdapter = true)
 data class CarProfileLang(
     val signedInAs: String,
     val driving: String,
@@ -12,9 +15,10 @@ data class CarProfileLang(
     val version: String,
     val nothingHere: String
 )
+@JsonClass(generateAdapter = true)
 data class CarStatsLang(
     val speed: String,
-    val height: String,
+    val altitude: String,
     val nightMode: String,
     val dayMode: String,
     val bearing: String,
@@ -26,6 +30,7 @@ data class CarStatsLang(
     val range: String,
     val outsideTemperature: String
 )
+@JsonClass(generateAdapter = true)
 data class PermissionsLang(
     val grantCta: String,
     val grantAccess: String,
@@ -33,13 +38,18 @@ data class PermissionsLang(
     val tryAgain: String,
     val openSettingsText: String
 )
+@JsonClass(generateAdapter = true)
 data class CarSettingsLang(val title: String, val openSettings: String, val selectCar: String, val noCars: String)
+@JsonClass(generateAdapter = true)
+data class CarLanguage(val code: String, val name: String)
+@JsonClass(generateAdapter = true)
 data class CarLang(
     val appName: String,
-    val language: String,
+    val language: CarLanguage,
     val profile: CarProfileLang,
     val settings: CarSettingsLang,
     val permissions: PermissionsLang,
     val stats: CarStatsLang
 )
-data class CarLanguages(val finnish: CarLang, val swedish: CarLang, val english: CarLang)
+@JsonClass(generateAdapter = true)
+data class CarConf(val languages: List<CarLang>)
