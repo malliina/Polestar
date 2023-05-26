@@ -1,8 +1,10 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,9 +16,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +39,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.skogberglabs.polestar.CarLang
+import com.skogberglabs.polestar.Outcome
+import com.skogberglabs.polestar.Paddings
 
 @Composable
 fun CheckIcon(visible: Boolean = false) {
@@ -51,10 +56,13 @@ fun CheckIcon(visible: Boolean = false) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsView(lang: CarLang, vm: ProfileViewModelInterface, navController: NavController) {
+fun SettingsView(lang: CarLang, vm: CarViewModelInterface, navController: NavController) {
     val profile by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
     val languages by vm.languages.collectAsStateWithLifecycle(emptyList())
     val savedLanguage by vm.savedLanguage.collectAsStateWithLifecycle(null)
+    val user by vm.user.collectAsStateWithLifecycle()
+    val isSignedIn = user.toOption() != null
+
     val carId = profile.toOption()?.activeCar?.id
     val plang = lang.profile
     val slang = lang.settings
@@ -111,6 +119,19 @@ fun SettingsView(lang: CarLang, vm: ProfileViewModelInterface, navController: Na
                     }
                 }
             }
+            Spacer(modifier = Modifier.weight(1f))
+            CarDivider()
+            if (isSignedIn) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    Button(
+                        onClick = { vm.signOut() },
+                        modifier = Modifier.padding(Paddings.xxl),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text(plang.signOut, Modifier.padding(Paddings.normal), fontSize = 32.sp)
+                    }
+                }
+            }
         }
     }
 }
@@ -151,5 +172,5 @@ fun SettingsButton(label: String, isSelected: Boolean, onClick: () -> Unit) {
 @Composable
 fun SettingsPreview() {
     val ctx = LocalContext.current
-    SettingsView(Previews.lang(ctx), ProfileViewModelInterface.preview(ctx), rememberNavController())
+    SettingsView(Previews.lang(ctx), CarViewModelInterface.preview(ctx), rememberNavController())
 }

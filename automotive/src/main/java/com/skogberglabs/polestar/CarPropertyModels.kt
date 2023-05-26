@@ -1,5 +1,6 @@
 package com.skogberglabs.polestar
 
+import com.skogberglabs.polestar.ui.formatted
 import com.squareup.moshi.JsonClass
 import java.time.OffsetDateTime
 

@@ -6,6 +6,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.skogberglabs.polestar.ui.CarProgressBar
+import com.skogberglabs.polestar.ui.ProfileView
+import com.skogberglabs.polestar.ui.CarViewModelInterface
+import com.skogberglabs.polestar.ui.SettingsView
 
 object NavRoutes {
     const val PROFILE = "profile"
@@ -13,7 +17,7 @@ object NavRoutes {
 }
 
 @Composable
-fun CarNavGraph(vm: ProfileViewModelInterface,
+fun CarNavGraph(vm: CarViewModelInterface,
                 onSignIn: () -> Unit,
                 navController: NavHostController,
                 start: String = NavRoutes.PROFILE) {

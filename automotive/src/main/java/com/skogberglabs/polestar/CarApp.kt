@@ -2,6 +2,9 @@ package com.skogberglabs.polestar
 
 import android.app.Application
 import android.content.Intent
+import com.skogberglabs.polestar.location.CarLocationService
+import com.skogberglabs.polestar.location.LocationSource
+import com.skogberglabs.polestar.location.LocationUploader
 import timber.log.Timber
 
 class CarApp : Application() {

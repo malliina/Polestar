@@ -1,5 +1,6 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.location
 
+import com.skogberglabs.polestar.LocationUpdate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

@@ -1,4 +1,4 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.ui
 
 import android.content.Intent
 import androidx.activity.OnBackPressedCallback
@@ -11,6 +11,19 @@ import androidx.car.app.model.CarIcon
 import androidx.car.app.model.CarLocation
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
+import com.skogberglabs.polestar.location.LocationSource
+import com.skogberglabs.polestar.action
+import com.skogberglabs.polestar.actionStrip
+import com.skogberglabs.polestar.itemList
+import com.skogberglabs.polestar.mapTemplate
+import com.skogberglabs.polestar.navigationTemplate
+import com.skogberglabs.polestar.pane
+import com.skogberglabs.polestar.paneTemplate
+import com.skogberglabs.polestar.place
+import com.skogberglabs.polestar.placeListNavigationTemplate
+import com.skogberglabs.polestar.placeListTemplate
+import com.skogberglabs.polestar.placeMarker
+import com.skogberglabs.polestar.row
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview

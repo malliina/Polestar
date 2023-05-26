@@ -1,5 +1,13 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.location
 
+import com.skogberglabs.polestar.Adapters
+import com.skogberglabs.polestar.CarHttpClient
+import com.skogberglabs.polestar.CarListener
+import com.skogberglabs.polestar.LocalDataSource
+import com.skogberglabs.polestar.LocationUpdates
+import com.skogberglabs.polestar.Outcome
+import com.skogberglabs.polestar.SimpleMessage
+import com.skogberglabs.polestar.UserState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -1,6 +1,9 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.ui
 
 import android.content.Context
+import com.skogberglabs.polestar.Adapters
+import com.skogberglabs.polestar.CarConf
+import com.skogberglabs.polestar.R
 
 object Previews {
     fun conf(ctx: Context): CarConf =

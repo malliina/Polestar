@@ -47,9 +47,9 @@
             </intent-filter>
         </service>
         <service android:foregroundServiceType="location"
-            android:name=".CarLocationService" />
+            android:name=".location.CarLocationService" />
         <activity
-            android:name=".CarActivity"
+            android:name=".ui.CarActivity"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
             android:launchMode="singleTask"
             android:exported="true"
@@ -73,7 +73,7 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
-        <receiver android:name=".LocationUpdatesBroadcastReceiver" android:exported="true">
+        <receiver android:name=".location.LocationUpdatesBroadcastReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="com.skogberglabs.polestar.action.LOCATIONS" />
             </intent-filter>

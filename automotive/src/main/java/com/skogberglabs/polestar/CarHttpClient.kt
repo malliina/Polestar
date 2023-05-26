@@ -43,6 +43,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
     companion object {
         private const val Accept = "Accept"
         private const val Authorization = "Authorization"
+        private const val UserAgent = "User-Agent"
         private val MediaTypeJson = "application/vnd.car.v1+json".toMediaType()
 //        private val MediaTypeJson = "application/vnd.boat.v2+json".toMediaType()
 
@@ -51,8 +52,11 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         val postPutHeaders = mapOf("Accept-Encoding" to "identity")
 
         fun headers(token: IdToken?): Map<String, String> {
-            val acceptPair = Accept to MediaTypeJson.toString()
-            return if (token != null) mapOf(Authorization to "Bearer $token", acceptPair) else mapOf(acceptPair)
+            val alwaysIncluded = mapOf(
+                Accept to MediaTypeJson.toString(),
+                UserAgent to "Car-Tracker/${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+            )
+            return if (token != null) mapOf(Authorization to "Bearer $token") + alwaysIncluded else alwaysIncluded
         }
     }
 

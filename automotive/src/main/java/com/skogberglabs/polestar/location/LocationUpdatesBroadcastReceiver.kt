@@ -1,10 +1,12 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.location
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.google.android.gms.location.LocationAvailability
 import com.google.android.gms.location.LocationResult
+import com.skogberglabs.polestar.LocationUpdate
+import com.skogberglabs.polestar.Utils
 import timber.log.Timber
 import java.time.Instant
 import java.time.OffsetDateTime

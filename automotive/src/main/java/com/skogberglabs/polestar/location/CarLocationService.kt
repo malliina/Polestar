@@ -1,4 +1,4 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.location
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -15,8 +15,13 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.skogberglabs.polestar.BootEventReceiver
+import com.skogberglabs.polestar.CarApp
+import com.skogberglabs.polestar.NotificationIds
+import com.skogberglabs.polestar.R
 import com.skogberglabs.polestar.Utils.appAction
 import com.skogberglabs.polestar.Utils.appId
+import com.skogberglabs.polestar.ui.PermissionContent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,7 +31,7 @@ import timber.log.Timber
  * Foreground service.
  */
 class CarLocationService : Service() {
-    private val intervalMillis = 5000L
+    private val intervalMillis = 1000L
     private val locationsPerBatch = 5
     private var started = false
     private lateinit var client: FusedLocationProviderClient
@@ -84,9 +89,7 @@ class CarLocationService : Service() {
     private fun prepareLocations() {
         val context = applicationContext
         client = LocationServices.getFusedLocationProviderClient(context)
-
         locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
-            .setMinUpdateIntervalMillis(1000)
             .setMaxUpdateDelayMillis(intervalMillis * locationsPerBatch) // batching, check the docs
             .build()
         val pi: PendingIntent by lazy {

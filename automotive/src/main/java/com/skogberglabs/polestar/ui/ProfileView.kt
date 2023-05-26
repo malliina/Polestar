@@ -1,4 +1,4 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.ui
 
 import android.content.Intent
 import androidx.car.app.activity.CarAppActivity
@@ -18,9 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,6 +41,12 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
+import com.skogberglabs.polestar.BuildConfig
+import com.skogberglabs.polestar.CarLang
+import com.skogberglabs.polestar.NavRoutes
+import com.skogberglabs.polestar.Outcome
+import com.skogberglabs.polestar.Paddings
+import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -56,13 +60,12 @@ fun SpacedRow(content: @Composable RowScope.() -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileView(lang: CarLang, vm: ProfileViewModelInterface, navController: NavController, onSignIn: () -> Unit) {
+fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavController, onSignIn: () -> Unit) {
     val context = LocalContext.current
     val user by vm.user.collectAsStateWithLifecycle()
     val profile by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
     val currentLocation by vm.locationSource.currentLocation.collectAsStateWithLifecycle(null)
     val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
-    val isSignedIn = user.toOption() != null
     val carState by vm.carState.collectAsStateWithLifecycle()
     val plang = lang.profile
     val slang = lang.stats
@@ -199,15 +202,6 @@ fun ProfileView(lang: CarLang, vm: ProfileViewModelInterface, navController: Nav
             }
             Spacer(modifier = Modifier.weight(1f))
             CarDivider()
-            if (isSignedIn) {
-                Button(
-                    onClick = { vm.signOut() },
-                    modifier = Modifier.padding(Paddings.xxl),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text(plang.signOut, Modifier.padding(Paddings.normal), fontSize = 32.sp)
-                }
-            }
             Text(
                 "${plang.version} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 Modifier.padding(Paddings.normal)
@@ -223,7 +217,7 @@ fun ProfilePreview() {
     val ctx = LocalContext.current
     val conf = Previews.lang(ctx)
     MaterialTheme {
-        ProfileView(conf, ProfileViewModelInterface.preview(ctx), rememberNavController()) {
+        ProfileView(conf, CarViewModelInterface.preview(ctx), rememberNavController()) {
         }
     }
 }

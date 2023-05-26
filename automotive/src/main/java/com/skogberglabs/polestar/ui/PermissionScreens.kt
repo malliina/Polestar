@@ -1,4 +1,4 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.ui
 
 import android.Manifest
 import android.content.Intent
@@ -8,6 +8,9 @@ import androidx.car.app.Screen
 import androidx.car.app.model.Action
 import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
+import com.skogberglabs.polestar.CarListener
+import com.skogberglabs.polestar.action
+import com.skogberglabs.polestar.messageTemplate
 import timber.log.Timber
 
 data class PermissionContent(val title: String, val message: String, val permissions: List<String>) {

@@ -7,6 +7,7 @@ import android.app.Service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.skogberglabs.polestar.location.LocationUpdatesBroadcastReceiver
 import timber.log.Timber
 
 class BootEventReceiver : BroadcastReceiver() {

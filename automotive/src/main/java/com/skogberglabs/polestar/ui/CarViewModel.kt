@@ -1,9 +1,25 @@
-package com.skogberglabs.polestar
+package com.skogberglabs.polestar.ui
 
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.skogberglabs.polestar.Adapters
+import com.skogberglabs.polestar.ApiUserInfo
+import com.skogberglabs.polestar.CarApp
+import com.skogberglabs.polestar.CarConf
+import com.skogberglabs.polestar.CarInfo
+import com.skogberglabs.polestar.CarLang
+import com.skogberglabs.polestar.CarLanguage
+import com.skogberglabs.polestar.CarState
+import com.skogberglabs.polestar.Email
+import com.skogberglabs.polestar.LocationUpdate
+import com.skogberglabs.polestar.Outcome
+import com.skogberglabs.polestar.ProfileInfo
+import com.skogberglabs.polestar.SimpleMessage
+import com.skogberglabs.polestar.UserContainer
+import com.skogberglabs.polestar.UserInfo
+import com.skogberglabs.polestar.location.LocationSourceInterface
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -22,25 +38,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
 
-class UserState {
-    companion object {
-        val instance = UserState()
-    }
-
-    private val current: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
-    val userResult: StateFlow<Outcome<UserInfo>> = current
-
-    fun update(outcome: Outcome<UserInfo>) {
-        current.value = outcome
-    }
-}
-
-data class ProfileInfo(val user: ApiUserInfo, val carId: String?) {
-    val activeCar = user.boats.firstOrNull { car -> car.id == carId }
-    val hasCars = user.boats.isNotEmpty()
-}
-
-interface ProfileViewModelInterface {
+interface CarViewModelInterface {
     val conf: Flow<Outcome<CarLang>>
     val languages: Flow<List<CarLanguage>>
     val savedLanguage: Flow<String?>
@@ -55,15 +53,20 @@ interface ProfileViewModelInterface {
     fun signOut()
 
     companion object {
-        fun preview(ctx: Context) = object : ProfileViewModelInterface {
+        fun preview(ctx: Context) = object : CarViewModelInterface {
             override val conf: Flow<Outcome<CarLang>> = MutableStateFlow(Outcome.Idle)
             override val languages: Flow<List<CarLanguage>> = MutableStateFlow(Previews.conf(ctx).languages.map { it.language })
             override val savedLanguage: Flow<String?> = MutableStateFlow(null)
             override val user: StateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
             val cars = ProfileInfo(ApiUserInfo(Email("a@b.com"), listOf(CarInfo("a", "Mos", 1L), CarInfo("b", "Tesla", 1L), CarInfo("a", "Toyota", 1L), CarInfo("a", "Rivian", 1L), CarInfo("a", "Cybertruck", 1L))), null)
-            override val profile: Flow<Outcome<ProfileInfo?>> = MutableStateFlow(Outcome.Success(cars))
+            override val profile: Flow<Outcome<ProfileInfo?>> = MutableStateFlow(
+                Outcome.Success(
+                    cars
+                )
+            )
             override val uploadMessage: SharedFlow<Outcome<SimpleMessage>> = MutableSharedFlow()
-            override val locationSource: LocationSourceInterface = object : LocationSourceInterface {
+            override val locationSource: LocationSourceInterface = object :
+                LocationSourceInterface {
                 override val currentLocation: Flow<LocationUpdate?> = MutableStateFlow(null)
             }
             override val carState: StateFlow<CarState> = MutableStateFlow(CarState.empty)
@@ -76,7 +79,8 @@ interface ProfileViewModelInterface {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ProfileViewModel(private val appl: Application) : AndroidViewModel(appl), ProfileViewModelInterface {
+class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
+    CarViewModelInterface {
     val app: CarApp = appl as CarApp
     val http = app.http
     override val locationSource = app.locationSource
