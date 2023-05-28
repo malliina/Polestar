@@ -21,6 +21,7 @@ class CarApp : Application() {
     private lateinit var locationUploader: LocationUploader
     val uploader: LocationUploader get() = locationUploader
     val userState = UserState.instance
+    val confState = ConfState.instance
 
     override fun onCreate() {
         super.onCreate()

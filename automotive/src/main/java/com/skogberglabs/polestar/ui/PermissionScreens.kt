@@ -20,7 +20,7 @@ data class PermissionContent(val title: String, val message: String, val permiss
         const val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
         const val backgroundPermission = Manifest.permission.ACCESS_BACKGROUND_LOCATION
         val allPermissions = CarListener.permissions + listOf(locationPermission, backgroundPermission)
-        val allExceptBackgroundLocation = CarListener.permissions + listOf(locationPermission)
+        private val allExceptBackgroundLocation = CarListener.permissions + listOf(locationPermission)
         val car = PermissionContent(
             "Grant access to car data",
             "This app needs access to car data (speed, battery level, and so on) in order to save it to your Car-Tracker account.",

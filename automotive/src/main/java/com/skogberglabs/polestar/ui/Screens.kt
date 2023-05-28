@@ -5,17 +5,19 @@ import androidx.activity.OnBackPressedCallback
 import androidx.car.app.CarContext
 import androidx.car.app.CarToast
 import androidx.car.app.Screen
+import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.model.Action
 import androidx.car.app.model.CarColor
 import androidx.car.app.model.CarIcon
 import androidx.car.app.model.CarLocation
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
-import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.itemList
+import com.skogberglabs.polestar.location.LocationSourceInterface
 import com.skogberglabs.polestar.mapTemplate
+import com.skogberglabs.polestar.messageTemplate
 import com.skogberglabs.polestar.navigationTemplate
 import com.skogberglabs.polestar.pane
 import com.skogberglabs.polestar.paneTemplate
@@ -32,8 +34,17 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
 
-@androidx.annotation.OptIn(androidx.car.app.annotations.ExperimentalCarApi::class)
-class PlacesScreen(carContext: CarContext, locationSource: LocationSource) : Screen(carContext) {
+class EmptyScreen(carContext: CarContext): Screen(carContext) {
+    override fun onGetTemplate(): Template {
+        Screens.installProfileRootBackBehavior(this)
+        return messageTemplate("?") {
+            setHeaderAction(Action.BACK)
+        }
+    }
+}
+
+@androidx.annotation.OptIn(ExperimentalCarApi::class)
+class PlacesScreen(carContext: CarContext, locationSource: LocationSourceInterface) : Screen(carContext) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
     @OptIn(FlowPreview::class)

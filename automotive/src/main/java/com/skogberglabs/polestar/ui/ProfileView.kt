@@ -204,8 +204,8 @@ fun ProfilePreview() {
     Button(
         onClick = { onSignIn() },
         Modifier
-            .padding(Paddings.normal)
             .widthIn(max = 800.dp)
+            .padding(Paddings.xxl)
     ) {
         Text(label, Modifier.padding(Paddings.normal), fontSize = 32.sp)
     }

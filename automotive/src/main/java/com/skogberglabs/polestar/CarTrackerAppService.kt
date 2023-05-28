@@ -11,6 +11,7 @@ import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.ui.CarActivity
+import com.skogberglabs.polestar.ui.EmptyScreen
 import com.skogberglabs.polestar.ui.PlacesScreen
 import com.skogberglabs.polestar.ui.RequestPermissionScreen
 
@@ -18,23 +19,28 @@ class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
     override fun onCreateSession(): Session {
         val app = application as CarApp
-        return CarSession(app.locationSource)
+        return CarSession(app.locationSource, app.confState)
     }
 }
 
 @androidx.annotation.OptIn(ExperimentalCarApi::class)
 class CarSession(
-    private val locationSource: LocationSource
+    private val locationSource: LocationSource,
+    private val confState: ConfState
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
-        return if (carContext.isAllPermissionsGranted()) {
-            PlacesScreen(carContext, locationSource)
-        } else {
-            val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
-            RequestPermissionScreen(carContext, content) {
-                carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                goToProfile()
+        confState.conf.value?.let { conf ->
+            return if (carContext.isAllPermissionsGranted()) {
+                PlacesScreen(carContext, locationSource)
+            } else {
+                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
+                RequestPermissionScreen(carContext, content) {
+                    carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+                    goToProfile()
+                }
             }
+        } ?: run {
+            return EmptyScreen(carContext)
         }
     }
 

@@ -12,6 +12,7 @@ import com.skogberglabs.polestar.CarInfo
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.CarLanguage
 import com.skogberglabs.polestar.CarState
+import com.skogberglabs.polestar.ConfState
 import com.skogberglabs.polestar.Email
 import com.skogberglabs.polestar.LocationUpdate
 import com.skogberglabs.polestar.Outcome
@@ -68,6 +69,7 @@ interface CarViewModelInterface {
             override val locationSource: LocationSourceInterface = object :
                 LocationSourceInterface {
                 override val currentLocation: Flow<LocationUpdate?> = MutableStateFlow(null)
+                override val locationUpdates: SharedFlow<List<LocationUpdate>> = MutableSharedFlow()
             }
             override val carState: StateFlow<CarState> = MutableStateFlow(CarState.empty)
             override suspend fun prepare() {}
@@ -98,11 +100,12 @@ class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
     }.combine(activeCar) { user, carId ->
         user.map { ProfileInfo(it, carId) }
     }
-    private val confs: MutableStateFlow<CarConf> = MutableStateFlow(CarConf(emptyList()))
+    private val confs: StateFlow<CarConf?> = ConfState.instance.conf
     override val savedLanguage: Flow<String?> = app.preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
-    override val languages: Flow<List<CarLanguage>> = confs.map { c -> c.languages.map { l -> l.language } }
+    override val languages: Flow<List<CarLanguage>> = confs.map { c -> c?.let { it.languages.map { l -> l.language } } ?: emptyList() }
     override val conf: Flow<Outcome<CarLang>> = confs.combine(savedLanguage) { confs, saved ->
-        val attempt = confs.languages.firstOrNull { it.language.code == saved } ?: confs.languages.firstOrNull()
+        val cs = confs ?: CarConf(emptyList())
+        val attempt = cs.languages.firstOrNull { it.language.code == saved } ?: cs.languages.firstOrNull()
         attempt?.let { Outcome.Success(it) } ?: Outcome.Loading
     }
 
@@ -121,7 +124,7 @@ class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
 
     override suspend fun prepare() {
         val response = http.get("/cars/conf", Adapters.carConf)
-        confs.emit(response)
+        ConfState.instance.update(response)
     }
 
     override fun selectCar(id: String) {
