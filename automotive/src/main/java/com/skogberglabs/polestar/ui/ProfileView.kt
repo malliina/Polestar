@@ -2,26 +2,18 @@ package com.skogberglabs.polestar.ui
 
 import android.content.Intent
 import androidx.car.app.activity.CarAppActivity
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -49,15 +41,6 @@ import com.skogberglabs.polestar.Paddings
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import java.time.format.DateTimeFormatter
 
-@Composable
-fun SpacedRow(content: @Composable RowScope.() -> Unit) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        content = content
-    )
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavController, onSignIn: () -> Unit) {
@@ -72,19 +55,14 @@ fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavCont
     Scaffold(
         modifier = Modifier,
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { TitleText(lang.appName) },
-                modifier = Modifier.padding(Paddings.normal),
-                actions = {
-                    IconButton(onClick = { navController.navigate(NavRoutes.SETTINGS) }, modifier = Modifier.size(64.dp)) {
-                        Icon(
-                            imageVector = Icons.Filled.Settings,
-                            contentDescription = "Settings",
-                            Modifier.fillMaxSize()
-                        )
-                    }
-                }
-            ) }
+            CarTopAppBar(lang.appName, actions = {
+                CarIconButton(
+                    onClick = { navController.navigate(NavRoutes.SETTINGS) },
+                    image = Icons.Filled.Settings,
+                    contentDescription = "Settings"
+                )
+            })
+        }
     ) { pd ->
         Column(
             Modifier
