@@ -6,11 +6,11 @@ import androidx.car.app.Screen
 import androidx.car.app.Session
 import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.validation.HostValidator
+import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.ui.CarActivity
-import com.skogberglabs.polestar.ui.PermissionContent
 import com.skogberglabs.polestar.ui.PlacesScreen
 import com.skogberglabs.polestar.ui.RequestPermissionScreen
 
@@ -30,10 +30,16 @@ class CarSession(
         return if (carContext.isAllPermissionsGranted()) {
             PlacesScreen(carContext, locationSource)
         } else {
-            val content = PermissionContent.all.copy(permissions = carContext.notGrantedPermissions())
+            val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
             RequestPermissionScreen(carContext, content) {
-//                carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+                carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
                 goToProfile()
+//                val permissionsRemaining = carContext.notGrantedPermissions()
+//                if (permissionsRemaining.isEmpty()) {
+//                    goToProfile()
+//                } else {
+//                    val sm = carContext.getCarService(ScreenManager::class.java)
+//                }
             }
         }
     }

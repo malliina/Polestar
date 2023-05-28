@@ -78,7 +78,7 @@ class CarLocationService : Service() {
                 if (applicationContext.isLocationGranted()) {
                     client.requestLocationUpdates(locationRequest, pendingIntent)
                     started = true
-                    Timber.i("Started location service permissions granted ${isAllPermissionsGranted()}")
+                    Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
                 }
             }
         }
@@ -108,9 +108,10 @@ class CarLocationService : Service() {
             packageManager.getLaunchIntentForPackage(this.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        val contentText = if (app.isAllPermissionsGranted()) "Enjoy the drive!" else "Please grant permissions."
         return Notification.Builder(applicationContext, LOCATIONS_CHANNEL)
             .setContentTitle("Car-Tracker running")
-            .setContentText("Enjoy the drive!")
+            .setContentText(contentText)
             .setContentIntent(startAppIntent)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
