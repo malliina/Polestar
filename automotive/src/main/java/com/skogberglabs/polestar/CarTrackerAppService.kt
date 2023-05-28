@@ -34,12 +34,6 @@ class CarSession(
             RequestPermissionScreen(carContext, content) {
                 carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
                 goToProfile()
-//                val permissionsRemaining = carContext.notGrantedPermissions()
-//                if (permissionsRemaining.isEmpty()) {
-//                    goToProfile()
-//                } else {
-//                    val sm = carContext.getCarService(ScreenManager::class.java)
-//                }
             }
         }
     }
