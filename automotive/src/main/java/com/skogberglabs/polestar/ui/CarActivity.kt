@@ -43,6 +43,7 @@ class CarActivity : ComponentActivity() {
         startActivityForResult(google.startSignIn(), requestCodeSignIn)
     }
 
+    @Deprecated("Higher up")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         Timber.i("Got activity result of request $requestCode. Result code $resultCode.")
