@@ -19,16 +19,16 @@ import timber.log.Timber
 class CarActivity : ComponentActivity() {
     private val requestCodeSignIn = 100
     private val profile: CarViewModel by viewModels()
-    private val scope = CoroutineScope(Dispatchers.IO)
+//    private val scope = CoroutineScope(Dispatchers.IO)
 
     private val google: Google get() = profile.google
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        scope.launch {
-            google.signInSilently()
-            profile.prepare()
-        }
+//        scope.launch {
+//            google.signInSilently()
+//            profile.prepare()
+//        }
         Timber.i("Creating activity...")
         setContent {
             AppTheme {

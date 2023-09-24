@@ -12,6 +12,8 @@ import androidx.car.app.model.CarIcon
 import androidx.car.app.model.CarLocation
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
+import androidx.core.graphics.drawable.IconCompat
+import com.skogberglabs.polestar.ConfState
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.itemList
@@ -29,6 +31,8 @@ import com.skogberglabs.polestar.row
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -40,6 +44,41 @@ class EmptyScreen(carContext: CarContext): Screen(carContext) {
         return messageTemplate("?") {
             setHeaderAction(Action.BACK)
         }
+    }
+}
+
+class AllGoodScreen(carContext: CarContext, val confState: ConfState, scope: CoroutineScope): Screen(carContext) {
+    init {
+        scope.launch {
+            confState.conf.collect { c ->
+                Timber.i("Conf $c")
+                // TODO call on main thread
+                invalidate()
+            }
+        }
+    }
+    override fun onGetTemplate(): Template {
+//        Screens.installProfileRootBackBehavior(this)
+        val settingsAction = action {
+            setTitle("Settings")
+            setOnClickListener {
+                Timber.i("Open settings...")
+                goToProfile()
+            }
+        }
+        return messageTemplate("Drive safely! ${confState.conf.value != null}") {
+//            setHeaderAction(Action.BACK)
+            setIcon(CarIcon.APP_ICON)
+            setTitle("Title")
+            setActionStrip(actionStrip { addAction(settingsAction) })
+        }
+    }
+
+    private fun goToProfile() {
+        val i = Intent(carContext, CarActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        carContext.startActivity(i)
     }
 }
 

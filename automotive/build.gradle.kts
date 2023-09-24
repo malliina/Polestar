@@ -64,8 +64,8 @@ android {
     }
 }
 
-val autoVersion = "1.4.0-beta01"
-val composeUiVersion = "1.5.0"
+val autoVersion = "1.4.0-beta02"
+val composeUiVersion = "1.5.1"
 
 dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:$composeUiVersion")
@@ -77,14 +77,14 @@ dependencies {
 
     implementation("androidx.car.app:app:$autoVersion")
     implementation("androidx.car.app:app-automotive:$autoVersion")
-    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
-    implementation("androidx.navigation:navigation-compose:2.7.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+    implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.google.android.gms:play-services-location:21.0.1")
-    implementation("com.google.android.gms:play-services-auth:20.6.0")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling:$composeUiVersion")
     val moshiVersion = "1.15.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")

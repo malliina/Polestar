@@ -100,7 +100,7 @@ class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
     }.combine(activeCar) { user, carId ->
         user.map { ProfileInfo(it, carId) }
     }
-    private val confs: StateFlow<CarConf?> = ConfState.instance.conf
+    private val confs: StateFlow<CarConf?> = app.confState.conf
     override val savedLanguage: Flow<String?> = app.preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
     override val languages: Flow<List<CarLanguage>> = confs.map { c -> c?.let { it.languages.map { l -> l.language } } ?: emptyList() }
     override val conf: Flow<Outcome<CarLang>> = confs.combine(savedLanguage) { confs, saved ->
@@ -124,7 +124,7 @@ class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
 
     override suspend fun prepare() {
         val response = http.get("/cars/conf", Adapters.carConf)
-        ConfState.instance.update(response)
+        app.confState.update(response)
     }
 
     override fun selectCar(id: String) {

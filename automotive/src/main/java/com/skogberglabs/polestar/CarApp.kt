@@ -5,9 +5,14 @@ import android.content.Intent
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.LocationUploader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class CarApp : Application() {
+    val ioScope = CoroutineScope(Dispatchers.IO)
+
     private lateinit var carListener: CarListener
     val carInfo: CarListener get() = carListener
     private lateinit var prefs: LocalDataSource
@@ -37,6 +42,11 @@ class CarApp : Application() {
         locationUploader = LocationUploader(http, userState, preferences, deviceLocationSource, carListener)
         startForegroundService(Intent(applicationContext, CarLocationService::class.java))
         carListener.connect()
+        ioScope.launch {
+            google.signInSilently()
+            val response = http.get("/cars/conf", Adapters.carConf)
+            confState.update(response)
+        }
     }
 }
 

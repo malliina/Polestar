@@ -54,11 +54,7 @@
             android:launchMode="singleTask"
             android:exported="true"
             android:label="Car-Tracker">
-            <meta-data android:name="distractionOptimized" android:value="true"/>
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            <meta-data android:name="distractionOptimized" android:value="false"/>
         </activity>
         <activity
             android:name="androidx.car.app.activity.CarAppActivity"
@@ -67,6 +63,10 @@
             android:exported="true"
             android:label="Car-Tracker">
             <meta-data android:name="distractionOptimized" android:value="true"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <receiver android:name=".BootEventReceiver" android:exported="true">
             <intent-filter>
