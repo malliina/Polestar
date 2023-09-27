@@ -38,26 +38,19 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
 
-class EmptyScreen(carContext: CarContext): Screen(carContext) {
-    override fun onGetTemplate(): Template {
-        Screens.installProfileRootBackBehavior(this)
-        return messageTemplate("?") {
-            setHeaderAction(Action.BACK)
-        }
-    }
-}
-
-class AllGoodScreen(carContext: CarContext, val confState: ConfState, scope: CoroutineScope): Screen(carContext) {
+class AllGoodScreen(carContext: CarContext,
+                    private val confState: ConfState,
+                    scope: CoroutineScope): Screen(carContext) {
     init {
         scope.launch {
             confState.conf.collect { c ->
                 Timber.i("Conf $c")
-                // TODO call on main thread
                 invalidate()
             }
         }
     }
     override fun onGetTemplate(): Template {
+        Timber.i("Get template")
 //        Screens.installProfileRootBackBehavior(this)
         val settingsAction = action {
             setTitle("Settings")
@@ -66,10 +59,10 @@ class AllGoodScreen(carContext: CarContext, val confState: ConfState, scope: Cor
                 goToProfile()
             }
         }
-        return messageTemplate("Drive safely! ${confState.conf.value != null}") {
+        return messageTemplate("Drive safely!") {
 //            setHeaderAction(Action.BACK)
             setIcon(CarIcon.APP_ICON)
-            setTitle("Title")
+            setTitle("Car-Tracker")
             setActionStrip(actionStrip { addAction(settingsAction) })
         }
     }
@@ -79,6 +72,15 @@ class AllGoodScreen(carContext: CarContext, val confState: ConfState, scope: Cor
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         carContext.startActivity(i)
+    }
+}
+
+class EmptyScreen(carContext: CarContext): Screen(carContext) {
+    override fun onGetTemplate(): Template {
+        Screens.installProfileRootBackBehavior(this)
+        return messageTemplate("?") {
+            setHeaderAction(Action.BACK)
+        }
     }
 }
 

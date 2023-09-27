@@ -5,6 +5,7 @@ import android.content.Intent
 import android.provider.Settings
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
+import androidx.car.app.ScreenManager
 import androidx.car.app.model.Action
 import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
@@ -47,8 +48,9 @@ data class PermissionContent(val title: String, val message: String, val permiss
     }
 }
 
-class RequestPermissionScreen(carContext: CarContext, val content: PermissionContent, private val onGranted: () -> Unit) :
-    Screen(carContext) {
+class RequestPermissionScreen(carContext: CarContext,
+                              val content: PermissionContent,
+                              private val onGranted: (ScreenManager) -> Unit) : Screen(carContext) {
     companion object {
         fun permissionContent(notGranted: List<String>): PermissionContent =
             if (notGranted.any { p -> PermissionContent.car.permissions.contains(p) }) PermissionContent.car
@@ -64,7 +66,7 @@ class RequestPermissionScreen(carContext: CarContext, val content: PermissionCon
                 if (grantedPermissions.isNotEmpty()) {
                     val str = grantedPermissions.joinToString(separator = ", ")
                     Timber.i("Granted permissions: $str.")
-                    if (carContext.isAllPermissionsGranted()) onGranted()
+                    if (carContext.isAllPermissionsGranted()) onGranted(screenManager)
                     else screenManager.push(RequestPermissionScreen(carContext, permissionContent(carContext.notGrantedPermissions()), onGranted))
                 } else {
                     val str = rejectedPermissions.joinToString(separator = ", ")

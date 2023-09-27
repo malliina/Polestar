@@ -12,6 +12,7 @@ import timber.log.Timber
 
 class CarApp : Application() {
     val ioScope = CoroutineScope(Dispatchers.IO)
+    val mainScope = CoroutineScope(Dispatchers.Main)
 
     private lateinit var carListener: CarListener
     val carInfo: CarListener get() = carListener

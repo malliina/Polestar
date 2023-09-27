@@ -16,6 +16,7 @@ import com.skogberglabs.polestar.ui.CarActivity
 import com.skogberglabs.polestar.ui.EmptyScreen
 import com.skogberglabs.polestar.ui.PlacesScreen
 import com.skogberglabs.polestar.ui.RequestPermissionScreen
+import timber.log.Timber
 
 class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
@@ -32,28 +33,15 @@ class CarSession(
     private val confState: ConfState
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
-        confState.conf.value?.let { conf ->
-            return if (carContext.isAllPermissionsGranted()) {
-//                PlacesScreen(carContext, locationSource)
-                AllGoodScreen(carContext, confState, app.ioScope)
-            } else {
-                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
-                RequestPermissionScreen(carContext, content) {
-                    carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-//                    goToProfile()
-                    val i = Intent(carContext, CarAppActivity::class.java)
-                    carContext.startActivity(i)
-                }
+        Timber.i("Create screen")
+        return if (carContext.isAllPermissionsGranted()) {
+            AllGoodScreen(carContext, confState, app.mainScope)
+        } else {
+            val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
+            RequestPermissionScreen(carContext, content) { sm ->
+                carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+                sm.push(AllGoodScreen(carContext, confState, app.mainScope))
             }
-        } ?: run {
-            return AllGoodScreen(carContext, confState, app.ioScope)
         }
-    }
-
-    private fun goToProfile() {
-        val i = Intent(carContext, CarActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        carContext.startActivity(i)
     }
 }
