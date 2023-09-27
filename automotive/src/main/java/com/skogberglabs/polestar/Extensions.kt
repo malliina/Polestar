@@ -12,6 +12,8 @@ import androidx.car.app.model.PlaceListMapTemplate
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Row
 import androidx.car.app.model.TabTemplate
+import androidx.car.app.model.signin.ProviderSignInMethod
+import androidx.car.app.model.signin.SignInTemplate
 import androidx.car.app.navigation.model.MapTemplate
 import androidx.car.app.navigation.model.NavigationTemplate
 import androidx.car.app.navigation.model.PlaceListNavigationTemplate
@@ -41,3 +43,5 @@ fun messageTemplate(explanation: String, build: MessageTemplate.Builder.() -> Un
     MessageTemplate.Builder(explanation).apply(build).build()
 fun actionStrip(build: ActionStrip.Builder.() -> Unit) =
     ActionStrip.Builder().apply(build).build()
+fun signInTemplate(method: ProviderSignInMethod, build: SignInTemplate.Builder.() -> Unit) =
+    SignInTemplate.Builder(method).apply(build).build()

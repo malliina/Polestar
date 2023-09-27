@@ -112,11 +112,8 @@ fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavCont
                 val i = Intent(context, CarAppActivity::class.java)
                 context.startActivity(i)
             }, Modifier.padding(Paddings.xxl)) {
-                val label =
-                    if (!context.isAllPermissionsGranted()) lang.permissions.grantCta
-                    else "Template"
                 Text(
-                    label,
+                    "Home",
                     Modifier.padding(Paddings.normal),
                     fontSize = 32.sp
                 )
