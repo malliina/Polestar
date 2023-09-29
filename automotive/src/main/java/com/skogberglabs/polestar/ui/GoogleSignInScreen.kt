@@ -3,7 +3,6 @@ package com.skogberglabs.polestar.ui
 import android.content.Intent
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
-import androidx.car.app.activity.CarAppActivity
 import androidx.car.app.model.Action
 import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
@@ -11,7 +10,6 @@ import androidx.car.app.model.signin.ProviderSignInMethod
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import com.skogberglabs.polestar.Google
 import com.skogberglabs.polestar.UserState
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.signInTemplate
