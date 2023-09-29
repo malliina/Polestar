@@ -3,6 +3,7 @@ package com.skogberglabs.polestar.ui
 import android.content.Intent
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
+import androidx.car.app.activity.CarAppActivity
 import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
 import androidx.car.app.model.signin.ProviderSignInMethod
@@ -16,8 +17,7 @@ class GoogleSignInScreen(carContext: CarContext, val google: Google): Screen(car
         val signInAction = action {
             setTitle("Sign in with Google")
             setOnClickListener(ParkedOnlyOnClickListener.create {
-                Timber.i("Hej")
-                val intent = google.startSignIn().apply {
+                val intent = Intent(carContext, GoogleSignInActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
                 carContext.startActivity(intent)
@@ -26,8 +26,8 @@ class GoogleSignInScreen(carContext: CarContext, val google: Google): Screen(car
         val method = ProviderSignInMethod(signInAction)
         return signInTemplate(method) {
             setTitle("Sign in")
-            setInstructions("Log in with your Google account.")
-            setAdditionalText("More info here.")
+            setInstructions("Sign in to store your rides in the cloud.")
+            setAdditionalText("Your information will not be shared with third parties.")
         }
     }
 }

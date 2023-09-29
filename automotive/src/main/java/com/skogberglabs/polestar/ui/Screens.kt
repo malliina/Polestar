@@ -86,7 +86,7 @@ class AllGoodScreen(carContext: CarContext,
     }
 
     private fun goToProfile() {
-        val i = Intent(carContext, CarActivity::class.java).apply {
+        val i = Intent(carContext, GoogleSignInActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
         carContext.startActivity(i)
@@ -176,7 +176,7 @@ object Screens {
         val backCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (screenManager.stackSize == 1) {
-                    val i = Intent(carContext, CarActivity::class.java).apply {
+                    val i = Intent(carContext, GoogleSignInActivity::class.java).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     }
                     carContext.startActivity(i)
