@@ -12,8 +12,6 @@ import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.ui.AllGoodScreen
 import com.skogberglabs.polestar.ui.RequestPermissionScreen
-import com.skogberglabs.polestar.ui.GoogleSignInScreen
-import timber.log.Timber
 
 class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
@@ -30,15 +28,13 @@ class CarSession(
     private val confState: ConfState
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
-        Timber.i("Create screen")
         return if (carContext.isAllPermissionsGranted()) {
-            GoogleSignInScreen(carContext, app.google)
-//            AllGoodScreen(carContext, confState, app.mainScope)
+            AllGoodScreen(carContext, confState, app.google, app.userState, app.mainScope)
         } else {
             val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
             RequestPermissionScreen(carContext, content) { sm ->
                 carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                sm.push(AllGoodScreen(carContext, confState, app.mainScope))
+                sm.push(AllGoodScreen(carContext, confState, app.google, app.userState, app.mainScope))
             }
         }
     }

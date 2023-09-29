@@ -12,7 +12,6 @@ import com.skogberglabs.polestar.CarInfo
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.CarLanguage
 import com.skogberglabs.polestar.CarState
-import com.skogberglabs.polestar.ConfState
 import com.skogberglabs.polestar.Email
 import com.skogberglabs.polestar.LocationUpdate
 import com.skogberglabs.polestar.Outcome
@@ -48,7 +47,6 @@ interface CarViewModelInterface {
     val uploadMessage: SharedFlow<Outcome<SimpleMessage>>
     val locationSource: LocationSourceInterface
     val carState: StateFlow<CarState>
-    suspend fun prepare()
     fun selectCar(id: String)
     fun saveLanguage(code: String)
     fun signOut()
@@ -72,7 +70,6 @@ interface CarViewModelInterface {
                 override val locationUpdates: SharedFlow<List<LocationUpdate>> = MutableSharedFlow()
             }
             override val carState: StateFlow<CarState> = MutableStateFlow(CarState.empty)
-            override suspend fun prepare() {}
             override fun selectCar(id: String) {}
             override fun saveLanguage(code: String) {}
             override fun signOut() {}
@@ -120,11 +117,6 @@ class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
             delay(30.seconds)
             emitAll(meFlow())
         }
-    }
-
-    override suspend fun prepare() {
-        val response = http.get("/cars/conf", Adapters.carConf)
-        app.confState.update(response)
     }
 
     override fun selectCar(id: String) {

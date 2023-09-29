@@ -12,17 +12,10 @@ import androidx.car.app.model.CarIcon
 import androidx.car.app.model.CarLocation
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.LifecycleOwner
-import com.skogberglabs.polestar.ConfState
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.itemList
-import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSourceInterface
-import com.skogberglabs.polestar.location.isAllPermissionsGranted
-import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.mapTemplate
 import com.skogberglabs.polestar.messageTemplate
 import com.skogberglabs.polestar.navigationTemplate
@@ -40,58 +33,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
-
-class AllGoodScreen(carContext: CarContext,
-                    private val confState: ConfState,
-                    val scope: CoroutineScope): Screen(carContext), LifecycleEventObserver {
-    init {
-        scope.launch {
-            confState.conf.collect { c ->
-                Timber.i("Conf $c")
-                invalidate()
-            }
-        }
-        lifecycle.addObserver(this)
-    }
-
-    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        if (event == Lifecycle.Event.ON_START) {
-            Timber.i("Event $event")
-            if (!carContext.isAllPermissionsGranted()) {
-                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
-                val permissionsScreen = RequestPermissionScreen(carContext, content) { sm ->
-                    carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                    sm.push(AllGoodScreen(carContext, confState, scope))
-                }
-                screenManager.push(permissionsScreen)
-            }
-        }
-    }
-
-    override fun onGetTemplate(): Template {
-        Timber.i("Get template")
-//        Screens.installProfileRootBackBehavior(this)
-        val settingsAction = action {
-            setTitle("Settings")
-            setOnClickListener {
-                Timber.i("Open settings...")
-                goToProfile()
-            }
-        }
-        return messageTemplate("Drive safely!") {
-            setIcon(CarIcon.APP_ICON)
-            setTitle("Car-Tracker")
-            setActionStrip(actionStrip { addAction(settingsAction) })
-        }
-    }
-
-    private fun goToProfile() {
-        val i = Intent(carContext, GoogleSignInActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        carContext.startActivity(i)
-    }
-}
 
 class EmptyScreen(carContext: CarContext): Screen(carContext) {
     override fun onGetTemplate(): Template {

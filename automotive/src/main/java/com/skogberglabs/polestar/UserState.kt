@@ -10,6 +10,7 @@ class UserState {
 
     private val current: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
     val userResult: StateFlow<Outcome<UserInfo>> = current
+    fun latest() = userResult.value.toOption()
 
     fun update(outcome: Outcome<UserInfo>) {
         current.value = outcome
