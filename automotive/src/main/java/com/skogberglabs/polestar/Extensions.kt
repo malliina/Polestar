@@ -26,6 +26,8 @@ fun gridItem(build: GridItem.Builder.() -> Unit): GridItem =
     GridItem.Builder().apply(build).build()
 fun itemList(build: ItemList.Builder.() -> Unit): ItemList =
     ItemList.Builder().apply(build).build()
+fun ItemList.Builder.addRow(build: Row.Builder.() -> Unit): ItemList.Builder =
+    addItem(row(build))
 fun pane(build: Pane.Builder.() -> Unit): Pane =
     Pane.Builder().apply(build).build()
 fun paneTemplate(pane: Pane, build: PaneTemplate.Builder.() -> Unit): PaneTemplate =
