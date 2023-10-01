@@ -12,8 +12,8 @@ android {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 30 // Android 11
         targetSdk = 34
-        versionCode = 29
-        versionName = "1.19.9"
+        versionCode = 30
+        versionName = "1.20.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -65,7 +65,7 @@ android {
 }
 
 val autoVersion = "1.4.0-beta02"
-val composeUiVersion = "1.5.1"
+val composeUiVersion = "1.5.2"
 
 dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:$composeUiVersion")

@@ -4,6 +4,7 @@ import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
 import androidx.car.app.model.Template
+import com.skogberglabs.polestar.BuildConfig
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.addRow
 import com.skogberglabs.polestar.itemList
@@ -39,6 +40,9 @@ class SettingsScreen(carContext: CarContext,
                             screenManager.pop()
                         }
                     }
+                }
+                addRow {
+                    setTitle("${lang.profile.version} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
                 }
             }
             setSingleList(list)
