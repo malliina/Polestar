@@ -4,38 +4,35 @@ import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
 import androidx.car.app.model.Template
-import com.skogberglabs.polestar.CarInfo
-import com.skogberglabs.polestar.CarLanguage
-import com.skogberglabs.polestar.Google
-import com.skogberglabs.polestar.ProfileInfo
+import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.addRow
 import com.skogberglabs.polestar.itemList
 import com.skogberglabs.polestar.listTemplate
 import com.skogberglabs.polestar.row
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class SettingsScreen(carContext: CarContext,
+                     private val lang: CarLang,
                      private val service: AppService): Screen(carContext) {
     override fun onGetTemplate(): Template {
         return listTemplate {
-            setTitle("Settings")
+            setTitle(lang.settings.title)
             val list = itemList {
                 addRow {
-                    setTitle("Car")
+                    setTitle(lang.settings.selectCar)
                     setOnClickListener {
-                        screenManager.push(SelectCarScreen(carContext, service))
+                        screenManager.push(SelectCarScreen(carContext, lang, service))
                     }
                 }
                 addRow {
-                    setTitle("Language")
+                    setTitle(lang.profile.chooseLanguage)
                     setOnClickListener {
-                        screenManager.push(SelectLanguageScreen(carContext, service))
+                        screenManager.push(SelectLanguageScreen(carContext, lang, service))
                     }
                 }
                 addRow {
-                    setTitle("Sign out")
+                    setTitle(lang.profile.signOut)
                     setOnClickListener {
                         service.mainScope.launch {
                             service.google.signOut()
@@ -50,10 +47,12 @@ class SettingsScreen(carContext: CarContext,
     }
 }
 
-class SelectLanguageScreen(carContext: CarContext, private val service: AppService): Screen(carContext) {
+class SelectLanguageScreen(carContext: CarContext,
+                           val lang: CarLang,
+                           private val service: AppService): Screen(carContext) {
     override fun onGetTemplate(): Template {
         return listTemplate {
-            setTitle("Select language")
+            setTitle(lang.profile.chooseLanguage)
             val list = itemList {
                 service.languagesLatest().forEach { lang ->
                     addRow { setTitle(lang.name) }
@@ -71,7 +70,9 @@ class SelectLanguageScreen(carContext: CarContext, private val service: AppServi
     }
 }
 
-class SelectCarScreen(carContext: CarContext, private val service: AppService): Screen(carContext) {
+class SelectCarScreen(carContext: CarContext,
+                      val lang: CarLang,
+                      private val service: AppService): Screen(carContext) {
     init {
         service.mainScope.launch {
             service.profile.collect {
@@ -83,7 +84,7 @@ class SelectCarScreen(carContext: CarContext, private val service: AppService): 
 
     override fun onGetTemplate(): Template {
         return listTemplate {
-            setTitle("Select car")
+            setTitle(lang.settings.selectCar)
             val list = itemList {
                 if (cars().isNotEmpty()) {
                     cars().forEach { car ->
@@ -95,7 +96,7 @@ class SelectCarScreen(carContext: CarContext, private val service: AppService): 
                         Timber.i("Selected car ${selected.name}")
                     }
                 } else {
-                    setNoItemsMessage("No cars.")
+                    setNoItemsMessage(lang.settings.noCars)
                 }
                 setSelectedIndex(cars().indexOfFirst { car -> car.id == service.profileLatest()?.activeCar?.id })
             }

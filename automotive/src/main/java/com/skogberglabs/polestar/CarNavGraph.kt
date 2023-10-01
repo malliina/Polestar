@@ -21,7 +21,7 @@ fun CarNavGraph(vm: CarViewModelInterface,
                 onSignIn: () -> Unit,
                 navController: NavHostController,
                 start: String = NavRoutes.PROFILE) {
-    val confOutcome by vm.conf.collectAsStateWithLifecycle(initialValue = Outcome.Idle)
+    val confOutcome by vm.currentLang.collectAsStateWithLifecycle(initialValue = Outcome.Idle)
     when (val conf = confOutcome) {
         is Outcome.Success -> {
             val lang = conf.result

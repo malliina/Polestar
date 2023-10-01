@@ -10,6 +10,7 @@ import androidx.car.app.model.signin.ProviderSignInMethod
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.UserState
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.signInTemplate
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class GoogleSignInScreen(carContext: CarContext,
+                         private val lang: CarLang,
                          private val userState: UserState,
                          mainScope: CoroutineScope): Screen(carContext), LifecycleEventObserver {
     init {
@@ -39,7 +41,7 @@ class GoogleSignInScreen(carContext: CarContext,
 
     override fun onGetTemplate(): Template {
         val signInAction = action {
-            setTitle("Sign in with Google")
+            setTitle("${lang.profile.signInWith} Google")
             setOnClickListener(ParkedOnlyOnClickListener.create {
                 val intent = Intent(carContext, GoogleSignInActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -49,9 +51,9 @@ class GoogleSignInScreen(carContext: CarContext,
         }
         val method = ProviderSignInMethod(signInAction)
         return signInTemplate(method) {
-            setTitle("Sign in")
-            setInstructions("Sign in to store your rides in the cloud.")
-            setAdditionalText("Your information will not be shared with third parties.")
+            setTitle("${lang.profile.signInWith} Google")
+//            setInstructions("Sign in to store your rides in the cloud.")
+//            setAdditionalText("Your information will not be shared with third parties.")
             setHeaderAction(Action.BACK)
         }
     }

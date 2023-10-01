@@ -8,27 +8,29 @@ import androidx.car.app.model.Template
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import com.skogberglabs.polestar.ConfState
-import com.skogberglabs.polestar.Google
-import com.skogberglabs.polestar.UserState
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.messageTemplate
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class AllGoodScreen(carContext: CarContext,
                     private val service: AppService
 ): Screen(carContext), LifecycleEventObserver {
+    private var isLoading = true
     init {
         service.mainScope.launch {
-            service.userState.userResult.collect { _ ->
-                invalidate()
-            }
+            service.userState.userResult.combine(service.currentLang) { a, b -> Pair(a, b) }
+//                .filter { p -> p.first.isSuccess() && p.second.isSuccess() }
+                .collect {
+                    isLoading = false
+                    invalidate()
+                }
         }
         lifecycle.addObserver(this)
     }
@@ -50,26 +52,33 @@ class AllGoodScreen(carContext: CarContext,
 
     override fun onGetTemplate(): Template {
         val userState = service.userState
-        val settingsAction = action {
-            setTitle("Settings")
-            setOnClickListener {
-                Timber.i("Open settings...")
-                screenManager.push(SettingsScreen(carContext, service))
-            }
-        }
-        return messageTemplate(if (userState.latest() != null) "Drive safely!" else "Welcome") {
-            setIcon(CarIcon.APP_ICON)
-            setTitle("Car-Tracker")
-            userState.latest()?.let { user ->
-                Timber.i("Got ${user.email}.")
-                setActionStrip(actionStrip { addAction(settingsAction) })
-            } ?: run {
-                addAction(action {
-                    setTitle("Sign in to continue")
-                    setOnClickListener {
-                        screenManager.push(GoogleSignInScreen(carContext, userState, service.mainScope))
+        // Message cannot be empty
+        val msg = service.langLatest()?.appName ?: "Car-Tracker"
+        return messageTemplate(msg) {
+            if (isLoading) {
+                setLoading(true)
+            } else {
+                setIcon(CarIcon.APP_ICON)
+                service.langLatest()?.let { lang ->
+                    userState.latest()?.let { user ->
+                        Timber.i("Got ${user.email}.")
+                            setTitle(lang.appName)
+                            setActionStrip(actionStrip { addAction(action {
+                                setTitle(lang.settings.title)
+                                setOnClickListener {
+                                    Timber.i("Open settings...")
+                                    screenManager.push(SettingsScreen(carContext, lang, service))
+                                }
+                            }) })
+                        }?: run {
+                        addAction(action {
+                            setTitle("${lang.profile.signInWith} Google")
+                            setOnClickListener {
+                                screenManager.push(GoogleSignInScreen(carContext, lang, userState, service.mainScope))
+                            }
+                        })
                     }
-                })
+                }
             }
         }
     }

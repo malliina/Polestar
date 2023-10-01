@@ -17,18 +17,15 @@ class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
     override fun onCreateSession(): Session {
         val app = application as CarApp
-        val service = app.appService
-        return CarSession(app, service.locationSource, service.confState)
+        return CarSession(app)
     }
 }
 
 @androidx.annotation.OptIn(ExperimentalCarApi::class)
 class CarSession(
-    private val app: CarApp,
-    private val locationSource: LocationSource,
-    private val confState: ConfState
+    app: CarApp,
 ) : Session() {
-    val service = app.appService
+    private val service = app.appService
     override fun onCreateScreen(intent: Intent): Screen {
         return if (carContext.isAllPermissionsGranted()) {
             AllGoodScreen(carContext, service)

@@ -47,7 +47,7 @@ import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
 
 interface CarViewModelInterface {
-    val conf: Flow<Outcome<CarLang>>
+    val currentLang: Flow<Outcome<CarLang>>
     val languages: Flow<List<CarLanguage>>
     val savedLanguage: Flow<String?>
     val user: StateFlow<Outcome<UserInfo>>
@@ -61,7 +61,7 @@ interface CarViewModelInterface {
 
     companion object {
         fun preview(ctx: Context) = object : CarViewModelInterface {
-            override val conf: Flow<Outcome<CarLang>> = MutableStateFlow(Outcome.Idle)
+            override val currentLang: Flow<Outcome<CarLang>> = MutableStateFlow(Outcome.Idle)
             override val languages: StateFlow<List<CarLanguage>> = MutableStateFlow(Previews.conf(ctx).languages.map { it.language })
             override val savedLanguage: Flow<String?> = MutableStateFlow(null)
             override val user: StateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
@@ -117,11 +117,12 @@ class AppService(applicationContext: Context, val mainScope: CoroutineScope, val
         .distinctUntilChanged()
         .stateIn(ioScope, SharingStarted.Eagerly, emptyList())
     fun languagesLatest() = languages.value
-    override val conf: Flow<Outcome<CarLang>> = confs.combine(savedLanguage) { confs, saved ->
+    override val currentLang: StateFlow<Outcome<CarLang>> = confs.combine(savedLanguage) { confs, saved ->
         val cs = confs ?: CarConf(emptyList())
         val attempt = cs.languages.firstOrNull { it.language.code == saved } ?: cs.languages.firstOrNull()
         attempt?.let { Outcome.Success(it) } ?: Outcome.Loading
-    }
+    }.stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
+    fun langLatest() = currentLang.value.toOption()
 
     fun onCreate() = ioScope.launch { initialize() }
 
