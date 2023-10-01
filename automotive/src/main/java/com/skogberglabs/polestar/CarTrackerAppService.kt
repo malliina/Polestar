@@ -17,7 +17,8 @@ class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
     override fun onCreateSession(): Session {
         val app = application as CarApp
-        return CarSession(app, app.locationSource, app.confState)
+        val service = app.appService
+        return CarSession(app, service.locationSource, service.confState)
     }
 }
 
@@ -27,14 +28,15 @@ class CarSession(
     private val locationSource: LocationSource,
     private val confState: ConfState
 ) : Session() {
+    val service = app.appService
     override fun onCreateScreen(intent: Intent): Screen {
         return if (carContext.isAllPermissionsGranted()) {
-            AllGoodScreen(carContext, confState, app.google, app.userState, app.mainScope)
+            AllGoodScreen(carContext, service)
         } else {
             val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
             RequestPermissionScreen(carContext, content) { sm ->
                 carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                sm.push(AllGoodScreen(carContext, confState, app.google, app.userState, app.mainScope))
+                sm.push(AllGoodScreen(carContext, service))
             }
         }
     }

@@ -19,9 +19,9 @@ import timber.log.Timber
 
 class GoogleSignInScreen(carContext: CarContext,
                          private val userState: UserState,
-                         scope: CoroutineScope): Screen(carContext), LifecycleEventObserver {
+                         mainScope: CoroutineScope): Screen(carContext), LifecycleEventObserver {
     init {
-        scope.launch {
+        mainScope.launch {
             userState.userResult.collect { user ->
                 if (user.isSuccess()) {
                     screenManager.pop()

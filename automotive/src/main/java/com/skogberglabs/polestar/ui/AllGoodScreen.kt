@@ -22,14 +22,11 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class AllGoodScreen(carContext: CarContext,
-                    private val confState: ConfState,
-                    private val google: Google,
-                    private val userState: UserState,
-                    private val mainScope: CoroutineScope
+                    private val service: AppService
 ): Screen(carContext), LifecycleEventObserver {
     init {
-        mainScope.launch {
-            userState.userResult.collect { _ ->
+        service.mainScope.launch {
+            service.userState.userResult.collect { _ ->
                 invalidate()
             }
         }
@@ -44,7 +41,7 @@ class AllGoodScreen(carContext: CarContext,
                 val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
                 val permissionsScreen = RequestPermissionScreen(carContext, content) { sm ->
                     carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                    sm.push(AllGoodScreen(carContext, confState, google, userState, mainScope))
+                    sm.push(AllGoodScreen(carContext, service))
                 }
                 screenManager.push(permissionsScreen)
             }
@@ -52,11 +49,12 @@ class AllGoodScreen(carContext: CarContext,
     }
 
     override fun onGetTemplate(): Template {
+        val userState = service.userState
         val settingsAction = action {
             setTitle("Settings")
             setOnClickListener {
                 Timber.i("Open settings...")
-                screenManager.push(SettingsScreen(carContext, google, mainScope))
+                screenManager.push(SettingsScreen(carContext, service))
             }
         }
         return messageTemplate(if (userState.latest() != null) "Drive safely!" else "Welcome") {
@@ -69,7 +67,7 @@ class AllGoodScreen(carContext: CarContext,
                 addAction(action {
                     setTitle("Sign in to continue")
                     setOnClickListener {
-                        screenManager.push(GoogleSignInScreen(carContext, userState, mainScope))
+                        screenManager.push(GoogleSignInScreen(carContext, userState, service.mainScope))
                     }
                 })
             }

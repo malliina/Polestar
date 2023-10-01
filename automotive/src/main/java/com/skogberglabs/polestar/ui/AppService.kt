@@ -1,31 +1,38 @@
 package com.skogberglabs.polestar.ui
 
-import android.app.Application
 import android.content.Context
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import com.skogberglabs.polestar.Adapters
 import com.skogberglabs.polestar.ApiUserInfo
-import com.skogberglabs.polestar.CarApp
 import com.skogberglabs.polestar.CarConf
+import com.skogberglabs.polestar.CarHttpClient
 import com.skogberglabs.polestar.CarInfo
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.CarLanguage
+import com.skogberglabs.polestar.CarListener
 import com.skogberglabs.polestar.CarState
+import com.skogberglabs.polestar.ConfState
 import com.skogberglabs.polestar.Email
+import com.skogberglabs.polestar.Google
+import com.skogberglabs.polestar.GoogleTokenSource
+import com.skogberglabs.polestar.LocalDataSource
 import com.skogberglabs.polestar.LocationUpdate
 import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.ProfileInfo
 import com.skogberglabs.polestar.SimpleMessage
 import com.skogberglabs.polestar.UserContainer
 import com.skogberglabs.polestar.UserInfo
+import com.skogberglabs.polestar.UserState
+import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.LocationSourceInterface
+import com.skogberglabs.polestar.location.LocationUploader
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -34,6 +41,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
@@ -54,11 +62,11 @@ interface CarViewModelInterface {
     companion object {
         fun preview(ctx: Context) = object : CarViewModelInterface {
             override val conf: Flow<Outcome<CarLang>> = MutableStateFlow(Outcome.Idle)
-            override val languages: Flow<List<CarLanguage>> = MutableStateFlow(Previews.conf(ctx).languages.map { it.language })
+            override val languages: StateFlow<List<CarLanguage>> = MutableStateFlow(Previews.conf(ctx).languages.map { it.language })
             override val savedLanguage: Flow<String?> = MutableStateFlow(null)
             override val user: StateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
             val cars = ProfileInfo(ApiUserInfo(Email("a@b.com"), listOf(CarInfo("a", "Mos", 1L), CarInfo("b", "Tesla", 1L), CarInfo("a", "Toyota", 1L), CarInfo("a", "Rivian", 1L), CarInfo("a", "Cybertruck", 1L))), null)
-            override val profile: Flow<Outcome<ProfileInfo?>> = MutableStateFlow(
+            override val profile: StateFlow<Outcome<ProfileInfo?>> = MutableStateFlow(
                 Outcome.Success(
                     cars
                 )
@@ -78,32 +86,49 @@ interface CarViewModelInterface {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
-    CarViewModelInterface {
-    val app: CarApp = appl as CarApp
-    val http = app.http
-    override val locationSource = app.locationSource
-    val google = app.google
-    override val uploadMessage = app.uploader.message
-    override val carState = app.carInfo.carInfo
+class AppService(applicationContext: Context, val mainScope: CoroutineScope, val ioScope: CoroutineScope): CarViewModelInterface {
+    val userState = UserState.instance
+    val confState = ConfState.instance
+    val google = Google.build(applicationContext, userState)
+    val http = CarHttpClient(GoogleTokenSource(google))
+    val preferences = LocalDataSource(applicationContext)
+    override val locationSource = LocationSource.instance
+    val carListener = CarListener(applicationContext)
+    val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener)
+    override val uploadMessage = locationUploader.message
+    override val carState = carListener.carInfo
 
-    override val user: StateFlow<Outcome<UserInfo>> = app.userState.userResult
-    private val activeCar = app.preferences.userPreferencesFlow().map { it.carId }
-    override val profile: Flow<Outcome<ProfileInfo?>> = user.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
+    override val user: StateFlow<Outcome<UserInfo>> = userState.userResult
+    private val activeCar = preferences.userPreferencesFlow().map { it.carId }
+    override val profile: StateFlow<Outcome<ProfileInfo?>> = user.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
         when (user) {
             is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
             else -> flow { Outcome.Idle }
         }
     }.combine(activeCar) { user, carId ->
         user.map { ProfileInfo(it, carId) }
-    }
-    private val confs: StateFlow<CarConf?> = app.confState.conf
-    override val savedLanguage: Flow<String?> = app.preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
-    override val languages: Flow<List<CarLanguage>> = confs.map { c -> c?.let { it.languages.map { l -> l.language } } ?: emptyList() }
+    }.distinctUntilChanged().stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
+    fun profileLatest(): ProfileInfo? = profile.value.toOption()
+    private val confs: StateFlow<CarConf?> = confState.conf
+    override val savedLanguage: StateFlow<String?> = preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
+        .stateIn(ioScope, SharingStarted.Eagerly, null)
+    fun currentLanguage() = savedLanguage.value
+    override val languages: StateFlow<List<CarLanguage>> = confs.map { c -> c?.let { it.languages.map { l -> l.language } } ?: emptyList() }
+        .distinctUntilChanged()
+        .stateIn(ioScope, SharingStarted.Eagerly, emptyList())
+    fun languagesLatest() = languages.value
     override val conf: Flow<Outcome<CarLang>> = confs.combine(savedLanguage) { confs, saved ->
         val cs = confs ?: CarConf(emptyList())
         val attempt = cs.languages.firstOrNull { it.language.code == saved } ?: cs.languages.firstOrNull()
         attempt?.let { Outcome.Success(it) } ?: Outcome.Loading
+    }
+
+    fun onCreate() = ioScope.launch { initialize() }
+
+    private suspend fun initialize() {
+        google.signInSilently()
+        val response = http.get("/cars/conf", Adapters.carConf)
+        confState.update(response)
     }
 
     private suspend fun meFlow(): Flow<Outcome<UserContainer>> = flow {
@@ -120,19 +145,19 @@ class CarViewModel(private val appl: Application) : AndroidViewModel(appl),
     }
 
     override fun selectCar(id: String) {
-        viewModelScope.launch {
-            app.preferences.saveCarId(id)
+        ioScope.launch {
+            preferences.saveCarId(id)
         }
     }
 
     override fun saveLanguage(code: String) {
-        viewModelScope.launch {
-            app.preferences.saveLanguage(code)
+        ioScope.launch {
+            preferences.saveLanguage(code)
         }
     }
 
     override fun signOut() {
-        viewModelScope.launch {
+        ioScope.launch {
             google.signOut()
         }
     }
