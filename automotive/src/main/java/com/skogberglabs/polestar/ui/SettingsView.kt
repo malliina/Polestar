@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.skogberglabs.polestar.BuildConfig
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.Paddings
@@ -79,29 +81,31 @@ fun SettingsView(lang: CarLang, vm: CarViewModelInterface, navController: NavCon
                 .fillMaxWidth()
                 .padding(horizontal = Paddings.xxl)
                 .padding(pd)) {
-            when (val profileOutcome = profile) {
-                is Outcome.Success -> {
-                    profileOutcome.result?.let { p ->
-                        if (p.hasCars) {
-                            ReadableText(slang.selectCar, Modifier.padding(vertical = Paddings.large))
-                            SettingsGrid {
-                                items(p.user.boats) { boat ->
-                                    val isSelected = boat.id == carId
-                                    SettingsButton(boat.name, isSelected) {
-                                        vm.selectCar(boat.id)
+            if (profile != Outcome.Idle) {
+                when (val profileOutcome = profile) {
+                    is Outcome.Success -> {
+                        profileOutcome.result?.let { p ->
+                            if (p.hasCars) {
+                                ReadableText(slang.selectCar, Modifier.padding(vertical = Paddings.large))
+                                SettingsGrid {
+                                    items(p.user.boats) { boat ->
+                                        val isSelected = boat.id == carId
+                                        SettingsButton(boat.name, isSelected) {
+                                            vm.selectCar(boat.id)
+                                        }
                                     }
                                 }
+                            } else {
+                                ReadableText(slang.noCars, Modifier.padding(vertical = Paddings.large))
                             }
-                        } else {
-                            ReadableText(slang.noCars, Modifier.padding(pd))
                         }
                     }
+                    Outcome.Loading -> CarProgressBar(Modifier.padding(vertical = Paddings.large))
+                    is Outcome.Error -> ErrorText(plang.failedToLoadProfile, Modifier.padding(vertical = Paddings.large))
+                    Outcome.Idle -> ErrorText(plang.nothingHere, Modifier.padding(vertical = Paddings.large))
                 }
-                Outcome.Loading -> CarProgressBar(Modifier.padding(pd))
-                is Outcome.Error -> ErrorText(plang.failedToLoadProfile, Modifier.padding(pd))
-                Outcome.Idle -> ErrorText(plang.nothingHere, Modifier.padding(pd))
+                CarDivider()
             }
-            CarDivider()
             ReadableText(plang.chooseLanguage, Modifier.padding(vertical = Paddings.large))
             SettingsGrid {
                 items(languages) { l ->
@@ -111,18 +115,23 @@ fun SettingsView(lang: CarLang, vm: CarViewModelInterface, navController: NavCon
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
-            CarDivider()
             if (isSignedIn) {
+                CarDivider()
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                     Button(
                         onClick = { vm.signOut() },
-                        modifier = Modifier.padding(Paddings.xxl),
+                        modifier = Modifier.padding(Paddings.xl),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                     ) {
                         Text(plang.signOut, Modifier.padding(Paddings.normal), fontSize = 32.sp)
                     }
                 }
             }
+            CarDivider()
+            Text(
+                "${plang.version} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                Modifier.align(Alignment.CenterHorizontally).padding(horizontal = Paddings.normal).padding(bottom = Paddings.large)
+            )
         }
     }
 }

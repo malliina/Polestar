@@ -10,44 +10,31 @@ import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
-import com.skogberglabs.polestar.ui.CarActivity
-import com.skogberglabs.polestar.ui.EmptyScreen
-import com.skogberglabs.polestar.ui.PlacesScreen
+import com.skogberglabs.polestar.ui.AllGoodScreen
 import com.skogberglabs.polestar.ui.RequestPermissionScreen
 
 class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
     override fun onCreateSession(): Session {
         val app = application as CarApp
-        return CarSession(app.locationSource, app.confState)
+        return CarSession(app)
     }
 }
 
 @androidx.annotation.OptIn(ExperimentalCarApi::class)
 class CarSession(
-    private val locationSource: LocationSource,
-    private val confState: ConfState
+    app: CarApp,
 ) : Session() {
+    private val service = app.appService
     override fun onCreateScreen(intent: Intent): Screen {
-        confState.conf.value?.let { conf ->
-            return if (carContext.isAllPermissionsGranted()) {
-                PlacesScreen(carContext, locationSource)
-            } else {
-                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
-                RequestPermissionScreen(carContext, content) {
-                    carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                    goToProfile()
-                }
+        return if (carContext.isAllPermissionsGranted()) {
+            AllGoodScreen(carContext, service)
+        } else {
+            val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
+            RequestPermissionScreen(carContext, content) { sm ->
+                carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+                sm.push(AllGoodScreen(carContext, service))
             }
-        } ?: run {
-            return EmptyScreen(carContext)
         }
-    }
-
-    private fun goToProfile() {
-        val i = Intent(carContext, CarActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        carContext.startActivity(i)
     }
 }

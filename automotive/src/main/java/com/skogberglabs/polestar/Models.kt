@@ -57,8 +57,8 @@ data class UserInfo(val email: Email, val idToken: IdToken)
 sealed class Outcome<out T> {
     data class Success<T>(val result: T) : Outcome<T>()
     data class Error(val e: Exception) : Outcome<Nothing>()
-    object Loading : Outcome<Nothing>()
-    object Idle : Outcome<Nothing>()
+    data object Loading : Outcome<Nothing>()
+    data object Idle : Outcome<Nothing>()
     fun <U> map(f: (T) -> U): Outcome<U> = when (this) {
         is Success -> Success(f(result))
         is Error -> Error(e)
@@ -70,5 +70,9 @@ sealed class Outcome<out T> {
         is Error -> null
         Idle -> null
         Loading -> null
+    }
+    fun isSuccess(): Boolean = when (this) {
+        is Success -> true
+        else -> false
     }
 }

@@ -49,7 +49,15 @@
         <service android:foregroundServiceType="location"
             android:name=".location.CarLocationService" />
         <activity
-            android:name=".ui.CarActivity"
+            android:name=".ui.GoogleSignInActivity"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:launchMode="singleTask"
+            android:exported="true"
+            android:label="Car-Tracker">
+            <meta-data android:name="distractionOptimized" android:value="false"/>
+        </activity>
+        <activity
+            android:name="androidx.car.app.activity.CarAppActivity"
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
             android:launchMode="singleTask"
             android:exported="true"
@@ -59,14 +67,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name="androidx.car.app.activity.CarAppActivity"
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
-            android:launchMode="singleTask"
-            android:exported="true"
-            android:label="Car-Tracker">
-            <meta-data android:name="distractionOptimized" android:value="true"/>
         </activity>
         <receiver android:name=".BootEventReceiver" android:exported="true">
             <intent-filter>

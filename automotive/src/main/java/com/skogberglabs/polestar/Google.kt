@@ -60,9 +60,10 @@ class Google(private val client: GoogleSignInClient, private val userState: User
 
     fun handleSignIn(account: GoogleSignInAccount, silent: Boolean): UserInfo? {
         try {
-            readUser(account)?.let {
-                userState.update(Outcome.Success(it))
-                return it
+            readUser(account)?.let { user ->
+//                Timber.d("Got user ${user.email}...")
+                userState.update(Outcome.Success(user))
+                return user
             }
             // I think this never happens, instead the exceptional path is taken
             Timber.w("Unable to read user info from account.")

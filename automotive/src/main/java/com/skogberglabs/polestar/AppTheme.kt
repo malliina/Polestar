@@ -23,6 +23,7 @@ object Paddings {
     val small = 8.dp
     val normal = 16.dp
     val large = 24.dp
+    val xl = 36.dp
     val xxl = 48.dp
 }
 

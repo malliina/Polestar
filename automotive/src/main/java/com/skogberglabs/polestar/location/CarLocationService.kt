@@ -72,7 +72,7 @@ class CarLocationService : Service() {
             stop()
         } else {
             scope.launch {
-                app.google.signInSilently()
+                app.appService.google.signInSilently()
             }
             if (!started) {
                 if (applicationContext.isLocationGranted()) {

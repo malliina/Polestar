@@ -33,13 +33,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.CommonStatusCodes
-import com.skogberglabs.polestar.BuildConfig
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.NavRoutes
 import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.Paddings
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,11 +45,7 @@ fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavCont
     val context = LocalContext.current
     val user by vm.user.collectAsStateWithLifecycle()
     val profile by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
-    val currentLocation by vm.locationSource.currentLocation.collectAsStateWithLifecycle(null)
-    val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
-    val carState by vm.carState.collectAsStateWithLifecycle()
     val plang = lang.profile
-    val slang = lang.stats
     Scaffold(
         modifier = Modifier,
         topBar = {
@@ -113,77 +107,18 @@ fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavCont
                 Outcome.Idle -> SignInButton("${plang.signInWith} Google", onSignIn)
             }
             CarDivider()
-            Column(Modifier.padding(Paddings.xxl)) {
-                currentLocation?.let { loc ->
-                    SpacedRow {
-                        val accuracy = loc.accuracyMeters?.let { " ${slang.accuracy.lowercase()} $it ${slang.meters}" } ?: ""
-                        ProfileText("GPS ${loc.latitude.formatted(5)}, ${loc.longitude.formatted(5)}$accuracy")
-                    }
-                    SpacedRow {
-                        loc.altitudeMeters?.let { altitude ->
-                            ProfileText("${slang.altitude} $altitude ${slang.meters}")
-                        }
-                        loc.bearing?.let { bearing ->
-                            val accuracyText = loc.bearingAccuracyDegrees?.let { " ${slang.accuracy.lowercase()} $it ${slang.degrees}" } ?: ""
-                            ProfileText("${slang.bearing} $bearing$accuracyText")
-                        }
-                    }
-                    SpacedRow {
-                        ProfileText(loc.date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
-                        when (val outcome = uploadMessage) {
-                            is Outcome.Success -> ProfileText("'${outcome.result.message}'.")
-                            is Outcome.Error -> ProfileText(outcome.e.message ?: "${outcome.e}", color = MaterialTheme.colorScheme.error)
-                            Outcome.Idle -> Text("")
-                            Outcome.Loading -> Text("")
-                        }
-                    }
-                }
-                if (!carState.isEmpty) {
-                    SpacedRow {
-                        carState.batteryLevel?.let { energy ->
-                            ProfileText("${slang.batteryLevel} ${energy.describeKWh}")
-                        }
-                        carState.batteryCapacity?.let { capacity ->
-                            ProfileText("${slang.capacity} ${capacity.describeKWh}")
-                        }
-                        carState.rangeRemaining?.let { distance ->
-                            ProfileText("${slang.range} ${distance.describeKm}")
-                        }
-                    }
-                    SpacedRow {
-                        carState.speed?.let { speed ->
-                            ProfileText("${slang.speed} ${speed.describeKmh}")
-                        }
-                        carState.outsideTemperature?.let { temperature ->
-                            ProfileText("${slang.outsideTemperature} ${temperature.describeCelsius}")
-                        }
-                        carState.nightMode?.let { nightMode ->
-                            ProfileText(if (nightMode) slang.nightMode else slang.dayMode)
-                        }
-                    }
-                }
-            }
-            CarDivider()
             Spacer(modifier = Modifier.weight(1f))
             Button(onClick = {
                 val i = Intent(context, CarAppActivity::class.java)
                 context.startActivity(i)
             }, Modifier.padding(Paddings.xxl)) {
-                val label =
-                    if (!context.isAllPermissionsGranted()) lang.permissions.grantCta
-                    else plang.goToMap
                 Text(
-                    label,
+                    "Home",
                     Modifier.padding(Paddings.normal),
                     fontSize = 32.sp
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
-            CarDivider()
-            Text(
-                "${plang.version} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                Modifier.padding(Paddings.normal)
-            )
             Spacer(modifier = Modifier.height(Paddings.large))
         }
     }
