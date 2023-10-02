@@ -105,7 +105,7 @@ class SelectCarScreen(carContext: CarContext,
                                 setOnClickListener {
                                     service.selectCar(car.id)
                                     Timber.i("Clicked car ${car.id} (${car.name})")
-                                    invalidate()
+                                    screenManager.pop()
                                 }
                             }
                         })

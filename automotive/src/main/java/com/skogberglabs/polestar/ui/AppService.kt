@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -87,7 +88,7 @@ interface CarViewModelInterface {
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppService(applicationContext: Context, val mainScope: CoroutineScope, private val ioScope: CoroutineScope): CarViewModelInterface {
-    val userState = UserState.instance
+    private val userState = UserState.instance
     private val confState = ConfState.instance
     val google = Google.build(applicationContext, userState)
     val http = CarHttpClient(GoogleTokenSource(google))
@@ -103,11 +104,11 @@ class AppService(applicationContext: Context, val mainScope: CoroutineScope, pri
     override val profile: StateFlow<Outcome<ProfileInfo?>> = user.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
         when (user) {
             is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
-            else -> flow { Outcome.Idle }
+            else -> flowOf(Outcome.Idle)
         }
     }.combine(activeCar) { user, carId ->
         user.map { ProfileInfo(it, carId) }
-    }.distinctUntilChanged().stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
+    }.distinctUntilChanged().stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
     fun profileLatest(): ProfileInfo? = profile.value.toOption()
     private val confs: StateFlow<CarConf?> = confState.conf
     override val savedLanguage: StateFlow<String?> = preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
@@ -122,14 +123,13 @@ class AppService(applicationContext: Context, val mainScope: CoroutineScope, pri
         val attempt = cs.languages.firstOrNull { it.language.code == saved } ?: cs.languages.firstOrNull()
         attempt?.let { Outcome.Success(it) } ?: Outcome.Loading
     }.stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
-    val appState: StateFlow<AppState> = currentLang.map { it.toOption() }.combine(userState.userResult.map{ it.toOption() }) { lang, user ->
+    val appState: StateFlow<AppState> = currentLang.map { it.toOption() }.combine(profile.map { it.toOption() }) { lang, user ->
         if (lang != null)
             if (user != null) AppState.LoggedIn(user, lang)
             else AppState.Anon(lang)
         else AppState.Loading
-    }.distinctUntilChanged().stateIn(ioScope, SharingStarted.Eagerly, AppState.Loading)
+    }.distinctUntilChanged().stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
     fun state() = appState.value
-    fun langLatest() = currentLang.value.toOption()
 
     fun onCreate() = ioScope.launch { initialize() }
 

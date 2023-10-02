@@ -10,7 +10,6 @@ class UserState {
 
     private val current: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
     val userResult: StateFlow<Outcome<UserInfo>> = current
-    fun latest() = userResult.value.toOption()
 
     fun update(outcome: Outcome<UserInfo>) {
         current.value = outcome
@@ -18,6 +17,7 @@ class UserState {
 }
 
 data class ProfileInfo(val user: ApiUserInfo, val carId: String?) {
+    val email = user.email
     val activeCar = user.boats.firstOrNull { car -> car.id == carId }
     val hasCars = user.boats.isNotEmpty()
 }

@@ -9,9 +9,8 @@ import androidx.car.app.model.signin.ProviderSignInMethod
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.skogberglabs.polestar.CarLang
-import com.skogberglabs.polestar.UserInfo
+import com.skogberglabs.polestar.ProfileInfo
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.location.CarLocationService
@@ -24,7 +23,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 sealed class AppState {
-    data class LoggedIn(val user: UserInfo, val lang: CarLang): AppState()
+    data class LoggedIn(val user: ProfileInfo, val lang: CarLang): AppState()
     data class Anon(val lang: CarLang): AppState()
     data object Loading: AppState()
 }
@@ -47,7 +46,7 @@ class AllGoodScreen(carContext: CarContext,
                     job = service.mainScope.launch {
                         service.appState.collect { state ->
                             isLoading = state != AppState.Loading
-                            Timber.i("Invalidating AllGoodScreen")
+                            Timber.i("Invalidating AllGoodScreen, state $state")
                             invalidate()
                         }
                     }
@@ -76,7 +75,16 @@ class AllGoodScreen(carContext: CarContext,
                 return messageTemplate(state.lang.appName) {
                     val user = state.user
                     Timber.i("Got ${user.email}.")
-                    setTitle(lang.appName)
+                    user.activeCar?.let { car ->
+                        setTitle(lang.appName)
+                    } ?: run {
+                        addAction(action {
+                            setTitle(lang.settings.selectCar)
+                            setOnClickListener {
+                                screenManager.push(SelectCarScreen(carContext, lang, service))
+                            }
+                        })
+                    }
                     setActionStrip(actionStrip {
                         addAction(action {
                             setTitle(lang.settings.title)
