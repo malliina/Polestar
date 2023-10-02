@@ -68,7 +68,10 @@ class SelectLanguageScreen(carContext: CarContext,
                     service.saveLanguage(selected.code)
                     Timber.i("Selected language $selected")
                 }
-                setSelectedIndex(service.languagesLatest().indexOfFirst { l -> l.code == service.currentLanguage() } )
+                val idx = service.languagesLatest().indexOfFirst { l -> l.code == service.currentLanguage() }
+                if (idx >= 0) {
+                    setSelectedIndex(idx)
+                }
             }
             setSingleList(list)
             setHeaderAction(Action.BACK)
@@ -89,22 +92,37 @@ class SelectCarScreen(carContext: CarContext,
     private fun cars() = service.profileLatest()?.user?.boats ?: emptyList()
 
     override fun onGetTemplate(): Template {
+        val idx = cars().indexOfFirst { car -> car.id == service.profileLatest()?.activeCar?.id }
+        val hasSelected = idx >= 0
         return listTemplate {
             setTitle(lang.settings.selectCar)
             val list = itemList {
                 if (cars().isNotEmpty()) {
                     cars().forEach { car ->
-                        addItem(row { setTitle(car.name) })
+                        addItem(row {
+                            setTitle(car.name)
+                            if (!hasSelected) {
+                                setOnClickListener {
+                                    service.selectCar(car.id)
+                                    Timber.i("Clicked car ${car.id} (${car.name})")
+                                    invalidate()
+                                }
+                            }
+                        })
                     }
-                    setOnSelectedListener { v ->
-                        val selected = cars()[v]
-                        service.selectCar(selected.id)
-                        Timber.i("Selected car ${selected.name}")
+                    if (hasSelected) {
+                        setOnSelectedListener { v ->
+                            val selected = cars()[v]
+                            service.selectCar(selected.id)
+                            Timber.i("Selected car ${selected.name}")
+                        }
                     }
                 } else {
                     setNoItemsMessage(lang.settings.noCars)
                 }
-                setSelectedIndex(cars().indexOfFirst { car -> car.id == service.profileLatest()?.activeCar?.id })
+                if (hasSelected) {
+                    setSelectedIndex(idx)
+                }
             }
             setSingleList(list)
             setHeaderAction(Action.BACK)
