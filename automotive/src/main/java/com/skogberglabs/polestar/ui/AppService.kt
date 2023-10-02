@@ -86,15 +86,15 @@ interface CarViewModelInterface {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class AppService(applicationContext: Context, val mainScope: CoroutineScope, val ioScope: CoroutineScope): CarViewModelInterface {
+class AppService(applicationContext: Context, val mainScope: CoroutineScope, private val ioScope: CoroutineScope): CarViewModelInterface {
     val userState = UserState.instance
-    val confState = ConfState.instance
+    private val confState = ConfState.instance
     val google = Google.build(applicationContext, userState)
     val http = CarHttpClient(GoogleTokenSource(google))
-    val preferences = LocalDataSource(applicationContext)
+    private val preferences = LocalDataSource(applicationContext)
     override val locationSource = LocationSource.instance
     val carListener = CarListener(applicationContext)
-    val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener)
+    private val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener)
     override val uploadMessage = locationUploader.message
     override val carState = carListener.carInfo
 
@@ -122,6 +122,13 @@ class AppService(applicationContext: Context, val mainScope: CoroutineScope, val
         val attempt = cs.languages.firstOrNull { it.language.code == saved } ?: cs.languages.firstOrNull()
         attempt?.let { Outcome.Success(it) } ?: Outcome.Loading
     }.stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
+    val appState: StateFlow<AppState> = currentLang.map { it.toOption() }.combine(userState.userResult.map{ it.toOption() }) { lang, user ->
+        if (lang != null)
+            if (user != null) AppState.LoggedIn(user, lang)
+            else AppState.Anon(lang)
+        else AppState.Loading
+    }.distinctUntilChanged().stateIn(ioScope, SharingStarted.Eagerly, AppState.Loading)
+    fun state() = appState.value
     fun langLatest() = currentLang.value.toOption()
 
     fun onCreate() = ioScope.launch { initialize() }

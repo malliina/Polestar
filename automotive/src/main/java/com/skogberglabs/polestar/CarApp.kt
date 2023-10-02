@@ -13,7 +13,7 @@ import timber.log.Timber
 
 class CarApp : Application() {
     private val ioScope = CoroutineScope(Dispatchers.IO)
-    val mainScope = CoroutineScope(Dispatchers.Main)
+    private val mainScope = CoroutineScope(Dispatchers.Main)
 
     lateinit var appService: AppService
 

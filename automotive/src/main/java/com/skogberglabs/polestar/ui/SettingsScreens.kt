@@ -37,7 +37,9 @@ class SettingsScreen(carContext: CarContext,
                     setOnClickListener {
                         service.mainScope.launch {
                             service.google.signOut()
-                            screenManager.pop()
+                            // .pop() for some reason crashes the app since the AllGoodScreen template has changed since last time
+//                            screenManager.pop()
+                            screenManager.push(AllGoodScreen(carContext, service))
                         }
                     }
                 }

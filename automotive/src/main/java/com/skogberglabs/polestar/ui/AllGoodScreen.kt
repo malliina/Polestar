@@ -3,82 +3,113 @@ package com.skogberglabs.polestar.ui
 import android.content.Intent
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
-import androidx.car.app.model.CarIcon
+import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
+import androidx.car.app.model.signin.ProviderSignInMethod
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import com.skogberglabs.polestar.CarLang
+import com.skogberglabs.polestar.UserInfo
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.messageTemplate
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
+import com.skogberglabs.polestar.signInTemplate
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
+sealed class AppState {
+    data class LoggedIn(val user: UserInfo, val lang: CarLang): AppState()
+    data class Anon(val lang: CarLang): AppState()
+    data object Loading: AppState()
+}
 
 class AllGoodScreen(carContext: CarContext,
                     private val service: AppService
 ): Screen(carContext), LifecycleEventObserver {
     private var isLoading = true
+    private var job: Job? = null
     init {
-        service.mainScope.launch {
-            service.userState.userResult.combine(service.currentLang) { a, b -> Pair(a, b) }
-//                .filter { p -> p.first.isSuccess() && p.second.isSuccess() }
-                .collect {
-                    isLoading = false
-                    invalidate()
-                }
-        }
         lifecycle.addObserver(this)
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        Timber.i("Event $event")
         // Checks permissions on every start
-        if (event == Lifecycle.Event.ON_START) {
-            Timber.i("Event $event")
-            if (!carContext.isAllPermissionsGranted()) {
-                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
-                val permissionsScreen = RequestPermissionScreen(carContext, content) { sm ->
-                    carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                    sm.push(AllGoodScreen(carContext, service))
+        when (event) {
+            Lifecycle.Event.ON_START -> {
+                if (carContext.isAllPermissionsGranted()) {
+                    job = service.mainScope.launch {
+                        service.appState.collect { state ->
+                            isLoading = state != AppState.Loading
+                            Timber.i("Invalidating AllGoodScreen")
+                            invalidate()
+                        }
+                    }
+                } else {
+                    val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
+                    val permissionsScreen = RequestPermissionScreen(carContext, content) { sm ->
+                        carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+                        sm.push(AllGoodScreen(carContext, service))
+                    }
+                    screenManager.push(permissionsScreen)
                 }
-                screenManager.push(permissionsScreen)
             }
+            Lifecycle.Event.ON_STOP -> {
+                job?.cancel()
+                job?.let { Timber.i("Canceled job.") }
+                job = null
+            }
+            else -> {}
         }
     }
 
     override fun onGetTemplate(): Template {
-        val userState = service.userState
-        // Message cannot be empty
-        val msg = service.langLatest()?.appName ?: "Car-Tracker"
-        return messageTemplate(msg) {
-            if (isLoading) {
-                setLoading(true)
-            } else {
-                setIcon(CarIcon.APP_ICON)
-                service.langLatest()?.let { lang ->
-                    userState.latest()?.let { user ->
-                        Timber.i("Got ${user.email}.")
-                            setTitle(lang.appName)
-                            setActionStrip(actionStrip { addAction(action {
-                                setTitle(lang.settings.title)
-                                setOnClickListener {
-                                    Timber.i("Open settings...")
-                                    screenManager.push(SettingsScreen(carContext, lang, service))
-                                }
-                            }) })
-                        }?: run {
+        return when (val state = service.state()) {
+            is AppState.LoggedIn -> {
+                val lang = state.lang
+                return messageTemplate(state.lang.appName) {
+                    val user = state.user
+                    Timber.i("Got ${user.email}.")
+                    setTitle(lang.appName)
+                    setActionStrip(actionStrip {
                         addAction(action {
-                            setTitle("${lang.profile.signInWith} Google")
+                            setTitle(lang.settings.title)
                             setOnClickListener {
-                                screenManager.push(GoogleSignInScreen(carContext, lang, userState, service.mainScope))
+                                Timber.i("Open settings...")
+                                screenManager.push(SettingsScreen(carContext, lang, service))
                             }
                         })
-                    }
+                    })
                 }
+            }
+            is AppState.Anon -> {
+                val lang = state.lang
+                val signInAction = action {
+                    setTitle("${lang.profile.signInWith} Google")
+                    setOnClickListener(ParkedOnlyOnClickListener.create {
+                        val intent = Intent(carContext, GoogleSignInActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        carContext.startActivity(intent)
+                    })
+                }
+                val method = ProviderSignInMethod(signInAction)
+                return signInTemplate(method) {
+                    setTitle("${lang.profile.signInWith} Google")
+//            setInstructions("Sign in to store your rides in the cloud.")
+//            setAdditionalText("Your information will not be shared with third parties.")
+//                setHeaderAction(Action.BACK)
+                }
+            }
+
+            AppState.Loading -> messageTemplate("Car-Tracker") {
+                setLoading(true)
             }
         }
     }
