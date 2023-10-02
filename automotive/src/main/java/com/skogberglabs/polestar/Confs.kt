@@ -3,10 +3,14 @@ package com.skogberglabs.polestar
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
+data class AuthLang(val ctaGoogle: String, val instructions: String, val additionalText: String)
+
+@JsonClass(generateAdapter = true)
 data class CarProfileLang(
     val signedInAs: String,
     val driving: String,
     val chooseLanguage: String,
+    val auth: AuthLang,
     val signInWith: String,
     val signOut: String,
     val failedToLoadProfile: String,

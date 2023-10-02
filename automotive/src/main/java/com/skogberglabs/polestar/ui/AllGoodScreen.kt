@@ -90,8 +90,9 @@ class AllGoodScreen(carContext: CarContext,
             }
             is AppState.Anon -> {
                 val lang = state.lang
+                val authLang = lang.profile.auth
                 val signInAction = action {
-                    setTitle("${lang.profile.signInWith} Google")
+                    setTitle(authLang.ctaGoogle)
                     setOnClickListener(ParkedOnlyOnClickListener.create {
                         val intent = Intent(carContext, GoogleSignInActivity::class.java).apply {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -101,10 +102,9 @@ class AllGoodScreen(carContext: CarContext,
                 }
                 val method = ProviderSignInMethod(signInAction)
                 return signInTemplate(method) {
-                    setTitle("${lang.profile.signInWith} Google")
-//            setInstructions("Sign in to store your rides in the cloud.")
-//            setAdditionalText("Your information will not be shared with third parties.")
-//                setHeaderAction(Action.BACK)
+                    setTitle(authLang.ctaGoogle)
+                    setInstructions(authLang.instructions)
+                    setAdditionalText(authLang.additionalText)
                 }
             }
 
