@@ -3,12 +3,9 @@ package com.skogberglabs.polestar
 import android.app.Application
 import android.content.Intent
 import com.skogberglabs.polestar.location.CarLocationService
-import com.skogberglabs.polestar.location.LocationSource
-import com.skogberglabs.polestar.location.LocationUploader
 import com.skogberglabs.polestar.ui.AppService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class CarApp : Application() {
@@ -25,7 +22,6 @@ class CarApp : Application() {
         CarLocationService.createNotificationChannels(applicationContext)
         startForegroundService(Intent(applicationContext, CarLocationService::class.java))
         appService = AppService(applicationContext, mainScope, ioScope)
-        appService.carListener.connect()
         appService.onCreate()
     }
 }

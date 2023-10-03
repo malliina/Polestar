@@ -27,13 +27,13 @@ import timber.log.Timber
 @OptIn(ExperimentalCoroutinesApi::class)
 class LocationUploader(
     private val http: CarHttpClient,
-    private val userState: UserState,
-    private val prefs: LocalDataSource,
+    userState: UserState,
+    prefs: LocalDataSource,
     private val locations: LocationSource,
-    private val carListener: CarListener
+    private val carListener: CarListener,
+    ioScope: CoroutineScope
 ) {
     private val path = "/cars/locations"
-    private val io = CoroutineScope(Dispatchers.IO)
     val message: SharedFlow<Outcome<SimpleMessage>> = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
         when (user) {
             is Outcome.Success -> {
@@ -42,7 +42,7 @@ class LocationUploader(
             }
             else -> flowOf(Outcome.Idle)
         }
-    }.shareIn(io, SharingStarted.Eagerly, replay = 1)
+    }.shareIn(ioScope, SharingStarted.Eagerly, replay = 1)
 
     private val carIds = prefs.userPreferencesFlow().map { it.carId }
     private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =

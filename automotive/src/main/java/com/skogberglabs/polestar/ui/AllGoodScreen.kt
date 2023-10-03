@@ -46,7 +46,7 @@ class AllGoodScreen(carContext: CarContext,
                     job = service.mainScope.launch {
                         service.appState.collect { state ->
                             isLoading = state != AppState.Loading
-                            Timber.i("Invalidating AllGoodScreen, state $state")
+                            Timber.i("Invalidating AllGoodScreen")
                             invalidate()
                         }
                     }

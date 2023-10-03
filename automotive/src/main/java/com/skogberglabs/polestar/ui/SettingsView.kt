@@ -59,7 +59,7 @@ fun SettingsView(lang: CarLang, vm: CarViewModelInterface, navController: NavCon
     val profile by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
     val languages by vm.languages.collectAsStateWithLifecycle(emptyList())
     val savedLanguage by vm.savedLanguage.collectAsStateWithLifecycle(null)
-    val user by vm.user.collectAsStateWithLifecycle()
+    val user by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
     val isSignedIn = user.toOption() != null
 
     val carId = profile.toOption()?.activeCar?.id

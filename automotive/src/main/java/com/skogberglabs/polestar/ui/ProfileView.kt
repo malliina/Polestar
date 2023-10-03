@@ -37,13 +37,11 @@ import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.NavRoutes
 import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.Paddings
-import com.skogberglabs.polestar.location.isAllPermissionsGranted
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavController, onSignIn: () -> Unit) {
     val context = LocalContext.current
-    val user by vm.user.collectAsStateWithLifecycle()
     val profile by vm.profile.collectAsStateWithLifecycle(Outcome.Idle)
     val plang = lang.profile
     Scaffold(
@@ -65,18 +63,13 @@ fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavCont
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            when (val u = user) {
+            when (val u = profile) {
                 is Outcome.Success -> {
-                    Text(
-                        "${lang.profile.signedInAs} ${u.result.email}.",
-                        modifier = Modifier.padding(Paddings.large),
-                        fontSize = 32.sp
-                    )
                     when (val profileOutcome = profile) {
                         is Outcome.Success -> {
                             profileOutcome.result?.let { p ->
                                 p.activeCar?.let { car ->
-                                    ReadableText("${plang.driving} ${car.name}.")
+                                    ReadableText("${p.email} ${plang.driving} ${car.name}.")
                                 } ?: run {
                                     OutlinedButton(
                                         onClick = { navController.navigate(NavRoutes.SETTINGS) },
@@ -104,7 +97,7 @@ fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavCont
                     }
                 }
                 Outcome.Loading -> CarProgressBar()
-                Outcome.Idle -> SignInButton("${plang.signInWith} Google", onSignIn)
+                Outcome.Idle -> SignInButton(plang.auth.ctaGoogle, onSignIn)
             }
             CarDivider()
             Spacer(modifier = Modifier.weight(1f))
