@@ -3,14 +3,9 @@ package com.skogberglabs.polestar.ui
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.viewModels
-import androidx.navigation.compose.rememberNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
-import com.skogberglabs.polestar.AppTheme
 import com.skogberglabs.polestar.CarApp
-import com.skogberglabs.polestar.CarNavGraph
 import com.skogberglabs.polestar.Google
 import timber.log.Timber
 

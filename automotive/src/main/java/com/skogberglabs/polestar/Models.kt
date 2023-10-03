@@ -59,8 +59,9 @@ sealed class Outcome<out T> {
     data class Error(val e: Exception) : Outcome<Nothing>()
     data object Loading : Outcome<Nothing>()
     data object Idle : Outcome<Nothing>()
-    fun <U> map(f: (T) -> U): Outcome<U> = when (this) {
-        is Success -> Success(f(result))
+    fun <U> map(f: (T) -> U): Outcome<U> = flatMap { Success(f(it)) }
+    fun <U> flatMap(f: (T) -> Outcome<U>): Outcome<U> = when(this) {
+        is Success -> f(result)
         is Error -> Error(e)
         Idle -> Idle
         Loading -> Loading

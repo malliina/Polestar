@@ -14,8 +14,8 @@ import com.skogberglabs.polestar.Paddings
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun CarStatsView(lang: CarLang, carVm: CarViewModelInterface, vm: StatsViewModelInterface) {
-    val currentLocation by carVm.locationSource.currentLocation.collectAsStateWithLifecycle(null)
+fun CarStatsView(lang: CarLang, vm: StatsViewModelInterface) {
+    val currentLocation by vm.currentLocation.collectAsStateWithLifecycle(null)
     val uploadMessage by vm.uploadMessage.collectAsStateWithLifecycle(Outcome.Idle)
     val carState by vm.carState.collectAsStateWithLifecycle()
     val slang = lang.stats

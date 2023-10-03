@@ -46,7 +46,12 @@ class AllGoodScreen(carContext: CarContext,
                     job = service.mainScope.launch {
                         service.appState.collect { state ->
                             isLoading = state != AppState.Loading
-                            Timber.i("Invalidating AllGoodScreen")
+                            val stateStr = when (state) {
+                                is AppState.Anon -> "anon"
+                                AppState.Loading -> "loading"
+                                is AppState.LoggedIn -> state.user.email.value
+                            }
+                            Timber.i("Invalidating AllGoodScreen, state $stateStr")
                             invalidate()
                         }
                     }

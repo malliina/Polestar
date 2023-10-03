@@ -65,23 +65,16 @@ fun ProfileView(lang: CarLang, vm: CarViewModelInterface, navController: NavCont
         ) {
             when (val u = profile) {
                 is Outcome.Success -> {
-                    when (val profileOutcome = profile) {
-                        is Outcome.Success -> {
-                            profileOutcome.result?.let { p ->
-                                p.activeCar?.let { car ->
-                                    ReadableText("${p.email} ${plang.driving} ${car.name}.")
-                                } ?: run {
-                                    OutlinedButton(
-                                        onClick = { navController.navigate(NavRoutes.SETTINGS) },
-                                        modifier = Modifier.padding(Paddings.large)) {
-                                        Text(lang.settings.selectCar)
-                                    }
-                                }
+                    u.result?.let { p ->
+                        p.activeCar?.let { car ->
+                            ReadableText("${p.email} ${plang.driving} ${car.name}.")
+                        } ?: run {
+                            OutlinedButton(
+                                onClick = { navController.navigate(NavRoutes.SETTINGS) },
+                                modifier = Modifier.padding(Paddings.large)) {
+                                Text(lang.settings.selectCar)
                             }
                         }
-                        Outcome.Idle -> Text("")
-                        Outcome.Loading -> CarProgressBar()
-                        is Outcome.Error -> ErrorText(plang.failedToLoadProfile)
                     }
                 }
                 is Outcome.Error -> {
