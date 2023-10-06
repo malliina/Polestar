@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.skogberglabs.polestar"
-        minSdk = 30 // Android 11
+        minSdk = 29 // Android 10
         targetSdk = 34
         versionCode = 31
         versionName = "1.20.1"
@@ -60,7 +60,7 @@ android {
     }
     useLibrary("android.car")
     kotlin {
-        jvmToolchain(8)
+        jvmToolchain(11)
     }
 }
 

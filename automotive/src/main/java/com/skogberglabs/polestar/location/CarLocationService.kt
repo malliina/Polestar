@@ -71,8 +71,7 @@ class CarLocationService : Service() {
             app.appService.signInSilently()
             if (!started) {
                 if (applicationContext.isLocationGranted()) {
-//                    client.requestLocationUpdates(locationRequest, pendingIntent)
-                    client.requestLocationUpdates(locationRequest, { loc -> Timber.i("Loc $loc")}, Looper.getMainLooper())
+                    client.requestLocationUpdates(locationRequest, pendingIntent)
                     started = true
                     Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
                 }
