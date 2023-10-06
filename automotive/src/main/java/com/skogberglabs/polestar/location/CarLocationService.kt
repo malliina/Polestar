@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
+import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
@@ -22,9 +23,6 @@ import com.skogberglabs.polestar.R
 import com.skogberglabs.polestar.Utils.appAction
 import com.skogberglabs.polestar.Utils.appId
 import com.skogberglabs.polestar.ui.PermissionContent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -37,7 +35,6 @@ class CarLocationService : Service() {
     private lateinit var client: FusedLocationProviderClient
     private lateinit var pendingIntent: PendingIntent
     private lateinit var locationRequest: LocationRequest
-    private val scope = CoroutineScope(Dispatchers.IO)
     val app: CarApp get() = application as CarApp
 
     companion object {
@@ -71,12 +68,11 @@ class CarLocationService : Service() {
         if (intent?.action == STOP_LOCATIONS) {
             stop()
         } else {
-            scope.launch {
-                app.appService.google.signInSilently()
-            }
+            app.appService.signInSilently()
             if (!started) {
                 if (applicationContext.isLocationGranted()) {
-                    client.requestLocationUpdates(locationRequest, pendingIntent)
+//                    client.requestLocationUpdates(locationRequest, pendingIntent)
+                    client.requestLocationUpdates(locationRequest, { loc -> Timber.i("Loc $loc")}, Looper.getMainLooper())
                     started = true
                     Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
                 }

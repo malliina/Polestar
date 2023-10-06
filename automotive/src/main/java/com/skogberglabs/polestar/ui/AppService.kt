@@ -121,8 +121,6 @@ class AppService(applicationContext: Context,
         attempt?.let { Outcome.Success(it) } ?: Outcome.Loading
     }.stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
     val appState: StateFlow<AppState> = currentLang.combine(profile) { lang, user ->
-        Timber.i("Lang $lang")
-        Timber.i("User $user")
         when (lang) {
             is Outcome.Error -> AppState.Loading
             Outcome.Idle -> AppState.Loading
@@ -141,6 +139,10 @@ class AppService(applicationContext: Context,
     fun onCreate() {
         carListener.connect()
         ioScope.launch { initialize() }
+    }
+
+    fun signInSilently() {
+        ioScope.launch { google.signInSilently() }
     }
 
     private suspend fun initialize() {
