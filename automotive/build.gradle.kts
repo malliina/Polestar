@@ -56,7 +56,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.2"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
     useLibrary("android.car")
     kotlin {
@@ -65,11 +65,11 @@ android {
 }
 
 val autoVersion = "1.4.0-beta02"
-val composeUiVersion = "1.5.2"
+val composeUiVersion = "1.5.3"
 
 dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview:$composeUiVersion")
-    val composeBom = platform("androidx.compose:compose-bom:2023.03.00")
+    val composeBom = platform("androidx.compose:compose-bom:2023.10.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
     implementation("androidx.compose.material3:material3")
@@ -89,7 +89,7 @@ dependencies {
     val moshiVersion = "1.15.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
-    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.car.app:app-testing:$autoVersion")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
