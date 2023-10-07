@@ -19,6 +19,7 @@ data class CarProfileLang(
     val version: String,
     val nothingHere: String
 )
+
 @JsonClass(generateAdapter = true)
 data class CarStatsLang(
     val speed: String,
@@ -35,17 +36,29 @@ data class CarStatsLang(
     val outsideTemperature: String
 )
 @JsonClass(generateAdapter = true)
+data class PermissionContentLang(val title: String, val message: String)
+
+@JsonClass(generateAdapter = true)
 data class PermissionsLang(
     val grantCta: String,
     val grantAccess: String,
     val explanation: String,
     val tryAgain: String,
-    val openSettingsText: String
+    val openSettingsText: String,
+    val car: PermissionContentLang,
+    val location: PermissionContentLang,
+    val background: PermissionContentLang,
+    val all: PermissionContentLang
 )
 @JsonClass(generateAdapter = true)
 data class CarSettingsLang(val title: String, val openSettings: String, val selectCar: String, val noCars: String)
+
 @JsonClass(generateAdapter = true)
 data class CarLanguage(val code: String, val name: String)
+
+@JsonClass(generateAdapter = true)
+data class NotificationLang(val appRunning: String, val enjoy: String, val grantPermissions: String)
+
 @JsonClass(generateAdapter = true)
 data class CarLang(
     val appName: String,
@@ -53,7 +66,9 @@ data class CarLang(
     val profile: CarProfileLang,
     val settings: CarSettingsLang,
     val permissions: PermissionsLang,
-    val stats: CarStatsLang
+    val stats: CarStatsLang,
+    val notifications: NotificationLang
 )
+
 @JsonClass(generateAdapter = true)
 data class CarConf(val languages: List<CarLang>)

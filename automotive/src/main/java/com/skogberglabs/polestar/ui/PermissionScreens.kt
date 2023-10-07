@@ -10,53 +10,44 @@ import androidx.car.app.model.Action
 import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
 import com.skogberglabs.polestar.CarListener
+import com.skogberglabs.polestar.PermissionContentLang
+import com.skogberglabs.polestar.PermissionsLang
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.messageTemplate
 import timber.log.Timber
 
-data class PermissionContent(val title: String, val message: String, val permissions: List<String>) {
+data class PermissionContent(val lang: PermissionContentLang, val permissions: List<String>) {
+    val title = lang.title
+    val message = lang.message
+
     companion object {
         const val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
         const val backgroundPermission = Manifest.permission.ACCESS_BACKGROUND_LOCATION
         val allPermissions = CarListener.permissions + listOf(locationPermission, backgroundPermission)
         private val allExceptBackgroundLocation = CarListener.permissions + listOf(locationPermission)
-        val car = PermissionContent(
-            "Grant access to car data",
-            "This app needs access to car data (speed, battery level, and so on) in order to save it to your Car-Tracker account.",
-            CarListener.permissions
-        )
-        val location = PermissionContent(
-            "Grant access to location",
-            "This app needs access to the car's location in order to save it to your Car-Tracker account.",
-            listOf(locationPermission)
-        )
+
+        fun car(lang: PermissionContentLang) = PermissionContent(lang, CarListener.permissions)
+        fun location(lang: PermissionContentLang) = PermissionContent(lang, listOf(locationPermission))
         /**
          * Request separately https://developer.android.com/about/versions/11/privacy/location#request-background-location-separately
          */
-        val background = PermissionContent(
-            "Grant access to background location",
-            "This app needs background location access.",
-            listOf(backgroundPermission)
-        )
-        val allForeground = PermissionContent(
-            "Grant app access to location and car",
-            "This app needs access to location and car properties in order to save them to your Car-Tracker account.",
-            allExceptBackgroundLocation
-        )
+        fun background(lang: PermissionContentLang) = PermissionContent(lang, listOf(backgroundPermission))
+        fun allForeground(lang: PermissionContentLang) = PermissionContent(lang, allExceptBackgroundLocation)
     }
 }
 
 class RequestPermissionScreen(carContext: CarContext,
                               val content: PermissionContent,
+                              val lang: PermissionsLang,
                               private val onGranted: (ScreenManager) -> Unit) : Screen(carContext) {
     companion object {
-        fun permissionContent(notGranted: List<String>): PermissionContent =
-            if (notGranted.any { p -> PermissionContent.car.permissions.contains(p) }) PermissionContent.car
-            else if (notGranted.contains(PermissionContent.locationPermission)) PermissionContent.location
-            else if (notGranted.contains(PermissionContent.backgroundPermission)) PermissionContent.background
-            else PermissionContent.allForeground
+        fun permissionContent(notGranted: List<String>, lang: PermissionsLang): PermissionContent =
+            if (notGranted.any { p -> CarListener.permissions.contains(p) }) PermissionContent.car(lang.car)
+            else if (notGranted.contains(PermissionContent.locationPermission)) PermissionContent.location(lang.location)
+            else if (notGranted.contains(PermissionContent.backgroundPermission)) PermissionContent.background(lang.background)
+            else PermissionContent.allForeground(lang.all)
     }
 
     override fun onGetTemplate(): Template {
@@ -67,11 +58,11 @@ class RequestPermissionScreen(carContext: CarContext,
                     val str = grantedPermissions.joinToString(separator = ", ")
                     Timber.i("Granted permissions: $str.")
                     if (carContext.isAllPermissionsGranted()) onGranted(screenManager)
-                    else screenManager.push(RequestPermissionScreen(carContext, permissionContent(carContext.notGrantedPermissions()), onGranted))
+                    else screenManager.push(RequestPermissionScreen(carContext, permissionContent(carContext.notGrantedPermissions(), lang), lang, onGranted))
                 } else {
                     val str = rejectedPermissions.joinToString(separator = ", ")
                     Timber.i("Rejected permissions: $str.")
-                    screenManager.push(NoPermissionScreen(carContext, content))
+                    screenManager.push(NoPermissionScreen(carContext, content, lang))
                 }
             }
         }
@@ -87,7 +78,7 @@ class RequestPermissionScreen(carContext: CarContext,
     }
 }
 
-class NoPermissionScreen(carContext: CarContext, val content: PermissionContent) : Screen(carContext) {
+class NoPermissionScreen(carContext: CarContext, val content: PermissionContent, val lang: PermissionsLang) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         val openSettingsAction = action {
             setTitle("Open Settings")
@@ -102,7 +93,7 @@ class NoPermissionScreen(carContext: CarContext, val content: PermissionContent)
             setTitle("Try again")
             setOnClickListener {
                 Timber.i("Trying again...")
-                screenManager.push(RequestPermissionScreen(carContext, content, onGranted = { screenManager.popToRoot() }))
+                screenManager.push(RequestPermissionScreen(carContext, content, lang, onGranted = { screenManager.popToRoot() }))
             }
         }
         return messageTemplate("Please open Settings and grant app-level permissions for this app.") {

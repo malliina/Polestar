@@ -134,7 +134,7 @@ class AppService(applicationContext: Context,
             }
         }
     }.stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
-    fun state() = appState.value
+    fun state(): AppState = appState.value
 
     fun onCreate() {
         carListener.connect()

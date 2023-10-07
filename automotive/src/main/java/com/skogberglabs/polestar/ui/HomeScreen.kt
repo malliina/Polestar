@@ -26,10 +26,16 @@ sealed class AppState {
     data class LoggedIn(val user: ProfileInfo, val lang: CarLang): AppState()
     data class Anon(val lang: CarLang): AppState()
     data object Loading: AppState()
+
+    fun carLang(): CarLang? = when (this) {
+        is Anon -> lang
+        is LoggedIn -> lang
+        Loading -> null
+    }
 }
 
-class AllGoodScreen(carContext: CarContext,
-                    private val service: AppService
+class HomeScreen(carContext: CarContext,
+                 private val service: AppService
 ): Screen(carContext), LifecycleEventObserver {
     private var isLoading = true
     private var job: Job? = null
@@ -42,27 +48,20 @@ class AllGoodScreen(carContext: CarContext,
         // Checks permissions on every start
         when (event) {
             Lifecycle.Event.ON_START -> {
-                if (carContext.isAllPermissionsGranted()) {
-                    job = service.mainScope.launch {
-                        service.appState.collect { state ->
-                            isLoading = state != AppState.Loading
-                            val stateStr = when (state) {
-                                is AppState.Anon -> "anon"
-                                AppState.Loading -> "loading"
-                                is AppState.LoggedIn -> state.user.email.value
-                            }
-                            Timber.i("Invalidating AllGoodScreen, state $stateStr")
-                            invalidate()
+                job = service.mainScope.launch {
+                    service.appState.collect { state ->
+                        isLoading = state != AppState.Loading
+                        val stateStr = when (state) {
+                            is AppState.Anon -> "anon"
+                            AppState.Loading -> "loading"
+                            is AppState.LoggedIn -> state.user.email.value
                         }
+                        Timber.i("State updated to $stateStr, invalidating screen")
+                        invalidate()
+                        checkPermissions()
                     }
-                } else {
-                    val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
-                    val permissionsScreen = RequestPermissionScreen(carContext, content) { sm ->
-                        carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                        sm.push(AllGoodScreen(carContext, service))
-                    }
-                    screenManager.push(permissionsScreen)
                 }
+                checkPermissions()
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
@@ -73,14 +72,28 @@ class AllGoodScreen(carContext: CarContext,
         }
     }
 
+    private fun checkPermissions() {
+        if (carContext.isAllPermissionsGranted()) {
+
+        } else {
+            service.state().carLang()?.let {
+                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions(), it.permissions)
+                val permissionsScreen = RequestPermissionScreen(carContext, content, it.permissions) { sm ->
+                    carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+                    sm.push(HomeScreen(carContext, service))
+                }
+                screenManager.push(permissionsScreen)
+            }
+        }
+    }
+
     override fun onGetTemplate(): Template {
         return when (val state = service.state()) {
             is AppState.LoggedIn -> {
                 val lang = state.lang
-                return messageTemplate(state.lang.appName) {
-                    val user = state.user
-                    Timber.i("Got ${user.email}.")
-                    user.activeCar?.let { car ->
+                val user = state.user
+                return messageTemplate("${lang.profile.signedInAs} ${user.email}.") {
+                    user.activeCar?.let {
                         setTitle(lang.appName)
                     } ?: run {
                         addAction(action {

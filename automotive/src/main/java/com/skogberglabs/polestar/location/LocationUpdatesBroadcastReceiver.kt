@@ -41,10 +41,10 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
             } ?: run {
                 LocationAvailability.extractLocationAvailability(intent)?.let { locationAvailability ->
                     locs.availability(locationAvailability.isLocationAvailable)
-                    if (!locationAvailability.isLocationAvailable) {
-                        Timber.i("Location services are not available.")
-                    } else {
+                    if (locationAvailability.isLocationAvailable) {
                         Timber.i("Location services are available.")
+                    } else {
+                        Timber.i("Location services are not available.")
                     }
                 }
             } ?: run {

@@ -11,7 +11,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
-import android.os.Looper
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
@@ -103,6 +102,7 @@ class CarLocationService : Service() {
             packageManager.getLaunchIntentForPackage(this.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        app.appService.appState.value.carLang()
         val contentText = if (app.isAllPermissionsGranted()) "Enjoy the drive!" else "Please grant permissions."
         return Notification.Builder(applicationContext, LOCATIONS_CHANNEL)
             .setContentTitle("Car-Tracker running")

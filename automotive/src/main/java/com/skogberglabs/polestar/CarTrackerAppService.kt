@@ -6,12 +6,7 @@ import androidx.car.app.Screen
 import androidx.car.app.Session
 import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.validation.HostValidator
-import com.skogberglabs.polestar.location.CarLocationService
-import com.skogberglabs.polestar.location.LocationSource
-import com.skogberglabs.polestar.location.isAllPermissionsGranted
-import com.skogberglabs.polestar.location.notGrantedPermissions
-import com.skogberglabs.polestar.ui.AllGoodScreen
-import com.skogberglabs.polestar.ui.RequestPermissionScreen
+import com.skogberglabs.polestar.ui.HomeScreen
 
 class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
@@ -23,18 +18,8 @@ class CarTrackerAppService : CarAppService() {
 
 @androidx.annotation.OptIn(ExperimentalCarApi::class)
 class CarSession(
-    app: CarApp,
+    val app: CarApp,
 ) : Session() {
-    private val service = app.appService
-    override fun onCreateScreen(intent: Intent): Screen {
-        return if (carContext.isAllPermissionsGranted()) {
-            AllGoodScreen(carContext, service)
-        } else {
-            val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions())
-            RequestPermissionScreen(carContext, content) { sm ->
-                carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
-                sm.push(AllGoodScreen(carContext, service))
-            }
-        }
-    }
+    override fun onCreateScreen(intent: Intent): Screen =
+        HomeScreen(carContext, app.appService)
 }
