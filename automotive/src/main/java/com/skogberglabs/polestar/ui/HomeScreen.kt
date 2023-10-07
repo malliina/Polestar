@@ -92,9 +92,13 @@ class HomeScreen(carContext: CarContext,
             is AppState.LoggedIn -> {
                 val lang = state.lang
                 val user = state.user
-                return messageTemplate("${lang.profile.signedInAs} ${user.email}.") {
+                val message = user.activeCar?.let { car ->
+                    "${lang.profile.driving} ${car.name}."
+                } ?: "${lang.profile.signedInAs} ${user.email}."
+                return messageTemplate(message) {
+                    setTitle(lang.appName)
                     user.activeCar?.let {
-                        setTitle(lang.appName)
+
                     } ?: run {
                         addAction(action {
                             setTitle(lang.settings.selectCar)
