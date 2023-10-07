@@ -102,10 +102,14 @@ class CarLocationService : Service() {
             packageManager.getLaunchIntentForPackage(this.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        app.appService.appState.value.carLang()
-        val contentText = if (app.isAllPermissionsGranted()) "Enjoy the drive!" else "Please grant permissions."
+        val lang = app.appService.state().carLang()?.notifications
+        // TODO think this through
+        val contentText =
+            if (app.isAllPermissionsGranted()) lang?.enjoy ?: "Enjoy the drive!"
+            else lang?.grantPermissions ?: "Please grant permissions."
+        Timber.i("Adding notification.")
         return Notification.Builder(applicationContext, LOCATIONS_CHANNEL)
-            .setContentTitle("Car-Tracker running")
+            .setContentTitle(lang?.appRunning ?: "Car-Tracker running")
             .setContentText(contentText)
             .setContentIntent(startAppIntent)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
