@@ -9,6 +9,7 @@ import androidx.car.app.model.signin.ProviderSignInMethod
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.ProfileInfo
 import com.skogberglabs.polestar.R
@@ -77,10 +78,12 @@ class HomeScreen(carContext: CarContext,
         if (carContext.isAllPermissionsGranted()) {
 
         } else {
-            service.state().carLang()?.let {
-                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions(), it.permissions)
-                val permissionsScreen = RequestPermissionScreen(carContext, content, it.permissions) { sm ->
-                    carContext.startForegroundService(Intent(carContext, CarLocationService::class.java))
+            service.state().carLang()?.let { lang ->
+                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions(), lang.permissions)
+                val permissionsScreen = RequestPermissionScreen(carContext, content, lang.permissions) { sm ->
+                    val nlang = lang.notifications
+                    val serviceIntent = CarLocationService.intent(carContext, nlang.appRunning, nlang.enjoy)
+                    carContext.startForegroundService(serviceIntent)
                     sm.push(HomeScreen(carContext, service))
                 }
                 screenManager.push(permissionsScreen)

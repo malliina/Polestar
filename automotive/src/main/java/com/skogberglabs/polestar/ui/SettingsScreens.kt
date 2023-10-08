@@ -4,6 +4,7 @@ import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.Action
 import androidx.car.app.model.Template
+import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.BuildConfig
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.addRow
@@ -15,7 +16,8 @@ import timber.log.Timber
 
 class SettingsScreen(carContext: CarContext,
                      private val lang: CarLang,
-                     private val service: AppService): Screen(carContext) {
+                     private val service: AppService
+): Screen(carContext) {
     override fun onGetTemplate(): Template {
         return listTemplate {
             setTitle(lang.settings.title)
@@ -37,7 +39,7 @@ class SettingsScreen(carContext: CarContext,
                     setOnClickListener {
                         service.mainScope.launch {
                             service.google.signOut()
-                            // .pop() for some reason crashes the app since the AllGoodScreen template has changed since last time
+                            // .pop() crashes the app since the AllGoodScreen template has changed since last time
 //                            screenManager.pop()
                             screenManager.push(HomeScreen(carContext, service))
                         }
@@ -55,7 +57,8 @@ class SettingsScreen(carContext: CarContext,
 
 class SelectLanguageScreen(carContext: CarContext,
                            val lang: CarLang,
-                           private val service: AppService): Screen(carContext) {
+                           private val service: AppService
+): Screen(carContext) {
     override fun onGetTemplate(): Template {
         return listTemplate {
             setTitle(lang.profile.chooseLanguage)
@@ -81,7 +84,8 @@ class SelectLanguageScreen(carContext: CarContext,
 
 class SelectCarScreen(carContext: CarContext,
                       val lang: CarLang,
-                      private val service: AppService): Screen(carContext) {
+                      private val service: AppService
+): Screen(carContext) {
     init {
         service.mainScope.launch {
             service.profile.collect {

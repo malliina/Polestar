@@ -40,6 +40,7 @@ class CarLocationService : Service() {
 
     companion object {
         val LOCATIONS_CHANNEL = appId("channels.LOCATION")
+        val START_LOCATIONS = appAction("START_LOCATIONS")
         val STOP_LOCATIONS = appAction("STOP_LOCATIONS")
 
         const val Title = "title"
@@ -55,8 +56,9 @@ class CarLocationService : Service() {
             Timber.i("Created notification channels $ids")
         }
 
-        fun intent(context: Context, title: String, text: String) =
+        fun intent(context: Context, title: String, text: String): Intent =
             Intent(context, CarLocationService::class.java).apply {
+                action = START_LOCATIONS
                 putExtra(Title, title)
                 putExtra(Text, text)
             }
@@ -74,23 +76,28 @@ class CarLocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         val describe = intent?.action ?: "no action"
-        Timber.i("Got start command with $describe...")
         intent?.let { i  ->
-            if (i.action == STOP_LOCATIONS) {
-                stop()
-            } else {
-                i.getStringExtra(Title)?.let { title ->
-                    i.getStringExtra(Text)?.let { text ->
-                        app.appService.signInSilently()
-                        if (!started) {
-                            if (applicationContext.isLocationGranted()) {
-                                client.requestLocationUpdates(locationRequest, pendingIntent)
-                                started = true
-                                Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
+            when (i.action) {
+                STOP_LOCATIONS -> {
+                    stop()
+                }
+                START_LOCATIONS -> {
+                    i.getStringExtra(Title)?.let { title ->
+                        i.getStringExtra(Text)?.let { text ->
+                            app.appService.signInSilently()
+                            if (!started) {
+                                if (applicationContext.isLocationGranted()) {
+                                    client.requestLocationUpdates(locationRequest, pendingIntent)
+                                    started = true
+                                    Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
+                                }
                             }
+                            startForeground(NotificationIds.FOREGROUND_ID, notification(title, text))
                         }
-                        startForeground(NotificationIds.FOREGROUND_ID, notification(title, text))
                     }
+                }
+                else -> {
+                    Timber.i("Got start command with unexpected action $describe...")
                 }
             }
         }
@@ -119,11 +126,6 @@ class CarLocationService : Service() {
             packageManager.getLaunchIntentForPackage(this.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        // TODO think this through
-//        val contentText =
-//            if (app.isAllPermissionsGranted()) lang.enjoy
-//            else lang.grantPermissions
-        Timber.i("Adding notification.")
         return Notification.Builder(applicationContext, LOCATIONS_CHANNEL)
             .setContentTitle(title)
             .setContentText(text)

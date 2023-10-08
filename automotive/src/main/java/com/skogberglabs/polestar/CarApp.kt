@@ -1,9 +1,7 @@
 package com.skogberglabs.polestar
 
 import android.app.Application
-import android.content.Intent
 import com.skogberglabs.polestar.location.CarLocationService
-import com.skogberglabs.polestar.ui.AppService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import timber.log.Timber

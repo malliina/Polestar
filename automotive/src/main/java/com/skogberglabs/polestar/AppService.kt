@@ -1,27 +1,12 @@
-package com.skogberglabs.polestar.ui
+package com.skogberglabs.polestar
 
 import android.content.Context
-import android.content.Intent
-import com.skogberglabs.polestar.Adapters
-import com.skogberglabs.polestar.ApiUserInfo
-import com.skogberglabs.polestar.CarConf
-import com.skogberglabs.polestar.CarHttpClient
-import com.skogberglabs.polestar.CarInfo
-import com.skogberglabs.polestar.CarLang
-import com.skogberglabs.polestar.CarLanguage
-import com.skogberglabs.polestar.CarListener
-import com.skogberglabs.polestar.Email
-import com.skogberglabs.polestar.Google
-import com.skogberglabs.polestar.GoogleTokenSource
-import com.skogberglabs.polestar.LocalDataSource
-import com.skogberglabs.polestar.Outcome
-import com.skogberglabs.polestar.ProfileInfo
-import com.skogberglabs.polestar.UserContainer
-import com.skogberglabs.polestar.UserState
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.LocationUploader
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
+import com.skogberglabs.polestar.ui.AppState
+import com.skogberglabs.polestar.ui.Previews
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -29,15 +14,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -50,7 +30,6 @@ import kotlin.time.Duration.Companion.seconds
 
 interface CarViewModelInterface {
     val languages: Flow<List<CarLanguage>>
-//    val savedLanguage: Flow<String?>
     val profile: Flow<Outcome<ProfileInfo?>>
     fun selectCar(id: String)
     fun saveLanguage(code: String)
@@ -58,8 +37,10 @@ interface CarViewModelInterface {
 
     companion object {
         fun preview(ctx: Context) = object : CarViewModelInterface {
-            override val languages: StateFlow<List<CarLanguage>> = MutableStateFlow(Previews.conf(ctx).languages.map { it.language })
-//            override val savedLanguage: Flow<String?> = MutableStateFlow(null)
+            override val languages: StateFlow<List<CarLanguage>> = MutableStateFlow(
+                Previews.conf(
+                    ctx
+                ).languages.map { it.language })
             val cars = ProfileInfo(ApiUserInfo(Email("a@b.com"), listOf(CarInfo("a", "Mos", 1L), CarInfo("b", "Tesla", 1L), CarInfo("a", "Toyota", 1L), CarInfo("a", "Rivian", 1L), CarInfo("a", "Cybertruck", 1L))), null)
             override val profile: StateFlow<Outcome<ProfileInfo?>> =
                 MutableStateFlow(Outcome.Success(cars))
@@ -116,7 +97,12 @@ class AppService(
                 Outcome.Idle -> AppState.Anon(lang.result)
                 Outcome.Loading -> AppState.Loading
                 is Outcome.Success ->
-                    user.result?.let { AppState.LoggedIn(it, lang.result) } ?: AppState.Anon(lang.result)
+                    user.result?.let {
+                        AppState.LoggedIn(
+                            it,
+                            lang.result
+                        )
+                    } ?: AppState.Anon(lang.result)
             }
         }
     }.stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
@@ -133,6 +119,7 @@ class AppService(
 
     private suspend fun initialize() {
         google.signInSilently()
+        // If loading conf fails, retries every 30 seconds until it succeeds once
         confFlow().map { it.toOption() }.filterNotNull().take(1).collect { conf ->
             val updated = preferences.saveConf(conf)
             updated.lang?.let { lang ->
@@ -144,12 +131,14 @@ class AppService(
         }
     }
 
+    // Emits loading/error states until loading conf succeeds
     private suspend fun confFlow(): Flow<Outcome<CarConf>> = flow {
         emit(Outcome.Loading)
         val outcome = try {
             val response = http.get("/cars/conf", Adapters.carConf)
             Outcome.Success(response)
         } catch (e: Exception) {
+            // Emitting in a catch-clause fails
             Timber.e(e, "Failed to load config. Retrying soon...")
             Outcome.Error(e)
         }
