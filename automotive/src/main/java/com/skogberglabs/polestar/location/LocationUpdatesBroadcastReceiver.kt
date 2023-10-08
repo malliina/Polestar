@@ -5,8 +5,12 @@ import android.content.Context
 import android.content.Intent
 import com.google.android.gms.location.LocationAvailability
 import com.google.android.gms.location.LocationResult
+import com.skogberglabs.polestar.LocalDataSource
 import com.skogberglabs.polestar.LocationUpdate
 import com.skogberglabs.polestar.Utils
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -21,6 +25,7 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == ACTION_LOCATIONS) {
+            val prefs = runBlocking { LocalDataSource(context).userPreferencesFlow().first() }
             LocationResult.extractResult(intent)?.let { result ->
                 Timber.i("Received ${result.locations.size} locations.")
                 val updates = result.locations.map { loc ->

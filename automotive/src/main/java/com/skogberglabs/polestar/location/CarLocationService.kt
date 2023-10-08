@@ -18,9 +18,11 @@ import com.google.android.gms.location.Priority
 import com.skogberglabs.polestar.BootEventReceiver
 import com.skogberglabs.polestar.CarApp
 import com.skogberglabs.polestar.NotificationIds
+import com.skogberglabs.polestar.NotificationLang
 import com.skogberglabs.polestar.R
 import com.skogberglabs.polestar.Utils.appAction
 import com.skogberglabs.polestar.Utils.appId
+import com.skogberglabs.polestar.currentLangBlocking
 import com.skogberglabs.polestar.ui.PermissionContent
 import timber.log.Timber
 
@@ -40,6 +42,9 @@ class CarLocationService : Service() {
         val LOCATIONS_CHANNEL = appId("channels.LOCATION")
         val STOP_LOCATIONS = appAction("STOP_LOCATIONS")
 
+        const val Title = "title"
+        const val Text = "text"
+
         fun createNotificationChannels(context: Context) {
             val channel = NotificationChannel(LOCATIONS_CHANNEL, "Car notifications", NotificationManager.IMPORTANCE_DEFAULT)
             val bootChannel = NotificationChannel(BootEventReceiver.BOOT_CHANNEL, "App boot notifications", NotificationManager.IMPORTANCE_HIGH)
@@ -49,6 +54,12 @@ class CarLocationService : Service() {
             val ids = channels.joinToString(separator = ", ") { it.id }
             Timber.i("Created notification channels $ids")
         }
+
+        fun intent(context: Context, title: String, text: String) =
+            Intent(context, CarLocationService::class.java).apply {
+                putExtra(Title, title)
+                putExtra(Text, text)
+            }
     }
 
     override fun onCreate() {
@@ -64,19 +75,25 @@ class CarLocationService : Service() {
         super.onStartCommand(intent, flags, startId)
         val describe = intent?.action ?: "no action"
         Timber.i("Got start command with $describe...")
-        if (intent?.action == STOP_LOCATIONS) {
-            stop()
-        } else {
-            app.appService.signInSilently()
-            if (!started) {
-                if (applicationContext.isLocationGranted()) {
-                    client.requestLocationUpdates(locationRequest, pendingIntent)
-                    started = true
-                    Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
+        intent?.let { i  ->
+            if (i.action == STOP_LOCATIONS) {
+                stop()
+            } else {
+                i.getStringExtra(Title)?.let { title ->
+                    i.getStringExtra(Text)?.let { text ->
+                        app.appService.signInSilently()
+                        if (!started) {
+                            if (applicationContext.isLocationGranted()) {
+                                client.requestLocationUpdates(locationRequest, pendingIntent)
+                                started = true
+                                Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
+                            }
+                        }
+                        startForeground(NotificationIds.FOREGROUND_ID, notification(title, text))
+                    }
                 }
             }
         }
-        startForeground(NotificationIds.FOREGROUND_ID, notification())
         return START_STICKY
     }
 
@@ -95,22 +112,21 @@ class CarLocationService : Service() {
         pendingIntent = pi
     }
 
-    private fun notification(): Notification {
+    private fun notification(title: String, text: String): Notification {
         val startAppIntent = PendingIntent.getActivity(
             this,
             0,
             packageManager.getLaunchIntentForPackage(this.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val lang = app.appService.state().carLang()?.notifications
         // TODO think this through
-        val contentText =
-            if (app.isAllPermissionsGranted()) lang?.enjoy ?: "Enjoy the drive!"
-            else lang?.grantPermissions ?: "Please grant permissions."
+//        val contentText =
+//            if (app.isAllPermissionsGranted()) lang.enjoy
+//            else lang.grantPermissions
         Timber.i("Adding notification.")
         return Notification.Builder(applicationContext, LOCATIONS_CHANNEL)
-            .setContentTitle(lang?.appRunning ?: "Car-Tracker running")
-            .setContentText(contentText)
+            .setContentTitle(title)
+            .setContentText(text)
             .setContentIntent(startAppIntent)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)

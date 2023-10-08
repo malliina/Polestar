@@ -53,7 +53,7 @@
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
             android:launchMode="singleTask"
             android:exported="true"
-            android:label="Car-Tracker">
+            android:label="Car-Map">
             <meta-data android:name="distractionOptimized" android:value="false"/>
         </activity>
         <activity
@@ -61,7 +61,7 @@
             android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
             android:launchMode="singleTask"
             android:exported="true"
-            android:label="Car-Tracker">
+            android:label="Car-Map">
             <meta-data android:name="distractionOptimized" android:value="true"/>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

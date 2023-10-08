@@ -1,6 +1,7 @@
 package com.skogberglabs.polestar
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -8,7 +9,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
-data class UserPreferences(val carId: String?, val language: String?)
+data class UserPreferences(val carId: String?, val language: String?, val carConf: CarConf?) {
+    var lang: CarLang? = carConf?.languages?.firstOrNull { l -> l.language.code == language } ?: carConf?.languages?.firstOrNull()
+}
 
 private val Context.dataStore by preferencesDataStore(
     name = "user_preferences"
@@ -18,16 +21,15 @@ interface DataSource {
     fun userPreferencesFlow(): Flow<UserPreferences>
     suspend fun saveCarId(carId: String?)
     suspend fun saveLanguage(code: String)
+    suspend fun saveConf(conf: CarConf): UserPreferences
 }
 
 class LocalDataSource(private val context: Context) : DataSource {
     override fun userPreferencesFlow(): Flow<UserPreferences> =
         context.dataStore.data.map { preferences ->
-            UserPreferences(
-                preferences[PreferencesKeys.CarId],
-                preferences[PreferencesKeys.LanguageCode]
-            )
+            parse(preferences)
         }
+
     override suspend fun saveCarId(carId: String?) {
         context.dataStore.edit { preferences ->
             carId?.let { id ->
@@ -46,9 +48,31 @@ class LocalDataSource(private val context: Context) : DataSource {
             Timber.i("Saved language ${code}.")
         }
     }
+
+    override suspend fun saveConf(conf: CarConf): UserPreferences {
+        val snapshot = context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.Conf] = Adapters.carConf.toJson(conf)
+        }
+        return parse(snapshot)
+    }
+
+    private fun parse(preferences: Preferences): UserPreferences =
+        UserPreferences(
+            preferences[PreferencesKeys.CarId],
+            preferences[PreferencesKeys.LanguageCode],
+            preferences[PreferencesKeys.Conf]?.let { str ->
+                try {
+                    Adapters.carConf.fromJson(str)
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to parse cached conf. This is normal if new keys have been introduced.")
+                    null
+                }
+            }
+        )
 }
 
 private object PreferencesKeys {
     val CarId = stringPreferencesKey("carId2")
+    val Conf = stringPreferencesKey("conf")
     val LanguageCode = stringPreferencesKey("language")
 }

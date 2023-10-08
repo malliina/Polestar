@@ -57,7 +57,7 @@ data class CarSettingsLang(val title: String, val openSettings: String, val sele
 data class CarLanguage(val code: String, val name: String)
 
 @JsonClass(generateAdapter = true)
-data class NotificationLang(val appRunning: String, val enjoy: String, val grantPermissions: String)
+data class NotificationLang(val appRunning: String, val enjoy: String, val grantPermissions: String, val autoStart: String, val startTracking: String)
 
 @JsonClass(generateAdapter = true)
 data class CarLang(

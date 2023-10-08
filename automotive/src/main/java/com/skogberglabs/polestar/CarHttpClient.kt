@@ -54,7 +54,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         fun headers(token: IdToken?): Map<String, String> {
             val alwaysIncluded = mapOf(
                 Accept to MediaTypeJson.toString(),
-                UserAgent to "Car-Tracker/${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+                UserAgent to "Car-Map/${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
             )
             return if (token != null) mapOf(Authorization to "Bearer $token") + alwaysIncluded else alwaysIncluded
         }

@@ -31,10 +31,11 @@ class GoogleSignInActivity : ComponentActivity() {
                 val account = task.getResult(ApiException::class.java)
                 Timber.i("Sign in complete, ${account.email ?: "no email"}")
                 google.handleSignIn(account, silent = false)
-                finish()
             } catch (e: ApiException) {
                 Timber.w(e, "Failed to handle sign in.")
                 google.fail(e)
+            } finally {
+                finish()
             }
         }
     }

@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.ProfileInfo
+import com.skogberglabs.polestar.R
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.location.CarLocationService
@@ -137,8 +138,7 @@ class HomeScreen(carContext: CarContext,
                     setAdditionalText(authLang.additionalText)
                 }
             }
-
-            AppState.Loading -> messageTemplate("Car-Tracker") {
+            AppState.Loading -> messageTemplate(carContext.getString(R.string.app_name)) {
                 setLoading(true)
             }
         }

@@ -20,7 +20,6 @@ class CarApp : Application() {
         Timber.plant(tree)
         Timber.i("Launching app.")
         CarLocationService.createNotificationChannels(applicationContext)
-        startForegroundService(Intent(applicationContext, CarLocationService::class.java))
         appService = AppService(applicationContext, mainScope, ioScope)
         appService.onCreate()
     }
