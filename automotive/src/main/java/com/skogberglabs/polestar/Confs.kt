@@ -9,6 +9,7 @@ data class AuthLang(val ctaGoogle: String, val instructions: String, val additio
 data class CarProfileLang(
     val signedInAs: String,
     val driving: String,
+    val cloudInstructions: String,
     val chooseLanguage: String,
     val auth: AuthLang,
     val signInWith: String,
