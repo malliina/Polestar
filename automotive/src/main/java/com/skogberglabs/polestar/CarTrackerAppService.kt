@@ -18,7 +18,7 @@ class CarTrackerAppService : CarAppService() {
 
 @androidx.annotation.OptIn(ExperimentalCarApi::class)
 class CarSession(
-    val app: CarApp,
+    val app: CarApp
 ) : Session() {
     override fun onCreateScreen(intent: Intent): Screen =
         HomeScreen(carContext, app.appService)

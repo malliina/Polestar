@@ -17,7 +17,7 @@ interface StatsViewModelInterface {
     val uploadMessage: SharedFlow<Outcome<SimpleMessage>>
 
     companion object {
-        fun preview(ctx: Context) = object: StatsViewModelInterface {
+        fun preview(ctx: Context) = object : StatsViewModelInterface {
             override val currentLocation: Flow<LocationUpdate?> = MutableStateFlow(null)
             override val uploadMessage: SharedFlow<Outcome<SimpleMessage>> = MutableSharedFlow()
             override val carState: StateFlow<CarState> = MutableStateFlow(CarState.empty)

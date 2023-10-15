@@ -30,6 +30,7 @@ data class PermissionContent(val lang: PermissionContentLang, val permissions: L
 
         fun car(lang: PermissionContentLang) = PermissionContent(lang, CarListener.permissions)
         fun location(lang: PermissionContentLang) = PermissionContent(lang, listOf(locationPermission))
+
         /**
          * Request separately https://developer.android.com/about/versions/11/privacy/location#request-background-location-separately
          */
@@ -38,16 +39,23 @@ data class PermissionContent(val lang: PermissionContentLang, val permissions: L
     }
 }
 
-class RequestPermissionScreen(carContext: CarContext,
-                              val content: PermissionContent,
-                              val lang: PermissionsLang,
-                              private val onGranted: (ScreenManager) -> Unit) : Screen(carContext) {
+class RequestPermissionScreen(
+    carContext: CarContext,
+    val content: PermissionContent,
+    val lang: PermissionsLang,
+    private val onGranted: (ScreenManager) -> Unit
+) : Screen(carContext) {
     companion object {
         fun permissionContent(notGranted: List<String>, lang: PermissionsLang): PermissionContent =
-            if (notGranted.any { p -> CarListener.permissions.contains(p) }) PermissionContent.car(lang.car)
-            else if (notGranted.contains(PermissionContent.locationPermission)) PermissionContent.location(lang.location)
-            else if (notGranted.contains(PermissionContent.backgroundPermission)) PermissionContent.background(lang.background)
-            else PermissionContent.allForeground(lang.all)
+            if (notGranted.any { p -> CarListener.permissions.contains(p) }) {
+                PermissionContent.car(lang.car)
+            } else if (notGranted.contains(PermissionContent.locationPermission)) {
+                PermissionContent.location(lang.location)
+            } else if (notGranted.contains(PermissionContent.backgroundPermission)) {
+                PermissionContent.background(lang.background)
+            } else {
+                PermissionContent.allForeground(lang.all)
+            }
     }
 
     override fun onGetTemplate(): Template {
@@ -57,8 +65,11 @@ class RequestPermissionScreen(carContext: CarContext,
                 if (grantedPermissions.isNotEmpty()) {
                     val str = grantedPermissions.joinToString(separator = ", ")
                     Timber.i("Granted permissions: $str.")
-                    if (carContext.isAllPermissionsGranted()) onGranted(screenManager)
-                    else screenManager.push(RequestPermissionScreen(carContext, permissionContent(carContext.notGrantedPermissions(), lang), lang, onGranted))
+                    if (carContext.isAllPermissionsGranted()) {
+                        onGranted(screenManager)
+                    } else {
+                        screenManager.push(RequestPermissionScreen(carContext, permissionContent(carContext.notGrantedPermissions(), lang), lang, onGranted))
+                    }
                 } else {
                     val str = rejectedPermissions.joinToString(separator = ", ")
                     Timber.i("Rejected permissions: $str.")

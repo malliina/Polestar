@@ -18,11 +18,9 @@ import com.google.android.gms.location.Priority
 import com.skogberglabs.polestar.BootEventReceiver
 import com.skogberglabs.polestar.CarApp
 import com.skogberglabs.polestar.NotificationIds
-import com.skogberglabs.polestar.NotificationLang
 import com.skogberglabs.polestar.R
 import com.skogberglabs.polestar.Utils.appAction
 import com.skogberglabs.polestar.Utils.appId
-import com.skogberglabs.polestar.currentLangBlocking
 import com.skogberglabs.polestar.ui.PermissionContent
 import timber.log.Timber
 
@@ -76,7 +74,7 @@ class CarLocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
         val describe = intent?.action ?: "no action"
-        intent?.let { i  ->
+        intent?.let { i ->
             when (i.action) {
                 STOP_LOCATIONS -> {
                     stop()

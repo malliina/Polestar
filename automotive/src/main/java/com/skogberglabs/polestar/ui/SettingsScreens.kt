@@ -14,10 +14,11 @@ import com.skogberglabs.polestar.row
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class SettingsScreen(carContext: CarContext,
-                     private val lang: CarLang,
-                     private val service: AppService
-): Screen(carContext) {
+class SettingsScreen(
+    carContext: CarContext,
+    private val lang: CarLang,
+    private val service: AppService
+) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         return listTemplate {
             setTitle(lang.settings.title)
@@ -55,10 +56,11 @@ class SettingsScreen(carContext: CarContext,
     }
 }
 
-class SelectLanguageScreen(carContext: CarContext,
-                           val lang: CarLang,
-                           private val service: AppService
-): Screen(carContext) {
+class SelectLanguageScreen(
+    carContext: CarContext,
+    val lang: CarLang,
+    private val service: AppService
+) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         return listTemplate {
             setTitle(lang.profile.chooseLanguage)
@@ -82,10 +84,11 @@ class SelectLanguageScreen(carContext: CarContext,
     }
 }
 
-class SelectCarScreen(carContext: CarContext,
-                      val lang: CarLang,
-                      private val service: AppService
-): Screen(carContext) {
+class SelectCarScreen(
+    carContext: CarContext,
+    val lang: CarLang,
+    private val service: AppService
+) : Screen(carContext) {
     init {
         service.mainScope.launch {
             service.profile.collect {
@@ -103,16 +106,18 @@ class SelectCarScreen(carContext: CarContext,
             val list = itemList {
                 if (cars().isNotEmpty()) {
                     cars().forEach { car ->
-                        addItem(row {
-                            setTitle(car.name)
-                            if (!hasSelected) {
-                                setOnClickListener {
-                                    service.selectCar(car.id)
-                                    Timber.i("Clicked car ${car.id} (${car.name})")
-                                    screenManager.pop()
+                        addItem(
+                            row {
+                                setTitle(car.name)
+                                if (!hasSelected) {
+                                    setOnClickListener {
+                                        service.selectCar(car.id)
+                                        Timber.i("Clicked car ${car.id} (${car.name})")
+                                        screenManager.pop()
+                                    }
                                 }
                             }
-                        })
+                        )
                     }
                     if (hasSelected) {
                         setOnSelectedListener { v ->

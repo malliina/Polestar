@@ -36,6 +36,7 @@ data class CarStatsLang(
     val range: String,
     val outsideTemperature: String
 )
+
 @JsonClass(generateAdapter = true)
 data class PermissionContentLang(val title: String, val message: String)
 
@@ -51,6 +52,7 @@ data class PermissionsLang(
     val background: PermissionContentLang,
     val all: PermissionContentLang
 )
+
 @JsonClass(generateAdapter = true)
 data class CarSettingsLang(val title: String, val openSettings: String, val selectCar: String, val noCars: String)
 

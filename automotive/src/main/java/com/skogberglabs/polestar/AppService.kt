@@ -40,7 +40,8 @@ interface CarViewModelInterface {
             override val languages: StateFlow<List<CarLanguage>> = MutableStateFlow(
                 Previews.conf(
                     ctx
-                ).languages.map { it.language })
+                ).languages.map { it.language }
+            )
             val cars = ProfileInfo(ApiUserInfo(Email("a@b.com"), listOf(CarInfo("a", "Mos", 1L), CarInfo("b", "Tesla", 1L), CarInfo("a", "Toyota", 1L), CarInfo("a", "Rivian", 1L), CarInfo("a", "Cybertruck", 1L))), null)
             override val profile: StateFlow<Outcome<ProfileInfo?>> =
                 MutableStateFlow(Outcome.Success(cars))
@@ -55,7 +56,8 @@ interface CarViewModelInterface {
 class AppService(
     private val applicationContext: Context,
     val mainScope: CoroutineScope,
-    private val ioScope: CoroutineScope): CarViewModelInterface {
+    private val ioScope: CoroutineScope
+) : CarViewModelInterface {
     private val userState = UserState.instance
     val google = Google.build(applicationContext, userState)
     private val http = CarHttpClient(GoogleTokenSource(google))
@@ -81,7 +83,7 @@ class AppService(
     override val languages: StateFlow<List<CarLanguage>> =
         preferences.userPreferencesFlow()
             .map { c -> c.carConf?.let { it.languages.map { l -> l.language } } ?: emptyList() }
-        .stateIn(ioScope, SharingStarted.Eagerly, emptyList())
+            .stateIn(ioScope, SharingStarted.Eagerly, emptyList())
     fun languagesLatest() = languages.value
     private val currentLang: StateFlow<Outcome<CarLang>> =
         preferences.userPreferencesFlow()

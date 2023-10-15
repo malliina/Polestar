@@ -25,9 +25,9 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 sealed class AppState {
-    data class LoggedIn(val user: ProfileInfo, val lang: CarLang): AppState()
-    data class Anon(val lang: CarLang): AppState()
-    data object Loading: AppState()
+    data class LoggedIn(val user: ProfileInfo, val lang: CarLang) : AppState()
+    data class Anon(val lang: CarLang) : AppState()
+    data object Loading : AppState()
 
     fun carLang(): CarLang? = when (this) {
         is Anon -> lang
@@ -36,9 +36,10 @@ sealed class AppState {
     }
 }
 
-class HomeScreen(carContext: CarContext,
-                 private val service: AppService
-): Screen(carContext), LifecycleEventObserver {
+class HomeScreen(
+    carContext: CarContext,
+    private val service: AppService
+) : Screen(carContext), LifecycleEventObserver {
     private var isLoading = true
     private var job: Job? = null
     init {
@@ -76,7 +77,6 @@ class HomeScreen(carContext: CarContext,
 
     private fun checkPermissions() {
         if (carContext.isAllPermissionsGranted()) {
-
         } else {
             service.state().carLang()?.let { lang ->
                 val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions(), lang.permissions)
@@ -103,24 +103,29 @@ class HomeScreen(carContext: CarContext,
                 return messageTemplate(message) {
                     setTitle(lang.appName)
                     user.activeCar?.let {
-
                     } ?: run {
-                        addAction(action {
-                            setTitle(lang.settings.selectCar)
-                            setOnClickListener {
-                                screenManager.push(SelectCarScreen(carContext, lang, service))
+                        addAction(
+                            action {
+                                setTitle(lang.settings.selectCar)
+                                setOnClickListener {
+                                    screenManager.push(SelectCarScreen(carContext, lang, service))
+                                }
                             }
-                        })
+                        )
                     }
-                    setActionStrip(actionStrip {
-                        addAction(action {
-                            setTitle(lang.settings.title)
-                            setOnClickListener {
-                                Timber.i("Open settings...")
-                                screenManager.push(SettingsScreen(carContext, lang, service))
-                            }
-                        })
-                    })
+                    setActionStrip(
+                        actionStrip {
+                            addAction(
+                                action {
+                                    setTitle(lang.settings.title)
+                                    setOnClickListener {
+                                        Timber.i("Open settings...")
+                                        screenManager.push(SettingsScreen(carContext, lang, service))
+                                    }
+                                }
+                            )
+                        }
+                    )
                 }
             }
             is AppState.Anon -> {
@@ -128,12 +133,14 @@ class HomeScreen(carContext: CarContext,
                 val authLang = lang.profile.auth
                 val signInAction = action {
                     setTitle(authLang.ctaGoogle)
-                    setOnClickListener(ParkedOnlyOnClickListener.create {
-                        val intent = Intent(carContext, GoogleSignInActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    setOnClickListener(
+                        ParkedOnlyOnClickListener.create {
+                            val intent = Intent(carContext, GoogleSignInActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            carContext.startActivity(intent)
                         }
-                        carContext.startActivity(intent)
-                    })
+                    )
                 }
                 val method = ProviderSignInMethod(signInAction)
                 return signInTemplate(method) {

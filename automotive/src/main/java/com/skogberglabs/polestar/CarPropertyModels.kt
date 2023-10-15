@@ -6,7 +6,7 @@ import java.time.OffsetDateTime
 
 data class Power(val watts: Float)
 data class Energy(val wattHours: Float) {
-    private val kWhRounded get() = (wattHours/1000).formatted(2)
+    private val kWhRounded get() = (wattHours / 1000).formatted(2)
     val describeKWh: String get() = "$kWhRounded kWh"
 }
 data class Distance(val meters: Float) {

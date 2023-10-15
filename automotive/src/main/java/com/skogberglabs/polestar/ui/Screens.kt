@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
 
-class EmptyScreen(carContext: CarContext): Screen(carContext) {
+class EmptyScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         Screens.installProfileRootBackBehavior(this)
         return messageTemplate("?") {
@@ -47,6 +47,7 @@ class EmptyScreen(carContext: CarContext): Screen(carContext) {
 class PlacesScreen(carContext: CarContext, locationSource: LocationSourceInterface) : Screen(carContext) {
     private val scope = CoroutineScope(Dispatchers.IO)
     private var currentLocation: CarLocation = CarLocation.create(60.155, 24.877)
+
     @OptIn(FlowPreview::class)
     val locationJob = scope.launch {
         locationSource.locationUpdates.debounce(10.seconds).collect { updates ->
@@ -166,31 +167,37 @@ class MapScreen(carContext: CarContext) : Screen(carContext) {
 }
 
 class CustomScreen(carContext: CarContext) : Screen(carContext) {
-    override fun onGetTemplate(): Template = paneTemplate(pane {
-        addRow(row {
-            setTitle("Hej")
-        })
-        addAction(
-            action {
-                setTitle("Primary action")
-                setOnClickListener {
-                    CarToast.makeText(carContext, "Clicked action", CarToast.LENGTH_SHORT).show()
+    override fun onGetTemplate(): Template = paneTemplate(
+        pane {
+            addRow(
+                row {
+                    setTitle("Hej")
                 }
-                setFlags(Action.FLAG_PRIMARY)
-            }
-        )
-        addAction(
-            action {
-                setTitle("Secondary action")
-                setOnClickListener {
-                    CarToast.makeText(carContext, "Clicked secondary action", CarToast.LENGTH_SHORT).show()
+            )
+            addAction(
+                action {
+                    setTitle("Primary action")
+                    setOnClickListener {
+                        CarToast.makeText(carContext, "Clicked action", CarToast.LENGTH_SHORT).show()
+                    }
+                    setFlags(Action.FLAG_PRIMARY)
                 }
-            }
-        )
-        addRow(row {
-            setTitle("Hej again")
-        })
-    }) {
+            )
+            addAction(
+                action {
+                    setTitle("Secondary action")
+                    setOnClickListener {
+                        CarToast.makeText(carContext, "Clicked secondary action", CarToast.LENGTH_SHORT).show()
+                    }
+                }
+            )
+            addRow(
+                row {
+                    setTitle("Hej again")
+                }
+            )
+        }
+    ) {
         setTitle("This is a pane template")
         setHeaderAction(Action.BACK)
     }

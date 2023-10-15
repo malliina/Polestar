@@ -9,7 +9,6 @@ import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.SimpleMessage
 import com.skogberglabs.polestar.UserState
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -49,18 +48,18 @@ class LocationUploader(
         locations.locationUpdates
             .filter { it.isNotEmpty() }
             .combine(carIds.filterNotNull()) { locs, id ->
-            try {
-                val result = http.post(
-                    path,
-                    LocationUpdates(locs.map { it.toPoint(carListener.carInfo.value) }, id),
-                    Adapters.locationUpdates,
-                    Adapters.message
-                )
-                Timber.i("Uploaded ${locs.size} locations to $path.")
-                Outcome.Success(result)
-            } catch (e: Exception) {
-                Timber.w(e, "Failed to POST location updates to $path.")
-                Outcome.Error(e)
+                try {
+                    val result = http.post(
+                        path,
+                        LocationUpdates(locs.map { it.toPoint(carListener.carInfo.value) }, id),
+                        Adapters.locationUpdates,
+                        Adapters.message
+                    )
+                    Timber.i("Uploaded ${locs.size} locations to $path.")
+                    Outcome.Success(result)
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to POST location updates to $path.")
+                    Outcome.Error(e)
+                }
             }
-        }
 }

@@ -9,7 +9,6 @@ import com.skogberglabs.polestar.LocalDataSource
 import com.skogberglabs.polestar.LocationUpdate
 import com.skogberglabs.polestar.Utils
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import java.time.Instant

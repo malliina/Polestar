@@ -5,10 +5,8 @@ import android.car.VehiclePropertyIds
 import android.car.hardware.CarPropertyValue
 import android.car.hardware.property.CarPropertyManager
 import android.content.Context
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
 
@@ -96,7 +94,7 @@ class CarListener(private val context: Context) {
         VehicleProp.bool(VehiclePropertyIds.HVAC_MAX_DEFROST_ON),
         VehicleProp.bool(VehiclePropertyIds.HVAC_POWER_ON),
         VehicleProp.bool(VehiclePropertyIds.HVAC_RECIRC_ON),
-        VehicleProp.string(VehiclePropertyIds.INFO_VIN),
+        VehicleProp.string(VehiclePropertyIds.INFO_VIN)
         //        VehicleProp(VehiclePropertyIds.HVAC_TEMPERATURE_SET),
 //        VehicleProp(VehiclePropertyIds.EPOCH_TIME),
 //        VehicleProp(VehiclePropertyIds.HVAC_SEAT_TEMPERATURE),

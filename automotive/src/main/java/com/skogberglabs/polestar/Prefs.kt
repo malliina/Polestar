@@ -45,7 +45,7 @@ class LocalDataSource(private val context: Context) : DataSource {
     override suspend fun saveLanguage(code: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.LanguageCode] = code
-            Timber.i("Saved language ${code}.")
+            Timber.i("Saved language $code.")
         }
     }
 
