@@ -3,6 +3,7 @@ package com.skogberglabs.polestar.ui
 import android.content.Intent
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
+import androidx.car.app.model.CarIcon
 import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
 import androidx.car.app.model.signin.ProviderSignInMethod
@@ -103,6 +104,7 @@ class HomeScreen(
                 return messageTemplate(message) {
                     setTitle(lang.appName)
                     user.activeCar?.let {
+                        setIcon(CarIcon.APP_ICON)
                     } ?: run {
                         addAction(
                             action {
