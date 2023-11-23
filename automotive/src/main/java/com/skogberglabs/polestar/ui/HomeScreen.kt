@@ -41,7 +41,6 @@ class HomeScreen(
     carContext: CarContext,
     private val service: AppService
 ) : Screen(carContext), LifecycleEventObserver {
-    private var isLoading = true
     private var job: Job? = null
     init {
         lifecycle.addObserver(this)
@@ -54,15 +53,16 @@ class HomeScreen(
             Lifecycle.Event.ON_START -> {
                 job = service.mainScope.launch {
                     service.appState.collect { state ->
-                        isLoading = state != AppState.Loading
                         val stateStr = when (state) {
                             is AppState.Anon -> "anon"
                             AppState.Loading -> "loading"
                             is AppState.LoggedIn -> state.user.email.value
                         }
-                        Timber.i("State updated to $stateStr, invalidating screen")
-                        invalidate()
-                        checkPermissions()
+                        val navigated = checkPermissions()
+                        if (!navigated) {
+                            Timber.i("State updated to $stateStr, invalidating screen")
+                            invalidate()
+                        }
                     }
                 }
                 checkPermissions()
@@ -76,8 +76,21 @@ class HomeScreen(
         }
     }
 
-    private fun checkPermissions() {
+    private fun checkPermissions(): Boolean {
         if (carContext.isAllPermissionsGranted()) {
+            if (service.navigateToPlaces) {
+                when (val state = service.state()) {
+                    is AppState.LoggedIn -> {
+                        if (state.user.activeCar != null) {
+                            service.initialNavigation()
+                            Timber.i("Navigating to places...")
+                            screenManager.push(PlacesScreen(carContext, service, state.lang))
+                            return true
+                        }
+                    }
+                    else -> {}
+                }
+            }
         } else {
             service.state().carLang()?.let { lang ->
                 val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions(), lang.permissions)
@@ -88,8 +101,10 @@ class HomeScreen(
                     sm.push(HomeScreen(carContext, service))
                 }
                 screenManager.push(permissionsScreen)
+                return true
             }
         }
+        return false
     }
 
     override fun onGetTemplate(): Template {
@@ -119,7 +134,7 @@ class HomeScreen(
                         action {
                             setTitle(lang.profile.goToMap)
                             setOnClickListener {
-                                screenManager.push(PlacesScreen(carContext, service.locationSource, service.tracksLatest(), lang))
+                                screenManager.push(PlacesScreen(carContext, service, lang))
                             }
                         }
                     )

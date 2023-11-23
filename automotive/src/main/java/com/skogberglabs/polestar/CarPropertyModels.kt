@@ -27,6 +27,7 @@ data class Speed(val metersPerSecond: Float) {
     private val kmhRounded = (metersPerSecond * 3.6).formatted(2)
     val describeKmh = "$kmhRounded km/h"
 }
+
 data class Rpm(val rpm: Int)
 enum class Gear(val value: Int) {
     Drive(8), Neutral(1), Park(4), Reverse(2);

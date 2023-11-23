@@ -77,19 +77,4 @@ data class CarLang(
 data class CarConf(val languages: List<CarLang>)
 
 @JsonClass(generateAdapter = true)
-data class TrackTime(val dateTime: String)
-
-@JsonClass(generateAdapter = true)
-data class Times(val start: TrackTime, val end: TrackTime)
-
-@JsonClass(generateAdapter = true)
 data class Coord(val lat: Double, val lng: Double)
-
-@JsonClass(generateAdapter = true)
-data class TopPoint(val coord: Coord)
-
-@JsonClass(generateAdapter = true)
-data class Track(val trackName: String, val boatName: String, val distanceMeters: Distance, val topPoint: TopPoint, val times: Times)
-
-@JsonClass(generateAdapter = true)
-data class Tracks(val tracks: List<Track>)

@@ -5,34 +5,19 @@ import androidx.activity.OnBackPressedCallback
 import androidx.car.app.CarContext
 import androidx.car.app.CarToast
 import androidx.car.app.Screen
-import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.model.Action
-import androidx.car.app.model.CarColor
-import androidx.car.app.model.CarIcon
-import androidx.car.app.model.CarLocation
-import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.itemList
-import com.skogberglabs.polestar.location.LocationSourceInterface
 import com.skogberglabs.polestar.mapTemplate
 import com.skogberglabs.polestar.messageTemplate
 import com.skogberglabs.polestar.navigationTemplate
 import com.skogberglabs.polestar.pane
 import com.skogberglabs.polestar.paneTemplate
-import com.skogberglabs.polestar.place
 import com.skogberglabs.polestar.placeListNavigationTemplate
-import com.skogberglabs.polestar.placeListTemplate
-import com.skogberglabs.polestar.placeMarker
 import com.skogberglabs.polestar.row
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.time.Duration.Companion.seconds
 
 class EmptyScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {

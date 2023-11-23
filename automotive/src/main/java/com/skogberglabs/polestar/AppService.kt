@@ -66,15 +66,14 @@ class AppService(
     private val carListener = CarListener(applicationContext)
     private val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener, ioScope)
     private val activeCar = preferences.userPreferencesFlow().map { it.carId }
-    private val tracks: StateFlow<Outcome<Tracks>> = userState.userResult.flatMapLatest { user ->
-        when(user) {
+    val tracks: StateFlow<Outcome<Tracks>> = userState.userResult.flatMapLatest { user ->
+        when (user) {
             is Outcome.Success -> tracksFlow()
             Outcome.Idle -> flowOf(Outcome.Idle)
             Outcome.Loading -> flowOf(Outcome.Loading)
             is Outcome.Error -> flowOf(Outcome.Error(user.e))
         }
     }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
-    fun tracksLatest() = tracks.value.toOption()?.tracks ?: emptyList()
     override val profile: StateFlow<Outcome<ProfileInfo?>> = userState.userResult.flatMapLatest { user ->
         when (user) {
             is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
@@ -117,6 +116,12 @@ class AppService(
             }
         }
     }.stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
+    private val navigateToPlacesState: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    val navigateToPlaces get() = navigateToPlacesState.value
+
+    fun initialNavigation() {
+        navigateToPlacesState.value = false
+    }
 
     fun state(): AppState = appState.value
 
@@ -165,6 +170,7 @@ class AppService(
         emit(Outcome.Loading)
         val outcome = try {
             val response = http.get("/tracks?limit=5", Adapters.tracks)
+            Timber.i("Loaded ${response.tracks.size} tracks.")
             Outcome.Success(response)
         } catch (e: Exception) {
             // Emitting in a catch-clause fails

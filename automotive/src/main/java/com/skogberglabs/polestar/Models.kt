@@ -3,6 +3,38 @@ package com.skogberglabs.polestar
 import com.squareup.moshi.JsonClass
 import java.time.OffsetDateTime
 
+data class SpeedKnots(val knots: Double) {
+    fun toSpeed() = Speed(knots.toFloat() * knotInKmh / meterPerSecondInKmh)
+
+    companion object {
+        const val knotInKmh: Float = 1.852f
+        const val meterPerSecondInKmh: Float = 3.6f
+    }
+}
+
+@JsonClass(generateAdapter = true)
+data class TrackTime(val dateTime: String)
+
+@JsonClass(generateAdapter = true)
+data class Times(val start: TrackTime, val end: TrackTime)
+
+@JsonClass(generateAdapter = true)
+data class TopPoint(val coord: Coord, val time: TrackTime, val speed: SpeedKnots) {
+    val carSpeed: Speed get() = speed.toSpeed()
+}
+
+@JsonClass(generateAdapter = true)
+data class Track(
+    val trackName: String,
+    val boatName: String,
+    val distanceMeters: Distance,
+    val topPoint: TopPoint,
+    val times: Times
+)
+
+@JsonClass(generateAdapter = true)
+data class Tracks(val tracks: List<Track>)
+
 // Inspiration from https://github.com/android/location-samples/blob/main/LocationUpdatesBackgroundKotlin/app/src/main/java/com/google/android/gms/location/sample/locationupdatesbackgroundkotlin/data/MyLocationManager.kt
 
 @JsonClass(generateAdapter = true)

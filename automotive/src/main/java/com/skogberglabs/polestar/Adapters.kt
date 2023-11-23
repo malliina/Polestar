@@ -80,10 +80,16 @@ class PrimitiveAdapter {
     fun writePressure(p: Pressure): Float = p.pascals
 
     @FromJson
-    fun speed(f: Float): Speed = Speed(f)
+    fun speedF(f: Float): Speed = Speed(f)
 
     @ToJson
-    fun writeSpeed(p: Speed): Float = p.metersPerSecond
+    fun writeSpeedF(p: Speed): Float = p.metersPerSecond
+
+    @FromJson
+    fun speedKnots(d: Double): SpeedKnots = SpeedKnots(d)
+
+    @ToJson
+    fun writeSpeedKnots(p: SpeedKnots): Double = p.knots
 
     @FromJson
     fun rpm(f: Int): Rpm = Rpm(f)

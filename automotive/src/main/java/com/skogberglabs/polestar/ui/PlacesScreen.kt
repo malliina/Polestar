@@ -13,37 +13,54 @@ import androidx.car.app.model.Distance
 import androidx.car.app.model.DistanceSpan
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
+import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.Coord
-import com.skogberglabs.polestar.Track
+import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.itemList
-import com.skogberglabs.polestar.location.LocationSourceInterface
 import com.skogberglabs.polestar.place
 import com.skogberglabs.polestar.placeListTemplate
 import com.skogberglabs.polestar.placeMarker
 import com.skogberglabs.polestar.row
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.time.Duration.Companion.seconds
 
 @androidx.annotation.OptIn(ExperimentalCarApi::class)
-class PlacesScreen(carContext: CarContext, locationSource: LocationSourceInterface, private val tracks: List<Track>, private val lang: CarLang) : Screen(carContext) {
-    private val scope = CoroutineScope(Dispatchers.IO)
-    private val latestCoord = locationSource.locationLatest() ?: tracks.firstOrNull()?.topPoint?.coord ?: Coord(60.155, 24.877)
+class PlacesScreen(
+    carContext: CarContext,
+    private val service: AppService,
+    private val lang: CarLang
+) : Screen(carContext), LifecycleEventObserver {
+    private val locationSource = service.locationSource
+    private val latestCoord = locationSource.locationLatest() ?: Coord(60.155, 24.877)
     private var currentLocation: CarLocation = CarLocation.create(latestCoord.lat, latestCoord.lng)
 
-    @OptIn(FlowPreview::class)
-    val locationJob = scope.launch {
-        locationSource.locationUpdates.debounce(10.seconds).collect { updates ->
-            updates.lastOrNull()?.let { last ->
-                Timber.i("Updating current location...")
-//                updateLocation(CarLocation.create(last.latitude, last.longitude))
+    private var job: Job? = null
+    init {
+        lifecycle.addObserver(this)
+    }
+
+    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+        when (event) {
+            Lifecycle.Event.ON_START -> {
+                job = service.mainScope.launch {
+                    service.tracks.drop(1).collect { ts ->
+                        invalidate()
+                    }
+                }
             }
+            Lifecycle.Event.ON_STOP -> {
+                job?.cancel()
+                job?.let { Timber.i("Canceled tracks job.") }
+                job = null
+            }
+            else -> {}
         }
     }
 
@@ -54,13 +71,15 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSourceInterfa
 
     override fun onGetTemplate(): Template {
         val interpunct = "\u00b7"
+        val ts = service.tracks.value
+        val latestTracks = ts.toOption()?.tracks ?: emptyList()
         val myItems = itemList {
             setNoItemsMessage(lang.settings.noTracks)
-            tracks.forEach { track ->
+            latestTracks.forEach { track ->
                 addItem(
                     row {
                         val span = DistanceSpan.create(Distance.create(track.distanceMeters.kilometers, Distance.UNIT_KILOMETERS))
-                        val str = SpannableString("  $interpunct ${track.trackName}")
+                        val str = SpannableString("  $interpunct ${track.topPoint.carSpeed.describeKmh}")
                         str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
                         setTitle(str)
                         setBrowsable(false)
@@ -86,7 +105,19 @@ class PlacesScreen(carContext: CarContext, locationSource: LocationSourceInterfa
             setItemList(myItems)
             setCurrentLocationEnabled(true)
             setAnchor(myPlace)
-            setActionStrip(actionStrip { addAction(Action.PAN) })
+            setActionStrip(
+                actionStrip {
+                    addAction(
+                        action {
+                            setTitle(lang.settings.title)
+                            setOnClickListener {
+                                screenManager.push(SettingsScreen(carContext, lang, service))
+                            }
+                        }
+                    )
+                }
+            )
+
 //            setOnContentRefreshListener {
 //                Timber.i("Refresh!")
 //                invalidate()
