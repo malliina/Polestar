@@ -21,6 +21,7 @@ object Adapters {
     val userContainer: JsonAdapter<UserContainer> = moshi.adapter()
     val carState: JsonAdapter<CarState> = moshi.adapter()
     val carConf: JsonAdapter<CarConf> = moshi.adapter()
+    val tracks: JsonAdapter<Tracks> = moshi.adapter()
 }
 
 class PrimitiveAdapter {
@@ -55,10 +56,16 @@ class PrimitiveAdapter {
     fun writeEnergy(p: Energy): Float = p.wattHours
 
     @FromJson
-    fun distance(f: Float): Distance = Distance(f)
+    fun distanceF(f: Float): DistanceF = DistanceF(f)
 
     @ToJson
-    fun writeDistance(p: Distance): Float = p.meters
+    fun writeDistanceF(p: DistanceF): Float = p.meters
+
+    @FromJson
+    fun distance(f: Double): Distance = Distance(f)
+
+    @ToJson
+    fun writeDistance(p: Distance): Double = p.meters
 
     @FromJson
     fun temperature(f: Float): Temperature = Temperature(f)

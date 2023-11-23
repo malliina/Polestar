@@ -115,13 +115,20 @@ class HomeScreen(
                             }
                         )
                     }
+                    addAction(
+                        action {
+                            setTitle(lang.profile.goToMap)
+                            setOnClickListener {
+                                screenManager.push(PlacesScreen(carContext, service.locationSource, service.tracksLatest(), lang))
+                            }
+                        }
+                    )
                     setActionStrip(
                         actionStrip {
                             addAction(
                                 action {
                                     setTitle(lang.settings.title)
                                     setOnClickListener {
-                                        Timber.i("Open settings...")
                                         screenManager.push(SettingsScreen(carContext, lang, service))
                                     }
                                 }

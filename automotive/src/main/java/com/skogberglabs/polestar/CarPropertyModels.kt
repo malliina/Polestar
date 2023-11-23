@@ -9,7 +9,12 @@ data class Energy(val wattHours: Float) {
     private val kWhRounded get() = (wattHours / 1000).formatted(2)
     val describeKWh: String get() = "$kWhRounded kWh"
 }
-data class Distance(val meters: Float) {
+data class Distance(val meters: Double) {
+    private val kmRounded get() = kilometers.formatted(2)
+    val kilometers get() = meters / 1000
+    val describeKm = "$kmRounded km"
+}
+data class DistanceF(val meters: Float) {
     private val kmRounded get() = (meters / 1000).formatted(2)
     val describeKm = "$kmRounded km"
 }
@@ -33,11 +38,12 @@ enum class Gear(val value: Int) {
 val Float.celsius get() = Temperature(this)
 val Float.wattHours get() = Energy(this)
 val Float.watts get() = Power(this)
-val Float.meters get() = Distance(this)
-val Float.kilometers get() = Distance(this * 1000)
+val Float.meters get() = DistanceF(this)
+val Float.kilometers get() = DistanceF(this * 1000)
 val Float.pascals get() = Pressure(this)
 val Float.kilopascals get() = Pressure(this * 1000)
 val Float.metersPerSecond get() = Speed(this)
+val Double.meters get() = Distance(this)
 
 @JsonClass(generateAdapter = true)
 data class CarState(
@@ -45,7 +51,7 @@ data class CarState(
     val batteryLevel: Energy?,
     val batteryCapacity: Energy?,
     val speed: Speed?,
-    val rangeRemaining: Distance?,
+    val rangeRemaining: DistanceF?,
     val gear: Gear?,
     val nightMode: Boolean?,
     val updated: OffsetDateTime?

@@ -29,7 +29,7 @@ data class CarPoint(
     val speed: Speed?,
     val batteryLevel: Energy?,
     val batteryCapacity: Energy?,
-    val rangeRemaining: Distance?,
+    val rangeRemaining: DistanceF?,
     val outsideTemperature: Temperature?,
     val nightMode: Boolean?,
     val date: OffsetDateTime

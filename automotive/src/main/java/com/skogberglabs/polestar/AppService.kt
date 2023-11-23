@@ -62,10 +62,19 @@ class AppService(
     val google = Google.build(applicationContext, userState)
     private val http = CarHttpClient(GoogleTokenSource(google))
     private val preferences = LocalDataSource(applicationContext)
-    private val locationSource = LocationSource.instance
+    val locationSource = LocationSource.instance
     private val carListener = CarListener(applicationContext)
     private val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener, ioScope)
     private val activeCar = preferences.userPreferencesFlow().map { it.carId }
+    private val tracks: StateFlow<Outcome<Tracks>> = userState.userResult.flatMapLatest { user ->
+        when(user) {
+            is Outcome.Success -> tracksFlow()
+            Outcome.Idle -> flowOf(Outcome.Idle)
+            Outcome.Loading -> flowOf(Outcome.Loading)
+            is Outcome.Error -> flowOf(Outcome.Error(user.e))
+        }
+    }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+    fun tracksLatest() = tracks.value.toOption()?.tracks ?: emptyList()
     override val profile: StateFlow<Outcome<ProfileInfo?>> = userState.userResult.flatMapLatest { user ->
         when (user) {
             is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
@@ -108,6 +117,7 @@ class AppService(
             }
         }
     }.stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
+
     fun state(): AppState = appState.value
 
     fun onCreate() {
@@ -148,6 +158,23 @@ class AppService(
         if (!outcome.isSuccess()) {
             delay(30.seconds)
             emitAll(confFlow())
+        }
+    }
+
+    private suspend fun tracksFlow(): Flow<Outcome<Tracks>> = flow {
+        emit(Outcome.Loading)
+        val outcome = try {
+            val response = http.get("/tracks?limit=5", Adapters.tracks)
+            Outcome.Success(response)
+        } catch (e: Exception) {
+            // Emitting in a catch-clause fails
+            Timber.e(e, "Failed to load tracks. Retrying soon...")
+            Outcome.Error(e)
+        }
+        emit(outcome)
+        if (!outcome.isSuccess()) {
+            delay(30.seconds)
+            emitAll(tracksFlow())
         }
     }
 

@@ -12,8 +12,9 @@
     <!-- For PlaceListMapTemplate -->
     <uses-permission android:name="androidx.car.app.MAP_TEMPLATES"/>
 
-    <uses-permission android:name="androidx.car.app.NAVIGATION_TEMPLATES"/>
-    <uses-permission android:name="androidx.car.app.ACCESS_SURFACE"/>
+    <!-- For Navigation templates -->
+<!--    <uses-permission android:name="androidx.car.app.NAVIGATION_TEMPLATES"/>-->
+<!--    <uses-permission android:name="androidx.car.app.ACCESS_SURFACE"/>-->
 
     <!-- Car properties -->
     <uses-permission android:name="android.car.permission.CAR_INFO" />
@@ -25,6 +26,23 @@
     <uses-feature
         android:name="android.hardware.type.automotive"
         android:required="true" />
+    <uses-feature
+        android:name="android.software.car.templates_host"
+        android:required="true" />
+
+    <!-- From https://developer.android.com/training/cars/apps/automotive-os#automotive-module -->
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.screen.portrait"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.screen.landscape"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:name=".CarApp"
@@ -38,12 +56,14 @@
         android:theme="@style/Theme.Polestar">
         <meta-data android:name="androidx.car.app.minCarApiLevel"
             android:value="4" />
+        <meta-data android:name="com.android.automotive"
+            android:resource="@xml/automotive_app_desc"/>
         <service
             android:name=".CarTrackerAppService"
             android:exported="true">
             <intent-filter>
                 <action android:name="androidx.car.app.CarAppService" />
-                <category android:name="androidx.car.app.category.NAVIGATION"/>
+                <category android:name="androidx.car.app.category.POI"/>
             </intent-filter>
         </service>
         <service android:foregroundServiceType="location"

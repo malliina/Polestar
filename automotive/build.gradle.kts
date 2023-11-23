@@ -61,7 +61,7 @@ android {
     }
 }
 
-val autoVersion = "1.4.0-beta02"
+val autoVersion = "1.4.0-rc01"
 
 dependencies {
     implementation("androidx.car.app:app:$autoVersion")
