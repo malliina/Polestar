@@ -61,7 +61,7 @@ android {
     }
 }
 
-val autoVersion = "1.4.0-rc01"
+val autoVersion = "1.4.0-rc02"
 
 dependencies {
     implementation("androidx.car.app:app:$autoVersion")
@@ -70,7 +70,7 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("com.jakewharton.timber:timber:5.0.1")
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
     val moshiVersion = "1.15.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
