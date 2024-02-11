@@ -56,6 +56,9 @@ android {
         kotlinCompilerExtensionVersion = "1.5.3"
     }
     useLibrary("android.car")
+    buildFeatures {
+        buildConfig = true
+    }
     kotlin {
         jvmToolchain(11)
     }
