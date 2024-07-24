@@ -53,7 +53,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     useLibrary("android.car")
     buildFeatures {
@@ -64,23 +64,23 @@ android {
     }
 }
 
-val autoVersion = "1.4.0-rc02"
+val autoVersion = "1.4.0"
 
 dependencies {
     implementation("androidx.car.app:app:$autoVersion")
     implementation("androidx.car.app:app-automotive:$autoVersion")
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
-    implementation("com.google.android.gms:play-services-location:21.1.0")
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
     val moshiVersion = "1.15.0"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.car.app:app-testing:$autoVersion")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
