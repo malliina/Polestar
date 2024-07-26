@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 29 // Android 10
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 35
         versionName = "1.21.2"
 
@@ -52,9 +52,6 @@ android {
         }
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
-    }
     useLibrary("android.car")
     buildFeatures {
         buildConfig = true
@@ -75,10 +72,10 @@ dependencies {
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
-    val moshiVersion = "1.15.0"
+    val moshiVersion = "1.15.1"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
     testImplementation("androidx.car.app:app-testing:$autoVersion")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
