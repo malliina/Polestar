@@ -46,7 +46,8 @@ class CarLocationService : Service() {
 
         fun createNotificationChannels(context: Context) {
             val channel = NotificationChannel(LOCATIONS_CHANNEL, "Car notifications", NotificationManager.IMPORTANCE_DEFAULT)
-            val bootChannel = NotificationChannel(BootEventReceiver.BOOT_CHANNEL, "App boot notifications", NotificationManager.IMPORTANCE_HIGH)
+            val bootChannel =
+                NotificationChannel(BootEventReceiver.BOOT_CHANNEL, "App boot notifications", NotificationManager.IMPORTANCE_HIGH)
             val manager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channels = listOf(channel, bootChannel)
             manager.createNotificationChannels(channels)
@@ -54,7 +55,11 @@ class CarLocationService : Service() {
             Timber.i("Created notification channels $ids")
         }
 
-        fun intent(context: Context, title: String, text: String): Intent =
+        fun intent(
+            context: Context,
+            title: String,
+            text: String,
+        ): Intent =
             Intent(context, CarLocationService::class.java).apply {
                 action = START_LOCATIONS
                 putExtra(Title, title)
@@ -71,7 +76,11 @@ class CarLocationService : Service() {
     }
 
     @SuppressLint("MissingPermission")
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
         super.onStartCommand(intent, flags, startId)
         val describe = intent?.action ?: "no action"
         intent?.let { i ->
@@ -105,25 +114,31 @@ class CarLocationService : Service() {
     private fun prepareLocations() {
         val context = applicationContext
         client = LocationServices.getFusedLocationProviderClient(context)
-        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
-            .setMaxUpdateDelayMillis(intervalMillis * locationsPerBatch) // batching, check the docs
-            .build()
+        locationRequest =
+            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
+                .setMaxUpdateDelayMillis(intervalMillis * locationsPerBatch) // batching, check the docs
+                .build()
         val pi: PendingIntent by lazy {
-            val intent = Intent(context, LocationUpdatesBroadcastReceiver::class.java).apply {
-                action = LocationUpdatesBroadcastReceiver.ACTION_LOCATIONS
-            }
+            val intent =
+                Intent(context, LocationUpdatesBroadcastReceiver::class.java).apply {
+                    action = LocationUpdatesBroadcastReceiver.ACTION_LOCATIONS
+                }
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
         }
         pendingIntent = pi
     }
 
-    private fun notification(title: String, text: String): Notification {
-        val startAppIntent = PendingIntent.getActivity(
-            this,
-            0,
-            packageManager.getLaunchIntentForPackage(this.packageName),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+    private fun notification(
+        title: String,
+        text: String,
+    ): Notification {
+        val startAppIntent =
+            PendingIntent.getActivity(
+                this,
+                0,
+                packageManager.getLaunchIntentForPackage(this.packageName),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
         return Notification.Builder(applicationContext, LOCATIONS_CHANNEL)
             .setContentTitle(title)
             .setContentText(text)
@@ -146,10 +161,12 @@ class CarLocationService : Service() {
 fun Context.isLocationGranted(): Boolean =
     checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-fun Context.isAllPermissionsGranted(): Boolean = PermissionContent.allPermissions.all { permission ->
-    checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
-}
+fun Context.isAllPermissionsGranted(): Boolean =
+    PermissionContent.allPermissions.all { permission ->
+        checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+    }
 
-fun Context.notGrantedPermissions(): List<String> = PermissionContent.allPermissions.filter { permission ->
-    checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED
-}
+fun Context.notGrantedPermissions(): List<String> =
+    PermissionContent.allPermissions.filter { permission ->
+        checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED
+    }

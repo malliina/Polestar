@@ -15,10 +15,13 @@ import kotlin.coroutines.suspendCoroutine
 
 class Google(private val client: GoogleSignInClient, private val userState: UserState) {
     companion object {
+        // https://console.cloud.google.com/apis/credentials/oauthclient/497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com?project=boattracker-209616
         private const val webClientId = "497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com"
 
-        fun build(ctx: Context, userState: UserState) =
-            Google(GoogleSignIn.getClient(ctx, options()), userState)
+        fun build(
+            ctx: Context,
+            userState: UserState,
+        ) = Google(GoogleSignIn.getClient(ctx, options()), userState)
 
         fun readUser(account: GoogleSignInAccount): UserInfo? {
             val idToken = account.idToken
@@ -30,10 +33,11 @@ class Google(private val client: GoogleSignInClient, private val userState: User
             }
         }
 
-        private fun options() = GoogleSignInOptions.Builder()
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
+        private fun options() =
+            GoogleSignInOptions.Builder()
+                .requestIdToken(webClientId)
+                .requestEmail()
+                .build()
     }
 
     fun startSignIn(): Intent {
@@ -58,7 +62,10 @@ class Google(private val client: GoogleSignInClient, private val userState: User
             null
         }
 
-    fun handleSignIn(account: GoogleSignInAccount, silent: Boolean): UserInfo? {
+    fun handleSignIn(
+        account: GoogleSignInAccount,
+        silent: Boolean,
+    ): UserInfo? {
         try {
             readUser(account)?.let { user ->
 //                Timber.d("Got user ${user.email}...")
@@ -92,28 +99,30 @@ class Google(private val client: GoogleSignInClient, private val userState: User
     }
 }
 
-suspend fun <T> Task<T>.await(): T = suspendCoroutine { cont ->
-    addOnCompleteListener { task ->
-        try {
-            val t = task.getResult(ApiException::class.java)
-            if (t != null) {
-                cont.resume(t)
-            } else {
-                cont.resumeWithException(Exception("No result in task."))
+suspend fun <T> Task<T>.await(): T =
+    suspendCoroutine { cont ->
+        addOnCompleteListener { task ->
+            try {
+                val t = task.getResult(ApiException::class.java)
+                if (t != null) {
+                    cont.resume(t)
+                } else {
+                    cont.resumeWithException(Exception("No result in task."))
+                }
+            } catch (e: ApiException) {
+                cont.resumeWithException(e)
             }
-        } catch (e: ApiException) {
-            cont.resumeWithException(e)
         }
     }
-}
 
-suspend fun Task<Void>.awaitVoid() = suspendCoroutine { cont ->
-    addOnCompleteListener { task ->
-        try {
-            task.getResult(ApiException::class.java)
-            cont.resume(Unit)
-        } catch (e: ApiException) {
-            cont.resumeWithException(e)
+suspend fun Task<Void>.awaitVoid() =
+    suspendCoroutine { cont ->
+        addOnCompleteListener { task ->
+            try {
+                task.getResult(ApiException::class.java)
+                cont.resume(Unit)
+            } catch (e: ApiException) {
+                cont.resumeWithException(e)
+            }
         }
     }
-}

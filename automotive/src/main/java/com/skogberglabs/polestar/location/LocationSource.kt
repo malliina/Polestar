@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.stateIn
 interface LocationSourceInterface {
     val locationUpdates: SharedFlow<List<LocationUpdate>>
     val currentLocation: StateFlow<LocationUpdate?>
+
     fun locationLatest(): Coord?
 }
 
@@ -23,6 +24,7 @@ class LocationSource : LocationSourceInterface {
     companion object {
         val instance = LocationSource()
     }
+
     private val scope = CoroutineScope(Dispatchers.IO)
     private val locationServicesAvailability: MutableStateFlow<Boolean?> =
         MutableStateFlow(null)
@@ -33,12 +35,12 @@ class LocationSource : LocationSourceInterface {
     override val currentLocation: StateFlow<LocationUpdate?> =
         locationUpdates.map { it.lastOrNull() }.stateIn(scope, SharingStarted.Eagerly, null)
 
-    override fun locationLatest(): Coord? =
-        currentLocation.value?.let { loc -> Coord(loc.latitude, loc.longitude) }
+    override fun locationLatest(): Coord? = currentLocation.value?.let { loc -> Coord(loc.latitude, loc.longitude) }
 
     val locationServicesAvailable: Flow<Boolean?> =
         locationServicesAvailability.shareIn(scope, SharingStarted.Lazily, 1)
 
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
+
     fun availability(isAvailable: Boolean) = locationServicesAvailability.tryEmit(isAvailable)
 }

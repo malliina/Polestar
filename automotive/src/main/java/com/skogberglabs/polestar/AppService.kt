@@ -31,24 +31,45 @@ import kotlin.time.Duration.Companion.seconds
 interface CarViewModelInterface {
     val languages: Flow<List<CarLanguage>>
     val profile: Flow<Outcome<ProfileInfo?>>
+
     fun selectCar(id: String)
+
     fun saveLanguage(code: String)
+
     fun signOut()
 
     companion object {
-        fun preview(ctx: Context) = object : CarViewModelInterface {
-            override val languages: StateFlow<List<CarLanguage>> = MutableStateFlow(
-                Previews.conf(
-                    ctx
-                ).languages.map { it.language }
-            )
-            val cars = ProfileInfo(ApiUserInfo(Email("a@b.com"), listOf(CarInfo("a", "Mos", 1L), CarInfo("b", "Tesla", 1L), CarInfo("a", "Toyota", 1L), CarInfo("a", "Rivian", 1L), CarInfo("a", "Cybertruck", 1L))), null)
-            override val profile: StateFlow<Outcome<ProfileInfo?>> =
-                MutableStateFlow(Outcome.Success(cars))
-            override fun selectCar(id: String) {}
-            override fun saveLanguage(code: String) {}
-            override fun signOut() {}
-        }
+        fun preview(ctx: Context) =
+            object : CarViewModelInterface {
+                override val languages: StateFlow<List<CarLanguage>> =
+                    MutableStateFlow(
+                        Previews.conf(
+                            ctx,
+                        ).languages.map { it.language },
+                    )
+                val cars =
+                    ProfileInfo(
+                        ApiUserInfo(
+                            Email("a@b.com"),
+                            listOf(
+                                CarInfo("a", "Mos", 1L),
+                                CarInfo("b", "Tesla", 1L),
+                                CarInfo("a", "Toyota", 1L),
+                                CarInfo("a", "Rivian", 1L),
+                                CarInfo("a", "Cybertruck", 1L),
+                            ),
+                        ),
+                        null,
+                    )
+                override val profile: StateFlow<Outcome<ProfileInfo?>> =
+                    MutableStateFlow(Outcome.Success(cars))
+
+                override fun selectCar(id: String) {}
+
+                override fun saveLanguage(code: String) {}
+
+                override fun signOut() {}
+            }
     }
 }
 
@@ -56,7 +77,7 @@ interface CarViewModelInterface {
 class AppService(
     private val applicationContext: Context,
     val mainScope: CoroutineScope,
-    private val ioScope: CoroutineScope
+    private val ioScope: CoroutineScope,
 ) : CarViewModelInterface {
     private val userState = UserState.instance
     val google = Google.build(applicationContext, userState)
@@ -66,56 +87,67 @@ class AppService(
     private val carListener = CarListener(applicationContext)
     private val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener, ioScope)
     private val activeCar = preferences.userPreferencesFlow().map { it.carId }
-    val tracks: StateFlow<Outcome<Tracks>> = userState.userResult.flatMapLatest { user ->
-        when (user) {
-            is Outcome.Success -> tracksFlow()
-            Outcome.Idle -> flowOf(Outcome.Idle)
-            Outcome.Loading -> flowOf(Outcome.Loading)
-            is Outcome.Error -> flowOf(Outcome.Error(user.e))
-        }
-    }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
-    override val profile: StateFlow<Outcome<ProfileInfo?>> = userState.userResult.flatMapLatest { user ->
-        when (user) {
-            is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
-            Outcome.Idle -> flowOf(Outcome.Idle)
-            Outcome.Loading -> flowOf(Outcome.Loading)
-            is Outcome.Error -> flowOf(Outcome.Error(user.e))
-        }
-    }.combine(activeCar) { user, carId ->
-        user.map { ProfileInfo(it, carId) }
-    }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+    val tracks: StateFlow<Outcome<Tracks>> =
+        userState.userResult.flatMapLatest { user ->
+            when (user) {
+                is Outcome.Success -> tracksFlow()
+                Outcome.Idle -> flowOf(Outcome.Idle)
+                Outcome.Loading -> flowOf(Outcome.Loading)
+                is Outcome.Error -> flowOf(Outcome.Error(user.e))
+            }
+        }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+    override val profile: StateFlow<Outcome<ProfileInfo?>> =
+        userState.userResult.flatMapLatest { user ->
+            when (user) {
+                is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
+                Outcome.Idle -> flowOf(Outcome.Idle)
+                Outcome.Loading -> flowOf(Outcome.Loading)
+                is Outcome.Error -> flowOf(Outcome.Error(user.e))
+            }
+        }.combine(activeCar) { user, carId ->
+            user.map { ProfileInfo(it, carId) }
+        }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+
     fun profileLatest(): ProfileInfo? = profile.value.toOption()
-    private val savedLanguage: StateFlow<String?> = preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
-        .stateIn(ioScope, SharingStarted.Eagerly, null)
+
+    private val savedLanguage: StateFlow<String?> =
+        preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
+            .stateIn(ioScope, SharingStarted.Eagerly, null)
+
     fun currentLanguage() = savedLanguage.value
+
     override val languages: StateFlow<List<CarLanguage>> =
         preferences.userPreferencesFlow()
             .map { c -> c.carConf?.let { it.languages.map { l -> l.language } } ?: emptyList() }
             .stateIn(ioScope, SharingStarted.Eagerly, emptyList())
+
     fun languagesLatest() = languages.value
+
     private val currentLang: StateFlow<Outcome<CarLang>> =
         preferences.userPreferencesFlow()
             .map { it.lang?.let { lang -> Outcome.Success(lang) } ?: Outcome.Loading }
             .stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
-    val appState: StateFlow<AppState> = currentLang.combine(profile) { lang, user ->
-        when (lang) {
-            is Outcome.Error -> AppState.Loading
-            Outcome.Idle -> AppState.Loading
-            Outcome.Loading -> AppState.Loading
-            is Outcome.Success -> when (user) {
-                is Outcome.Error -> AppState.Anon(lang.result)
-                Outcome.Idle -> AppState.Anon(lang.result)
+    val appState: StateFlow<AppState> =
+        currentLang.combine(profile) { lang, user ->
+            when (lang) {
+                is Outcome.Error -> AppState.Loading
+                Outcome.Idle -> AppState.Loading
                 Outcome.Loading -> AppState.Loading
                 is Outcome.Success ->
-                    user.result?.let {
-                        AppState.LoggedIn(
-                            it,
-                            lang.result
-                        )
-                    } ?: AppState.Anon(lang.result)
+                    when (user) {
+                        is Outcome.Error -> AppState.Anon(lang.result)
+                        Outcome.Idle -> AppState.Anon(lang.result)
+                        Outcome.Loading -> AppState.Loading
+                        is Outcome.Success ->
+                            user.result?.let {
+                                AppState.LoggedIn(
+                                    it,
+                                    lang.result,
+                                )
+                            } ?: AppState.Anon(lang.result)
+                    }
             }
-        }
-    }.stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
+        }.stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
     private val navigateToPlacesState: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val navigateToPlaces get() = navigateToPlacesState.value
 
@@ -149,56 +181,62 @@ class AppService(
     }
 
     // Emits loading/error states until loading conf succeeds
-    private suspend fun confFlow(): Flow<Outcome<CarConf>> = flow {
-        emit(Outcome.Loading)
-        val outcome = try {
-            val response = http.get("/cars/conf", Adapters.carConf)
-            Outcome.Success(response)
-        } catch (e: Exception) {
-            // Emitting in a catch-clause fails
-            Timber.e(e, "Failed to load config. Retrying soon...")
-            Outcome.Error(e)
+    private suspend fun confFlow(): Flow<Outcome<CarConf>> =
+        flow {
+            emit(Outcome.Loading)
+            val outcome =
+                try {
+                    val response = http.get("/cars/conf", Adapters.carConf)
+                    Outcome.Success(response)
+                } catch (e: Exception) {
+                    // Emitting in a catch-clause fails
+                    Timber.e(e, "Failed to load config. Retrying soon...")
+                    Outcome.Error(e)
+                }
+            emit(outcome)
+            if (!outcome.isSuccess()) {
+                delay(30.seconds)
+                emitAll(confFlow())
+            }
         }
-        emit(outcome)
-        if (!outcome.isSuccess()) {
-            delay(30.seconds)
-            emitAll(confFlow())
-        }
-    }
 
-    private suspend fun tracksFlow(): Flow<Outcome<Tracks>> = flow {
-        emit(Outcome.Loading)
-        val outcome = try {
-            val response = http.get("/tracks?limit=5", Adapters.tracks)
-            Timber.i("Loaded ${response.tracks.size} tracks.")
-            Outcome.Success(response)
-        } catch (e: Exception) {
-            // Emitting in a catch-clause fails
-            Timber.e(e, "Failed to load tracks. Retrying soon...")
-            Outcome.Error(e)
+    private suspend fun tracksFlow(): Flow<Outcome<Tracks>> =
+        flow {
+            emit(Outcome.Loading)
+            val outcome =
+                try {
+                    val response = http.get("/tracks?limit=5", Adapters.tracks)
+                    Timber.i("Loaded ${response.tracks.size} tracks.")
+                    Outcome.Success(response)
+                } catch (e: Exception) {
+                    // Emitting in a catch-clause fails
+                    Timber.e(e, "Failed to load tracks. Retrying soon...")
+                    Outcome.Error(e)
+                }
+            emit(outcome)
+            if (!outcome.isSuccess()) {
+                delay(30.seconds)
+                emitAll(tracksFlow())
+            }
         }
-        emit(outcome)
-        if (!outcome.isSuccess()) {
-            delay(30.seconds)
-            emitAll(tracksFlow())
-        }
-    }
 
-    private suspend fun meFlow(): Flow<Outcome<UserContainer>> = flow {
-        emit(Outcome.Loading)
-        val outcome = try {
-            val response = http.get("/users/me", Adapters.userContainer)
-            Outcome.Success(response)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to load profile. Retrying soon...")
-            Outcome.Error(e)
+    private suspend fun meFlow(): Flow<Outcome<UserContainer>> =
+        flow {
+            emit(Outcome.Loading)
+            val outcome =
+                try {
+                    val response = http.get("/users/me", Adapters.userContainer)
+                    Outcome.Success(response)
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to load profile. Retrying soon...")
+                    Outcome.Error(e)
+                }
+            emit(outcome)
+            if (!outcome.isSuccess()) {
+                delay(30.seconds)
+                emitAll(meFlow())
+            }
         }
-        emit(outcome)
-        if (!outcome.isSuccess()) {
-            delay(30.seconds)
-            emitAll(meFlow())
-        }
-    }
 
     override fun selectCar(id: String) {
         ioScope.launch {

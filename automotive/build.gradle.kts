@@ -22,6 +22,16 @@ android {
     }
 
     signingConfigs {
+        getByName("debug") {
+            val RELEASE_STORE_FILE: String by project
+            storeFile = file(RELEASE_STORE_FILE)
+            val RELEASE_STORE_PASSWORD: String by project
+            storePassword = RELEASE_STORE_PASSWORD
+            val RELEASE_KEY_ALIAS: String by project
+            keyAlias = RELEASE_KEY_ALIAS
+            val RELEASE_KEY_PASSWORD: String by project
+            keyPassword = RELEASE_KEY_PASSWORD
+        }
         create("release") {
             if (System.getenv("CI") == "true") {
                 storeFile = rootProject.file("keystore.jks")
@@ -46,7 +56,7 @@ android {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
             signingConfig = signingConfigs.getByName("release")
         }

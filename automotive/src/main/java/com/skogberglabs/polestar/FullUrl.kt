@@ -15,11 +15,27 @@ data class FullUrl(val proto: String, val hostAndPort: String, val uri: String) 
     companion object {
         private val pattern = Pattern.compile("(.+)://([^/]+)(/?.*)")
 
-        fun https(domain: String, uri: String): FullUrl = FullUrl("https", dropHttps(domain), uri)
-        fun http(domain: String, uri: String): FullUrl = FullUrl("http", dropHttps(domain), uri)
+        fun https(
+            domain: String,
+            uri: String,
+        ): FullUrl = FullUrl("https", dropHttps(domain), uri)
+
+        fun http(
+            domain: String,
+            uri: String,
+        ): FullUrl = FullUrl("http", dropHttps(domain), uri)
+
         fun host(domain: String): FullUrl = FullUrl("https", dropHttps(domain), "")
-        fun ws(domain: String, uri: String): FullUrl = FullUrl("ws", domain, uri)
-        fun wss(domain: String, uri: String): FullUrl = FullUrl("wss", domain, uri)
+
+        fun ws(
+            domain: String,
+            uri: String,
+        ): FullUrl = FullUrl("ws", domain, uri)
+
+        fun wss(
+            domain: String,
+            uri: String,
+        ): FullUrl = FullUrl("wss", domain, uri)
 
         fun parse(input: String): FullUrl {
             return build(input)

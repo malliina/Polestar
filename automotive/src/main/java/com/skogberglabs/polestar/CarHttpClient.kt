@@ -24,19 +24,21 @@ interface TokenSource {
     suspend fun fetchToken(): IdToken?
 
     companion object {
-        val empty = object : TokenSource {
-            override suspend fun fetchToken(): IdToken? = null
-        }
+        val empty =
+            object : TokenSource {
+                override suspend fun fetchToken(): IdToken? = null
+            }
     }
 }
 
 class GoogleTokenSource(private val google: Google) : TokenSource {
-    override suspend fun fetchToken(): IdToken? = try {
-        google.signInSilently()?.idToken
-    } catch (e: Exception) {
-        Timber.w(e, "Failed to fetch token")
-        null
-    }
+    override suspend fun fetchToken(): IdToken? =
+        try {
+            google.signInSilently()?.idToken
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to fetch token")
+            null
+        }
 }
 
 class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvConf = EnvConf.current) {
@@ -52,22 +54,25 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         val postPutHeaders = mapOf("Accept-Encoding" to "identity")
 
         fun headers(token: IdToken?): Map<String, String> {
-            val alwaysIncluded = mapOf(
-                Accept to MediaTypeJson.toString(),
-                UserAgent to "Car-Map/${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-            )
+            val alwaysIncluded =
+                mapOf(
+                    Accept to MediaTypeJson.toString(),
+                    UserAgent to "Car-Map/${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                )
             return if (token != null) mapOf(Authorization to "Bearer $token") + alwaysIncluded else alwaysIncluded
         }
     }
 
-    private val client: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .callTimeout(60, TimeUnit.SECONDS)
-        .build()
+    private val client: OkHttpClient =
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(60, TimeUnit.SECONDS)
+            .build()
 
     private var token: IdToken? = null
+
     private suspend fun fetchToken(): IdToken? =
         token ?: run {
             val t = tokenSource.fetchToken()
@@ -75,7 +80,10 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             t
         }
 
-    suspend fun <T> get(path: String, adapter: JsonAdapter<T>): T {
+    suspend fun <T> get(
+        path: String,
+        adapter: JsonAdapter<T>,
+    ): T {
         val request = authRequest(env.baseUrl.append(path)).get().build()
         return execute(request, adapter)
     }
@@ -84,7 +92,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         path: String,
         body: Req,
         writer: JsonAdapter<Req>,
-        reader: JsonAdapter<Res>
+        reader: JsonAdapter<Res>,
     ): Res = body(path, body, writer, reader) { req, rb -> req.post(rb) }
 
     suspend fun <Req, Res> body(
@@ -92,15 +100,19 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         body: Req,
         writer: JsonAdapter<Req>,
         reader: JsonAdapter<Res>,
-        install: (Request.Builder, RequestBody) -> Request.Builder
-    ): Res = withContext(Dispatchers.IO) {
-        val url = env.baseUrl.append(path)
-        val requestBody = writer.toJson(body).toRequestBody(MediaTypeJson)
-        val builder = installHeaders(postPutHeaders, authRequest(url))
-        execute(install(builder, requestBody).build(), reader)
-    }
+        install: (Request.Builder, RequestBody) -> Request.Builder,
+    ): Res =
+        withContext(Dispatchers.IO) {
+            val url = env.baseUrl.append(path)
+            val requestBody = writer.toJson(body).toRequestBody(MediaTypeJson)
+            val builder = installHeaders(postPutHeaders, authRequest(url))
+            execute(install(builder, requestBody).build(), reader)
+        }
 
-    private suspend fun <T> execute(request: Request, reader: JsonAdapter<T>): T =
+    private suspend fun <T> execute(
+        request: Request,
+        reader: JsonAdapter<T>,
+    ): T =
         try {
             executeOnce(request, reader)
         } catch (e: ErrorsException) {
@@ -121,7 +133,10 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             }
         }
 
-    private suspend fun <T> executeOnce(request: Request, reader: JsonAdapter<T>): T =
+    private suspend fun <T> executeOnce(
+        request: Request,
+        reader: JsonAdapter<T>,
+    ): T =
         withContext(Dispatchers.IO) {
             make(client.newCall(request)).use { response ->
                 val body = response.body
@@ -132,13 +147,16 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                         throw BodyException(request)
                     }
                 } else {
-                    val errors = body?.let { b ->
-                        try {
-                            val str = b.string()
-                            Timber.w("Request ${request.method} ${request.url} errored with body $str")
-                            Adapters.errors.read(str)
-                        } catch (e: Exception) { null }
-                    }
+                    val errors =
+                        body?.let { b ->
+                            try {
+                                val str = b.string()
+                                Timber.w("Request ${request.method} ${request.url} errored with body $str")
+                                Adapters.errors.read(str)
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
                     errors?.let {
                         Timber.w("Throwing error.")
                         throw ErrorsException(it, response.code, request)
@@ -150,39 +168,54 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private suspend fun make(call: Call): Response = suspendCancellableCoroutine { cont ->
-        val callback = object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                cont.resume(response) {
-                    // If we have a response but we're cancelled while resuming, we need to
-                    // close() the unused response
-                    if (response.body != null) {
-                        response.closeQuietly()
+    private suspend fun make(call: Call): Response =
+        suspendCancellableCoroutine { cont ->
+            val callback =
+                object : Callback {
+                    override fun onResponse(
+                        call: Call,
+                        response: Response,
+                    ) {
+                        cont.resume(response) {
+                            // If we have a response but we're cancelled while resuming, we need to
+                            // close() the unused response
+                            if (response.body != null) {
+                                response.closeQuietly()
+                            }
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call,
+                        e: IOException,
+                    ) {
+                        cont.resumeWithException(e)
                     }
                 }
-            }
-
-            override fun onFailure(call: Call, e: IOException) {
-                cont.resumeWithException(e)
-            }
-        }
-        call.enqueue(callback)
-        cont.invokeOnCancellation {
-            try {
-                call.cancel()
-            } catch (t: Throwable) {
-                // Ignore cancel exception
+            call.enqueue(callback)
+            cont.invokeOnCancellation {
+                try {
+                    call.cancel()
+                } catch (t: Throwable) {
+                    // Ignore cancel exception
+                }
             }
         }
-    }
 
-    private suspend fun authRequest(url: FullUrl) =
-        newRequest(url, headers(fetchToken()))
-    private fun newRequest(url: FullUrl, headers: Map<String, String>): Request.Builder {
+    private suspend fun authRequest(url: FullUrl) = newRequest(url, headers(fetchToken()))
+
+    private fun newRequest(
+        url: FullUrl,
+        headers: Map<String, String>,
+    ): Request.Builder {
         val builder = Request.Builder().url(url.url)
         return installHeaders(headers, builder)
     }
-    private fun installHeaders(headers: Map<String, String>, builder: Request.Builder): Request.Builder {
+
+    private fun installHeaders(
+        headers: Map<String, String>,
+        builder: Request.Builder,
+    ): Request.Builder {
         for ((k, v) in headers) {
             builder.header(k, v)
         }

@@ -17,25 +17,31 @@ class BootEventReceiver : BroadcastReceiver() {
     companion object {
         val BOOT_CHANNEL = Utils.appId("channels.BOOT")
     }
-    override fun onReceive(context: Context, intent: Intent) {
+
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         Timber.i("Boot event receiver received $intent")
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             Timber.i("Boot completed.")
             context.currentLangBlocking()?.let { lang ->
                 val nlang = lang.notifications
-                val locationsIntent = PendingIntent.getForegroundService(
-                    context.applicationContext,
-                    0,
-                    CarLocationService.intent(context.applicationContext, nlang.autoStart, nlang.startTracking),
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-                val notification = Notification.Builder(context, BOOT_CHANNEL)
-                    .setContentTitle(nlang.autoStart)
-                    .setContentText(nlang.startTracking)
-                    .setContentIntent(locationsIntent)
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
-                    .setOngoing(false)
-                    .build()
+                val locationsIntent =
+                    PendingIntent.getForegroundService(
+                        context.applicationContext,
+                        0,
+                        CarLocationService.intent(context.applicationContext, nlang.autoStart, nlang.startTracking),
+                        PendingIntent.FLAG_IMMUTABLE,
+                    )
+                val notification =
+                    Notification.Builder(context, BOOT_CHANNEL)
+                        .setContentTitle(nlang.autoStart)
+                        .setContentText(nlang.startTracking)
+                        .setContentIntent(locationsIntent)
+                        .setSmallIcon(R.drawable.ic_launcher_foreground)
+                        .setOngoing(false)
+                        .build()
                 val manager = context.getSystemService(Service.NOTIFICATION_SERVICE) as NotificationManager
                 manager.notify(NotificationIds.BOOT_ID, notification)
             }

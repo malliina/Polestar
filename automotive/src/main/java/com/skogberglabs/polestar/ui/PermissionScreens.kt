@@ -29,12 +29,14 @@ data class PermissionContent(val lang: PermissionContentLang, val permissions: L
         private val allExceptBackgroundLocation = CarListener.permissions + listOf(locationPermission)
 
         fun car(lang: PermissionContentLang) = PermissionContent(lang, CarListener.permissions)
+
         fun location(lang: PermissionContentLang) = PermissionContent(lang, listOf(locationPermission))
 
         /**
          * Request separately https://developer.android.com/about/versions/11/privacy/location#request-background-location-separately
          */
         fun background(lang: PermissionContentLang) = PermissionContent(lang, listOf(backgroundPermission))
+
         fun allForeground(lang: PermissionContentLang) = PermissionContent(lang, allExceptBackgroundLocation)
     }
 }
@@ -43,10 +45,13 @@ class RequestPermissionScreen(
     carContext: CarContext,
     val content: PermissionContent,
     val lang: PermissionsLang,
-    private val onGranted: (ScreenManager) -> Unit
+    private val onGranted: (ScreenManager) -> Unit,
 ) : Screen(carContext) {
     companion object {
-        fun permissionContent(notGranted: List<String>, lang: PermissionsLang): PermissionContent =
+        fun permissionContent(
+            notGranted: List<String>,
+            lang: PermissionsLang,
+        ): PermissionContent =
             if (notGranted.any { p -> CarListener.permissions.contains(p) }) {
                 PermissionContent.car(lang.car)
             } else if (notGranted.contains(PermissionContent.locationPermission)) {
@@ -60,28 +65,37 @@ class RequestPermissionScreen(
 
     override fun onGetTemplate(): Template {
         Screens.installProfileRootBackBehavior(this)
-        val pocl = ParkedOnlyOnClickListener.create {
-            carContext.requestPermissions(content.permissions) { grantedPermissions, rejectedPermissions ->
-                if (grantedPermissions.isNotEmpty()) {
-                    val str = grantedPermissions.joinToString(separator = ", ")
-                    Timber.i("Granted permissions: $str.")
-                    if (carContext.isAllPermissionsGranted()) {
-                        onGranted(screenManager)
+        val pocl =
+            ParkedOnlyOnClickListener.create {
+                carContext.requestPermissions(content.permissions) { grantedPermissions, rejectedPermissions ->
+                    if (grantedPermissions.isNotEmpty()) {
+                        val str = grantedPermissions.joinToString(separator = ", ")
+                        Timber.i("Granted permissions: $str.")
+                        if (carContext.isAllPermissionsGranted()) {
+                            onGranted(screenManager)
+                        } else {
+                            screenManager.push(
+                                RequestPermissionScreen(
+                                    carContext,
+                                    permissionContent(carContext.notGrantedPermissions(), lang),
+                                    lang,
+                                    onGranted,
+                                ),
+                            )
+                        }
                     } else {
-                        screenManager.push(RequestPermissionScreen(carContext, permissionContent(carContext.notGrantedPermissions(), lang), lang, onGranted))
+                        val str = rejectedPermissions.joinToString(separator = ", ")
+                        Timber.i("Rejected permissions: $str.")
+                        screenManager.push(NoPermissionScreen(carContext, content, lang))
                     }
-                } else {
-                    val str = rejectedPermissions.joinToString(separator = ", ")
-                    Timber.i("Rejected permissions: $str.")
-                    screenManager.push(NoPermissionScreen(carContext, content, lang))
                 }
             }
-        }
 
-        val myAction = action {
-            setTitle(content.title)
-            setOnClickListener(pocl)
-        }
+        val myAction =
+            action {
+                setTitle(content.title)
+                setOnClickListener(pocl)
+            }
         return messageTemplate(content.message) {
             addAction(myAction)
             setHeaderAction(Action.BACK)
@@ -91,22 +105,25 @@ class RequestPermissionScreen(
 
 class NoPermissionScreen(carContext: CarContext, val content: PermissionContent, val lang: PermissionsLang) : Screen(carContext) {
     override fun onGetTemplate(): Template {
-        val openSettingsAction = action {
-            setTitle("Open Settings")
-            setOnClickListener {
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        val openSettingsAction =
+            action {
+                setTitle("Open Settings")
+                setOnClickListener {
+                    val intent =
+                        Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                    carContext.startActivity(intent)
                 }
-                carContext.startActivity(intent)
             }
-        }
-        val tryAgainAction = action {
-            setTitle("Try again")
-            setOnClickListener {
-                Timber.i("Trying again...")
-                screenManager.push(RequestPermissionScreen(carContext, content, lang, onGranted = { screenManager.popToRoot() }))
+        val tryAgainAction =
+            action {
+                setTitle("Try again")
+                setOnClickListener {
+                    Timber.i("Trying again...")
+                    screenManager.push(RequestPermissionScreen(carContext, content, lang, onGranted = { screenManager.popToRoot() }))
+                }
             }
-        }
         return messageTemplate("Please open Settings and grant app-level permissions for this app.") {
             addAction(openSettingsAction)
             addAction(tryAgainAction)
