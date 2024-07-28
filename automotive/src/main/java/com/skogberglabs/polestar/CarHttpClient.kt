@@ -142,7 +142,8 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                 val body = response.body
                 if (response.isSuccessful) {
                     body?.let { b ->
-                        reader.fromJson(b.source()) ?: throw JsonDataException("Moshi returned null for response body from '${request.url}'.")
+                        reader.fromJson(b.source())
+                            ?: throw JsonDataException("Moshi returned null for response body from '${request.url}'.")
                     } ?: run {
                         throw BodyException(request)
                     }
