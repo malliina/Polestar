@@ -12,8 +12,8 @@ android {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 29 // Android 10
         targetSdk = 35
-        versionCode = 36
-        versionName = "1.21.3"
+        versionCode = 37
+        versionName = "1.21.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -23,14 +23,21 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            val RELEASE_STORE_FILE: String by project
-            storeFile = file(RELEASE_STORE_FILE)
-            val RELEASE_STORE_PASSWORD: String by project
-            storePassword = RELEASE_STORE_PASSWORD
-            val RELEASE_KEY_ALIAS: String by project
-            keyAlias = RELEASE_KEY_ALIAS
-            val RELEASE_KEY_PASSWORD: String by project
-            keyPassword = RELEASE_KEY_PASSWORD
+            if (System.getenv("CI") == "true") {
+                storeFile = rootProject.file("keystore.jks")
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            } else {
+                val RELEASE_STORE_FILE: String by project
+                storeFile = file(RELEASE_STORE_FILE)
+                val RELEASE_STORE_PASSWORD: String by project
+                storePassword = RELEASE_STORE_PASSWORD
+                val RELEASE_KEY_ALIAS: String by project
+                keyAlias = RELEASE_KEY_ALIAS
+                val RELEASE_KEY_PASSWORD: String by project
+                keyPassword = RELEASE_KEY_PASSWORD
+            }
         }
         create("release") {
             if (System.getenv("CI") == "true") {
