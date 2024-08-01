@@ -125,7 +125,7 @@ class HomeScreen(
                 val plang = lang.profile
                 val message =
                     user.activeCar?.let { car ->
-                        "${plang.driving} ${car.name} as ${user.email}. ${plang.cloudInstructions}"
+                        "${plang.driving} ${car.name}. ${plang.cloudInstructions}"
                     } ?: "${plang.signedInAs} ${user.email}."
                 return messageTemplate(message) {
                     setTitle(lang.appName)

@@ -45,6 +45,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
     companion object {
         private const val Accept = "Accept"
         private const val Authorization = "Authorization"
+        private const val CsrfToken = "Csrf-Token"
         private const val UserAgent = "User-Agent"
         private val MediaTypeJson = "application/vnd.car.v1+json".toMediaType()
 //        private val MediaTypeJson = "application/vnd.boat.v2+json".toMediaType()
@@ -57,6 +58,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             val alwaysIncluded =
                 mapOf(
                     Accept to MediaTypeJson.toString(),
+                    CsrfToken to "nocheck",
                     UserAgent to "Car-Map/${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 )
             return if (token != null) mapOf(Authorization to "Bearer $token") + alwaysIncluded else alwaysIncluded

@@ -85,7 +85,7 @@ class AppService(
     private val preferences = LocalDataSource(applicationContext)
     val locationSource = LocationSource.instance
     private val carListener = CarListener(applicationContext)
-    private val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener, ioScope)
+    val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener, ioScope)
     private val activeCar = preferences.userPreferencesFlow().map { it.carId }
     val tracks: StateFlow<Outcome<Tracks>> =
         userState.userResult.flatMapLatest { user ->

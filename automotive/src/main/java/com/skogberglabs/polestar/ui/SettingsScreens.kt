@@ -7,6 +7,7 @@ import androidx.car.app.model.Template
 import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.BuildConfig
 import com.skogberglabs.polestar.CarLang
+import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.addRow
 import com.skogberglabs.polestar.itemList
 import com.skogberglabs.polestar.listTemplate
@@ -31,6 +32,12 @@ class SettingsScreen(
             locations.currentLocation.value?.let { current ->
                 "Latest location lat ${current.latitude} lon ${current.longitude} at ${current.date}."
             } ?: "No location obtained."
+        val uploadStatus = when(val s = service.locationUploader.status.value) {
+            is Outcome.Error -> "Uploader failed with ${s.e}."
+            Outcome.Idle -> "Uploader is idle."
+            Outcome.Loading -> "Uploader is loading."
+            is Outcome.Success -> "Uploaded locations, got message: '${s.result.message}'."
+        }
         return listTemplate {
             setTitle(lang.settings.title)
             val list =
@@ -66,6 +73,9 @@ class SettingsScreen(
                     }
                     addRow {
                         setTitle(currentStatus)
+                    }
+                    addRow {
+                        setTitle(uploadStatus)
                     }
                 }
             setSingleList(list)
