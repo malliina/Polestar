@@ -14,13 +14,16 @@ data class UserPreferences(val carId: String?, val language: String?, val carCon
 }
 
 private val Context.dataStore by preferencesDataStore(
-    name = "user_preferences"
+    name = "user_preferences",
 )
 
 interface DataSource {
     fun userPreferencesFlow(): Flow<UserPreferences>
+
     suspend fun saveCarId(carId: String?)
+
     suspend fun saveLanguage(code: String)
+
     suspend fun saveConf(conf: CarConf): UserPreferences
 }
 
@@ -50,9 +53,10 @@ class LocalDataSource(private val context: Context) : DataSource {
     }
 
     override suspend fun saveConf(conf: CarConf): UserPreferences {
-        val snapshot = context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.Conf] = Adapters.carConf.toJson(conf)
-        }
+        val snapshot =
+            context.dataStore.edit { preferences ->
+                preferences[PreferencesKeys.Conf] = Adapters.carConf.toJson(conf)
+            }
         return parse(snapshot)
     }
 
@@ -67,7 +71,7 @@ class LocalDataSource(private val context: Context) : DataSource {
                     Timber.w(e, "Failed to parse cached conf. This is normal if new keys have been introduced.")
                     null
                 }
-            }
+            },
         )
 }
 

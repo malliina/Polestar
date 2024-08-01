@@ -19,36 +19,50 @@ import androidx.car.app.navigation.model.MapTemplate
 import androidx.car.app.navigation.model.NavigationTemplate
 import androidx.car.app.navigation.model.PlaceListNavigationTemplate
 
-fun row(build: Row.Builder.() -> Unit): Row =
-    Row.Builder().apply(build).build()
-fun gridItem(build: GridItem.Builder.() -> Unit): GridItem =
-    GridItem.Builder().apply(build).build()
-fun itemList(build: ItemList.Builder.() -> Unit): ItemList =
-    ItemList.Builder().apply(build).build()
-fun ItemList.Builder.addRow(build: Row.Builder.() -> Unit): ItemList.Builder =
-    addItem(row(build))
-fun pane(build: Pane.Builder.() -> Unit): Pane =
-    Pane.Builder().apply(build).build()
-fun paneTemplate(pane: Pane, build: PaneTemplate.Builder.() -> Unit): PaneTemplate =
-    PaneTemplate.Builder(pane).apply(build).build()
-fun navigationTemplate(build: NavigationTemplate.Builder.() -> Unit) =
-    NavigationTemplate.Builder().apply(build).build()
-fun mapTemplate(build: MapTemplate.Builder.() -> Unit) =
-    MapTemplate.Builder().apply(build).build()
-fun place(loc: CarLocation, build: Place.Builder.() -> Unit = {}): Place =
-    Place.Builder(loc).apply(build).build()
+fun row(build: Row.Builder.() -> Unit): Row = Row.Builder().apply(build).build()
+
+fun gridItem(build: GridItem.Builder.() -> Unit): GridItem = GridItem.Builder().apply(build).build()
+
+fun itemList(build: ItemList.Builder.() -> Unit): ItemList = ItemList.Builder().apply(build).build()
+
+fun ItemList.Builder.addRow(build: Row.Builder.() -> Unit): ItemList.Builder = addItem(row(build))
+
+fun pane(build: Pane.Builder.() -> Unit): Pane = Pane.Builder().apply(build).build()
+
+fun paneTemplate(
+    pane: Pane,
+    build: PaneTemplate.Builder.() -> Unit,
+): PaneTemplate = PaneTemplate.Builder(pane).apply(build).build()
+
+fun navigationTemplate(build: NavigationTemplate.Builder.() -> Unit) = NavigationTemplate.Builder().apply(build).build()
+
+fun mapTemplate(build: MapTemplate.Builder.() -> Unit) = MapTemplate.Builder().apply(build).build()
+
+fun place(
+    loc: CarLocation,
+    build: Place.Builder.() -> Unit = {},
+): Place = Place.Builder(loc).apply(build).build()
+
 fun placeMarker(build: PlaceMarker.Builder.() -> Unit) = PlaceMarker.Builder().apply(build).build()
+
 fun placeListTemplate(build: PlaceListMapTemplate.Builder.() -> Unit): PlaceListMapTemplate =
     PlaceListMapTemplate.Builder().apply(build).build()
+
 fun placeListNavigationTemplate(build: PlaceListNavigationTemplate.Builder.() -> Unit) =
     PlaceListNavigationTemplate.Builder().apply(build).build()
-fun action(build: Action.Builder.() -> Unit) =
-    Action.Builder().apply(build).build()
-fun messageTemplate(message: String, build: MessageTemplate.Builder.() -> Unit): MessageTemplate =
-    MessageTemplate.Builder(message).apply(build).build()
-fun actionStrip(build: ActionStrip.Builder.() -> Unit) =
-    ActionStrip.Builder().apply(build).build()
-fun signInTemplate(method: ProviderSignInMethod, build: SignInTemplate.Builder.() -> Unit) =
-    SignInTemplate.Builder(method).apply(build).build()
-fun listTemplate(build: ListTemplate.Builder.() -> Unit): ListTemplate =
-    ListTemplate.Builder().apply(build).build()
+
+fun action(build: Action.Builder.() -> Unit) = Action.Builder().apply(build).build()
+
+fun messageTemplate(
+    message: String,
+    build: MessageTemplate.Builder.() -> Unit,
+): MessageTemplate = MessageTemplate.Builder(message).apply(build).build()
+
+fun actionStrip(build: ActionStrip.Builder.() -> Unit) = ActionStrip.Builder().apply(build).build()
+
+fun signInTemplate(
+    method: ProviderSignInMethod,
+    build: SignInTemplate.Builder.() -> Unit,
+) = SignInTemplate.Builder(method).apply(build).build()
+
+fun listTemplate(build: ListTemplate.Builder.() -> Unit): ListTemplate = ListTemplate.Builder().apply(build).build()

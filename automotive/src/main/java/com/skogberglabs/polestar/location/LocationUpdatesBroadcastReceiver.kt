@@ -22,23 +22,27 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
         val ACTION_LOCATIONS = Utils.appAction("LOCATIONS")
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         if (intent.action == ACTION_LOCATIONS) {
             val prefs = runBlocking { LocalDataSource(context).userPreferencesFlow().first() }
             LocationResult.extractResult(intent)?.let { result ->
                 Timber.i("Received ${result.locations.size} locations.")
-                val updates = result.locations.map { loc ->
-                    Timber.i("Got ${loc.latitude}, ${loc.longitude}")
-                    LocationUpdate(
-                        loc.longitude,
-                        loc.latitude,
-                        if (loc.hasAltitude()) loc.altitude else null,
-                        if (loc.hasAccuracy()) loc.accuracy else null,
-                        if (loc.hasBearing()) loc.bearing else null,
-                        if (loc.hasBearingAccuracy()) loc.bearingAccuracyDegrees else null,
-                        OffsetDateTime.ofInstant(Instant.ofEpochMilli(loc.time), ZoneId.systemDefault())
-                    )
-                }
+                val updates =
+                    result.locations.map { loc ->
+                        Timber.i("Got ${loc.latitude}, ${loc.longitude}")
+                        LocationUpdate(
+                            loc.longitude,
+                            loc.latitude,
+                            if (loc.hasAltitude()) loc.altitude else null,
+                            if (loc.hasAccuracy()) loc.accuracy else null,
+                            if (loc.hasBearing()) loc.bearing else null,
+                            if (loc.hasBearingAccuracy()) loc.bearingAccuracyDegrees else null,
+                            OffsetDateTime.ofInstant(Instant.ofEpochMilli(loc.time), ZoneId.systemDefault()),
+                        )
+                    }
                 if (updates.isNotEmpty()) {
                     locs.save(updates)
                 }

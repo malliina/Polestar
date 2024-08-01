@@ -29,7 +29,7 @@ data class Track(
     val boatName: String,
     val distanceMeters: Distance,
     val topPoint: TopPoint,
-    val times: Times
+    val times: Times,
 )
 
 @JsonClass(generateAdapter = true)
@@ -45,9 +45,10 @@ data class LocationUpdate(
     val accuracyMeters: Float?,
     val bearing: Float?,
     val bearingAccuracyDegrees: Float?,
-    val date: OffsetDateTime
+    val date: OffsetDateTime,
 ) {
-    fun toPoint(car: CarState) = CarPoint(longitude, latitude, altitudeMeters, accuracyMeters, bearing, bearingAccuracyDegrees, car.speed, car.batteryLevel, car.batteryCapacity, car.rangeRemaining, car.outsideTemperature, car.nightMode, date)
+    fun toPoint(car: CarState) =
+        CarPoint(longitude, latitude, altitudeMeters, accuracyMeters, bearing, bearingAccuracyDegrees, car.speed, car.batteryLevel, car.batteryCapacity, car.rangeRemaining, car.outsideTemperature, car.nightMode, date)
 }
 
 @JsonClass(generateAdapter = true)
@@ -64,7 +65,7 @@ data class CarPoint(
     val rangeRemaining: DistanceF?,
     val outsideTemperature: Temperature?,
     val nightMode: Boolean?,
-    val date: OffsetDateTime
+    val date: OffsetDateTime,
 )
 
 @JsonClass(generateAdapter = true)
@@ -76,11 +77,13 @@ interface Primitive {
 
 data class Email(val email: String) : Primitive {
     override val value: String get() = email
+
     override fun toString(): String = email
 }
 
 data class IdToken(val token: String) : Primitive {
     override val value: String get() = token
+
     override fun toString(): String = token
 }
 
@@ -88,24 +91,34 @@ data class UserInfo(val email: Email, val idToken: IdToken)
 
 sealed class Outcome<out T> {
     data class Success<T>(val result: T) : Outcome<T>()
+
     data class Error(val e: Exception) : Outcome<Nothing>()
+
     data object Loading : Outcome<Nothing>()
+
     data object Idle : Outcome<Nothing>()
+
     fun <U> map(f: (T) -> U): Outcome<U> = flatMap { Success(f(it)) }
-    fun <U> flatMap(f: (T) -> Outcome<U>): Outcome<U> = when (this) {
-        is Success -> f(result)
-        is Error -> Error(e)
-        Idle -> Idle
-        Loading -> Loading
-    }
-    fun toOption(): T? = when (this) {
-        is Success -> this.result
-        is Error -> null
-        Idle -> null
-        Loading -> null
-    }
-    fun isSuccess(): Boolean = when (this) {
-        is Success -> true
-        else -> false
-    }
+
+    fun <U> flatMap(f: (T) -> Outcome<U>): Outcome<U> =
+        when (this) {
+            is Success -> f(result)
+            is Error -> Error(e)
+            Idle -> Idle
+            Loading -> Loading
+        }
+
+    fun toOption(): T? =
+        when (this) {
+            is Success -> this.result
+            is Error -> null
+            Idle -> null
+            Loading -> null
+        }
+
+    fun isSuccess(): Boolean =
+        when (this) {
+            is Success -> true
+            else -> false
+        }
 }

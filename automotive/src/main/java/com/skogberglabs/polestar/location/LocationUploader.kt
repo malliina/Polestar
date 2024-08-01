@@ -30,31 +30,34 @@ class LocationUploader(
     prefs: LocalDataSource,
     private val locations: LocationSource,
     private val carListener: CarListener,
-    ioScope: CoroutineScope
+    ioScope: CoroutineScope,
 ) {
     private val path = "/cars/locations"
-    val message: SharedFlow<Outcome<SimpleMessage>> = userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
-        when (user) {
-            is Outcome.Success -> {
-                Timber.i("Logged in as ${user.result.email}, sending locations...")
-                sendLocations()
+    val message: SharedFlow<Outcome<SimpleMessage>> =
+        userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
+            when (user) {
+                is Outcome.Success -> {
+                    Timber.i("Logged in as ${user.result.email}, sending locations...")
+                    sendLocations()
+                }
+                else -> flowOf(Outcome.Idle)
             }
-            else -> flowOf(Outcome.Idle)
-        }
-    }.shareIn(ioScope, SharingStarted.Eagerly, replay = 1)
+        }.shareIn(ioScope, SharingStarted.Eagerly, replay = 1)
 
     private val carIds = prefs.userPreferencesFlow().map { it.carId }
+
     private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
         locations.locationUpdates
             .filter { it.isNotEmpty() }
             .combine(carIds.filterNotNull()) { locs, id ->
                 try {
-                    val result = http.post(
-                        path,
-                        LocationUpdates(locs.map { it.toPoint(carListener.carInfo.value) }, id),
-                        Adapters.locationUpdates,
-                        Adapters.message
-                    )
+                    val result =
+                        http.post(
+                            path,
+                            LocationUpdates(locs.map { it.toPoint(carListener.carInfo.value) }, id),
+                            Adapters.locationUpdates,
+                            Adapters.message,
+                        )
                     Timber.i("Uploaded ${locs.size} locations to $path.")
                     Outcome.Success(result)
                 } catch (e: Exception) {

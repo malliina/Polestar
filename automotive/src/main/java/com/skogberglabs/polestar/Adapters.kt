@@ -11,9 +11,10 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalStdlibApi::class)
 object Adapters {
-    private val moshi: Moshi = Moshi.Builder()
-        .add(PrimitiveAdapter())
-        .build()
+    private val moshi: Moshi =
+        Moshi.Builder()
+            .add(PrimitiveAdapter())
+            .build()
 
     val errors: JsonAdapter<Errors> = moshi.adapter()
     val locationUpdates: JsonAdapter<LocationUpdates> = moshi.adapter()
@@ -98,8 +99,7 @@ class PrimitiveAdapter {
     fun writeRpm(p: Rpm): Int = p.rpm
 
     @FromJson
-    fun gear(i: Int): Gear =
-        Gear.values().firstOrNull { v -> v.value == i } ?: throw JsonDataException("Invalid gear: '$i'.")
+    fun gear(i: Int): Gear = Gear.values().firstOrNull { v -> v.value == i } ?: throw JsonDataException("Invalid gear: '$i'.")
 
     @ToJson
     fun writeGear(p: Gear): Int = p.value

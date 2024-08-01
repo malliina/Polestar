@@ -35,25 +35,30 @@ import timber.log.Timber
 class PlacesScreen(
     carContext: CarContext,
     private val service: AppService,
-    private val lang: CarLang
+    private val lang: CarLang,
 ) : Screen(carContext), LifecycleEventObserver {
     private val locationSource = service.locationSource
     private val latestCoord = locationSource.locationLatest() ?: Coord(60.155, 24.877)
     private var currentLocation: CarLocation = CarLocation.create(latestCoord.lat, latestCoord.lng)
 
     private var job: Job? = null
+
     init {
         lifecycle.addObserver(this)
     }
 
-    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+    override fun onStateChanged(
+        source: LifecycleOwner,
+        event: Lifecycle.Event,
+    ) {
         when (event) {
             Lifecycle.Event.ON_START -> {
-                job = service.mainScope.launch {
-                    service.tracks.drop(1).collect { ts ->
-                        invalidate()
+                job =
+                    service.mainScope.launch {
+                        service.tracks.drop(1).collect { ts ->
+                            invalidate()
+                        }
                     }
-                }
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
@@ -73,32 +78,34 @@ class PlacesScreen(
         val interpunct = "\u00b7"
         val ts = service.tracks.value
         val latestTracks = ts.toOption()?.tracks ?: emptyList()
-        val myItems = itemList {
-            setNoItemsMessage(lang.settings.noTracks)
-            latestTracks.forEach { track ->
-                addItem(
-                    row {
-                        val span = DistanceSpan.create(Distance.create(track.distanceMeters.kilometers, Distance.UNIT_KILOMETERS))
-                        val str = SpannableString("  $interpunct ${track.topPoint.carSpeed.describeKmh}")
-                        str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
-                        setTitle(str)
-                        setBrowsable(false)
-                        setOnClickListener {
-                            val top = track.topPoint.coord
-                            updateLocation(CarLocation.create(top.lat, top.lng))
-                        }
-                    }
+        val myItems =
+            itemList {
+                setNoItemsMessage(lang.settings.noTracks)
+                latestTracks.forEach { track ->
+                    addItem(
+                        row {
+                            val span = DistanceSpan.create(Distance.create(track.distanceMeters.kilometers, Distance.UNIT_KILOMETERS))
+                            val str = SpannableString("  $interpunct ${track.topPoint.carSpeed.describeKmh}")
+                            str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
+                            setTitle(str)
+                            setBrowsable(false)
+                            setOnClickListener {
+                                val top = track.topPoint.coord
+                                updateLocation(CarLocation.create(top.lat, top.lng))
+                            }
+                        },
+                    )
+                }
+            }
+        val myPlace =
+            place(currentLocation) {
+                setMarker(
+                    placeMarker {
+                        setIcon(CarIcon.APP_ICON, PlaceMarker.TYPE_ICON)
+                        setColor(CarColor.BLUE)
+                    },
                 )
             }
-        }
-        val myPlace = place(currentLocation) {
-            setMarker(
-                placeMarker {
-                    setIcon(CarIcon.APP_ICON, PlaceMarker.TYPE_ICON)
-                    setColor(CarColor.BLUE)
-                }
-            )
-        }
         return placeListTemplate {
             setTitle(lang.settings.tracks)
             setHeaderAction(Action.BACK)
@@ -113,9 +120,9 @@ class PlacesScreen(
                             setOnClickListener {
                                 screenManager.push(SettingsScreen(carContext, lang, service))
                             }
-                        }
+                        },
                     )
-                }
+                },
             )
 
 //            setOnContentRefreshListener {

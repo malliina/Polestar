@@ -32,6 +32,10 @@ data class SingleError(val key: String, val message: String) {
 data class Errors(val errors: List<SingleError>) {
     companion object {
         fun input(message: String) = single("input", message)
-        fun single(key: String, message: String): Errors = Errors(listOf(SingleError(key, message)))
+
+        fun single(
+            key: String,
+            message: String,
+        ): Errors = Errors(listOf(SingleError(key, message)))
     }
 }
