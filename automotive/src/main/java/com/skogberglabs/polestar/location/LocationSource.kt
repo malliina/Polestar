@@ -4,7 +4,6 @@ import com.skogberglabs.polestar.Coord
 import com.skogberglabs.polestar.LocationUpdate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -37,8 +36,8 @@ class LocationSource : LocationSourceInterface {
 
     override fun locationLatest(): Coord? = currentLocation.value?.let { loc -> Coord(loc.latitude, loc.longitude) }
 
-    val locationServicesAvailable: Flow<Boolean?> =
-        locationServicesAvailability.shareIn(scope, SharingStarted.Lazily, 1)
+    val locationServicesAvailable: StateFlow<Boolean?> =
+        locationServicesAvailability.stateIn(scope, SharingStarted.Eagerly, null)
 
     fun save(updates: List<LocationUpdate>): Boolean = updatesState.tryEmit(updates)
 

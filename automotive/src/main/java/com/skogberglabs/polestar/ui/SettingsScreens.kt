@@ -20,6 +20,17 @@ class SettingsScreen(
     private val service: AppService,
 ) : Screen(carContext) {
     override fun onGetTemplate(): Template {
+        val locations = service.locationSource
+        val locationStatus =
+            when (locations.locationServicesAvailable.value) {
+                true -> "Location services are available."
+                false -> "Location services are not available."
+                null -> "Location services availability not obtained."
+            }
+        val currentStatus =
+            locations.currentLocation.value?.let { current ->
+                "Latest location lat ${current.latitude} lon ${current.longitude} at ${current.date}."
+            } ?: "No location obtained."
         return listTemplate {
             setTitle(lang.settings.title)
             val list =
@@ -49,6 +60,12 @@ class SettingsScreen(
                     }
                     addRow {
                         setTitle("${lang.profile.version} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+                    }
+                    addRow {
+                        setTitle(locationStatus)
+                    }
+                    addRow {
+                        setTitle(currentStatus)
                     }
                 }
             setSingleList(list)
