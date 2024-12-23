@@ -10,6 +10,8 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ServiceInfo
+import android.os.Build
 import android.os.IBinder
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
@@ -95,11 +97,15 @@ class CarLocationService : Service() {
                             if (!started) {
                                 if (applicationContext.isLocationGranted()) {
                                     client.requestLocationUpdates(locationRequest, pendingIntent)
-                                    started = true
-                                    Timber.i("Started location service, permissions granted ${isAllPermissionsGranted()}")
+                                    if (isForegroundServiceGranted()) {
+                                        startForeground(NotificationIds.FOREGROUND_ID, notification(title, text), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
+                                        Timber.i("Promoted location service to a foreground service, permissions granted ${isAllPermissionsGranted()}.")
+                                        started = true
+                                    } else {
+                                        Timber.i("Foreground location service permission not granted, not promoting, other permissions granted ${isAllPermissionsGranted()}.")
+                                    }
                                 }
                             }
-                            startForeground(NotificationIds.FOREGROUND_ID, notification(title, text))
                         }
                     }
                 }
@@ -160,6 +166,13 @@ class CarLocationService : Service() {
 
 fun Context.isLocationGranted(): Boolean =
     checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+fun Context.isForegroundServiceGranted(): Boolean =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        checkSelfPermission(Manifest.permission.FOREGROUND_SERVICE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    } else {
+        true
+    }
 
 fun Context.isAllPermissionsGranted(): Boolean =
     PermissionContent.allPermissions.all { permission ->

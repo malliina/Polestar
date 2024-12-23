@@ -52,7 +52,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
 
         // OkHttp automatically advertises gzip compression, but Azure returns HTTP 502 for failed
         // POST requests where gzip support is advertised. This disables it as a workaround.
-        val postPutHeaders = mapOf("Accept-Encoding" to "identity")
+//        val postPutHeaders = mapOf("Accept-Encoding" to "identity")
 
         fun headers(token: IdToken?): Map<String, String> {
             val alwaysIncluded =
@@ -107,8 +107,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         withContext(Dispatchers.IO) {
             val url = env.baseUrl.append(path)
             val requestBody = writer.toJson(body).toRequestBody(MediaTypeJson)
-            val builder = installHeaders(postPutHeaders, authRequest(url))
-            execute(install(builder, requestBody).build(), reader)
+            execute(install(authRequest(url), requestBody).build(), reader)
         }
 
     private suspend fun <T> execute(

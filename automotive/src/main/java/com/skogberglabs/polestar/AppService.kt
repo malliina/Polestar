@@ -5,6 +5,8 @@ import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.LocationUploader
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
+import com.skogberglabs.polestar.location.isForegroundServiceGranted
+import com.skogberglabs.polestar.location.isLocationGranted
 import com.skogberglabs.polestar.ui.AppState
 import com.skogberglabs.polestar.ui.Previews
 import kotlinx.coroutines.CoroutineScope
@@ -175,7 +177,9 @@ class AppService(
                 val nlang = lang.notifications
                 val text = if (applicationContext.isAllPermissionsGranted()) nlang.enjoy else nlang.grantPermissions
                 val carIntent = CarLocationService.intent(applicationContext, nlang.appRunning, text)
-                applicationContext.startForegroundService(carIntent)
+                if (applicationContext.isForegroundServiceGranted() && applicationContext.isLocationGranted()) {
+                    applicationContext.startForegroundService(carIntent)
+                }
             }
         }
     }

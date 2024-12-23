@@ -2,6 +2,7 @@ package com.skogberglabs.polestar.ui
 
 import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
@@ -25,7 +26,10 @@ data class PermissionContent(val lang: PermissionContentLang, val permissions: L
     companion object {
         const val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
         const val backgroundPermission = Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        val allPermissions = CarListener.permissions + listOf(locationPermission, backgroundPermission)
+        private val allLegacyPermissions = CarListener.permissions + listOf(locationPermission, backgroundPermission)
+        val allPermissions =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) allLegacyPermissions + listOf(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
+            else allLegacyPermissions
         private val allExceptBackgroundLocation = CarListener.permissions + listOf(locationPermission)
 
         fun car(lang: PermissionContentLang) = PermissionContent(lang, CarListener.permissions)
@@ -58,6 +62,8 @@ class RequestPermissionScreen(
                 PermissionContent.location(lang.location)
             } else if (notGranted.contains(PermissionContent.backgroundPermission)) {
                 PermissionContent.background(lang.background)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && notGranted.contains(Manifest.permission.FOREGROUND_SERVICE_LOCATION)) {
+                PermissionContent(PermissionContentLang("Foreground service", "This app runs as a foreground service."), listOf(Manifest.permission.FOREGROUND_SERVICE_LOCATION))
             } else {
                 PermissionContent.allForeground(lang.all)
             }
