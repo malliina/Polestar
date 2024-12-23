@@ -50,6 +50,7 @@ data class PermissionsLang(
     val car: PermissionContentLang,
     val location: PermissionContentLang,
     val background: PermissionContentLang,
+    val foreground: PermissionContentLang,
     val all: PermissionContentLang,
 )
 

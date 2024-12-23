@@ -6,14 +6,14 @@ plugins {
 
 android {
     namespace = "com.skogberglabs.polestar"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 29 // Android 10
         targetSdk = 35
-        versionCode = 39
-        versionName = "1.21.6"
+        versionCode = 40
+        versionName = "1.21.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -83,13 +83,14 @@ val autoVersion = "1.4.0"
 dependencies {
     implementation("androidx.car.app:app:$autoVersion")
     implementation("androidx.car.app:app-automotive:$autoVersion")
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("com.jakewharton.timber:timber:5.0.1")
-    implementation("com.google.android.gms:play-services-location:21.3.0")
-    implementation("com.google.android.gms:play-services-auth:21.2.0")
-    val moshiVersion = "1.15.1"
+    val playServicesVersion = "21.3.0"
+    implementation("com.google.android.gms:play-services-location:$playServicesVersion")
+    implementation("com.google.android.gms:play-services-auth:$playServicesVersion")
+    val moshiVersion = "1.15.2"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
