@@ -35,6 +35,15 @@ data class Track(
 @JsonClass(generateAdapter = true)
 data class Tracks(val tracks: List<Track>)
 
+@JsonClass(generateAdapter = true)
+data class NearestCoord(val coord: Coord, val distance: Distance)
+
+@JsonClass(generateAdapter = true)
+data class ParkingDirections(val from: Coord, val to: List<Coord>, val nearest: NearestCoord, val capacity: Int)
+
+@JsonClass(generateAdapter = true)
+data class ParkingResponse(val directions: List<ParkingDirections>)
+
 // Inspiration from https://github.com/android/location-samples/blob/main/LocationUpdatesBackgroundKotlin/app/src/main/java/com/google/android/gms/location/sample/locationupdatesbackgroundkotlin/data/MyLocationManager.kt
 
 @JsonClass(generateAdapter = true)

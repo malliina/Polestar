@@ -23,6 +23,7 @@ object Adapters {
     val carState: JsonAdapter<CarState> = moshi.adapter()
     val carConf: JsonAdapter<CarConf> = moshi.adapter()
     val tracks: JsonAdapter<Tracks> = moshi.adapter()
+    val parkings: JsonAdapter<ParkingResponse> = moshi.adapter()
 }
 
 class PrimitiveAdapter {

@@ -1,6 +1,7 @@
 package com.skogberglabs.polestar
 
 import android.content.Context
+import androidx.car.app.model.CarLocation
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.LocationUploader
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -98,6 +100,10 @@ class AppService(
                 is Outcome.Error -> flowOf(Outcome.Error(user.e))
             }
         }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+    private val parkingSearch: MutableStateFlow<Coord?> = MutableStateFlow(null)
+    val parkings: StateFlow<Outcome<ParkingResponse>> = parkingSearch.filterNotNull().flatMapLatest { coord ->
+        parkingsFlow(coord)
+    }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
     override val profile: StateFlow<Outcome<ProfileInfo?>> =
         userState.userResult.flatMapLatest { user ->
             when (user) {
@@ -185,7 +191,7 @@ class AppService(
     }
 
     // Emits loading/error states until loading conf succeeds
-    private suspend fun confFlow(): Flow<Outcome<CarConf>> =
+    private fun confFlow(): Flow<Outcome<CarConf>> =
         flow {
             emit(Outcome.Loading)
             val outcome =
@@ -204,7 +210,7 @@ class AppService(
             }
         }
 
-    private suspend fun tracksFlow(): Flow<Outcome<Tracks>> =
+    private fun tracksFlow(): Flow<Outcome<Tracks>> =
         flow {
             emit(Outcome.Loading)
             val outcome =
@@ -224,7 +230,23 @@ class AppService(
             }
         }
 
-    private suspend fun meFlow(): Flow<Outcome<UserContainer>> =
+    private fun parkingsFlow(coord: Coord): Flow<Outcome<ParkingResponse>> =
+        flow {
+            emit(Outcome.Loading)
+            val outcome =
+                try {
+                    val response = http.get("/cars/parkings/search?lat=${coord.lat}&lng=${coord.lng}", Adapters.parkings)
+                    Timber.i("Loaded ${response.directions.size} directions.")
+                    Outcome.Success(response)
+                } catch (e: Exception) {
+                    // Emitting in a catch-clause fails
+                    Timber.e(e, "Failed to load parking directions.")
+                    Outcome.Error(e)
+                }
+            emit(outcome)
+        }
+
+    private fun meFlow(): Flow<Outcome<UserContainer>> =
         flow {
             emit(Outcome.Loading)
             val outcome =
@@ -241,6 +263,14 @@ class AppService(
                 emitAll(meFlow())
             }
         }
+
+    fun searchParkings(loc: CarLocation) {
+        searchParkings(Coord(loc.latitude, loc.longitude))
+    }
+
+    fun searchParkings(near: Coord) {
+        parkingSearch.value = near
+    }
 
     override fun selectCar(id: String) {
         ioScope.launch {
