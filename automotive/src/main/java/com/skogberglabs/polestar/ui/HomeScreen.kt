@@ -147,7 +147,15 @@ class HomeScreen(
                             setOnClickListener {
                                 screenManager.push(PlacesScreen(carContext, service, lang))
                             }
-                        },
+                        }
+                    )
+                    addAction(
+                        action {
+                            setTitle(lang.profile.goToMap)
+                            setOnClickListener {
+                                screenManager.push(MapContentScreen(carContext))
+                            }
+                        }
                     )
                     setActionStrip(
                         actionStrip {

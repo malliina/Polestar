@@ -104,6 +104,8 @@ class AppService(
     val parkings: StateFlow<Outcome<ParkingResponse>> = parkingSearch.filterNotNull().flatMapLatest { coord ->
         parkingsFlow(coord)
     }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+    val parkingsList: List<ParkingDirections> get() = parkings.value.toOption()?.directions ?: emptyList()
+
     override val profile: StateFlow<Outcome<ProfileInfo?>> =
         userState.userResult.flatMapLatest { user ->
             when (user) {

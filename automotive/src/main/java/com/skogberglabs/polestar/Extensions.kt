@@ -1,5 +1,7 @@
 package com.skogberglabs.polestar
 
+import androidx.annotation.OptIn
+import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.model.Action
 import androidx.car.app.model.ActionStrip
 import androidx.car.app.model.CarLocation
@@ -7,6 +9,7 @@ import androidx.car.app.model.GridItem
 import androidx.car.app.model.ItemList
 import androidx.car.app.model.ListTemplate
 import androidx.car.app.model.MessageTemplate
+import androidx.car.app.model.Metadata
 import androidx.car.app.model.Pane
 import androidx.car.app.model.PaneTemplate
 import androidx.car.app.model.Place
@@ -16,10 +19,15 @@ import androidx.car.app.model.Row
 import androidx.car.app.model.signin.ProviderSignInMethod
 import androidx.car.app.model.signin.SignInTemplate
 import androidx.car.app.navigation.model.MapTemplate
+import androidx.car.app.navigation.model.MapWithContentTemplate
 import androidx.car.app.navigation.model.NavigationTemplate
 import androidx.car.app.navigation.model.PlaceListNavigationTemplate
 
+fun Coord.carLocation(): CarLocation = CarLocation.create(lat, lng)
+
 fun row(build: Row.Builder.() -> Unit): Row = Row.Builder().apply(build).build()
+
+fun metadata(build: Metadata.Builder.() -> Unit): Metadata = Metadata.Builder().apply(build).build()
 
 fun gridItem(build: GridItem.Builder.() -> Unit): GridItem = GridItem.Builder().apply(build).build()
 
@@ -50,6 +58,10 @@ fun placeListTemplate(build: PlaceListMapTemplate.Builder.() -> Unit): PlaceList
 
 fun placeListNavigationTemplate(build: PlaceListNavigationTemplate.Builder.() -> Unit) =
     PlaceListNavigationTemplate.Builder().apply(build).build()
+
+@OptIn(ExperimentalCarApi::class)
+fun mapWithContenttemplate(build: MapWithContentTemplate.Builder.() -> Unit): MapWithContentTemplate =
+    MapWithContentTemplate.Builder().apply(build).build()
 
 fun action(build: Action.Builder.() -> Unit) = Action.Builder().apply(build).build()
 

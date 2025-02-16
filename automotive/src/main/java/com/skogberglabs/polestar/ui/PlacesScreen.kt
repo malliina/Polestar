@@ -19,15 +19,17 @@ import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.Coord
 import com.skogberglabs.polestar.Outcome
+import com.skogberglabs.polestar.ParkingDirections
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
+import com.skogberglabs.polestar.carLocation
 import com.skogberglabs.polestar.itemList
+import com.skogberglabs.polestar.metadata
 import com.skogberglabs.polestar.place
 import com.skogberglabs.polestar.placeListTemplate
 import com.skogberglabs.polestar.placeMarker
 import com.skogberglabs.polestar.row
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -90,43 +92,32 @@ class PlacesScreen(
     override fun onGetTemplate(): Template {
         Timber.i("Getting template...")
         val interpunct = "\u00b7"
-        val ts = service.tracks.value
-        val latestTracks = ts.toOption()?.tracks ?: emptyList()
-        val trackItems =
-            itemList {
-                setNoItemsMessage(lang.settings.noTracks)
-                latestTracks.forEach { track ->
-                    addItem(
-                        row {
-                            val span = DistanceSpan.create(Distance.create(track.distanceMeters.kilometers, Distance.UNIT_KILOMETERS))
-                            val str = SpannableString("  $interpunct ${track.topPoint.carSpeed.describeKmh}")
-                            str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
-                            setTitle(str)
-                            setBrowsable(false)
-                            setOnClickListener {
-                                val top = track.topPoint.coord
-                                updateLocation(CarLocation.create(top.lat, top.lng))
-                            }
-                        },
-                    )
-                }
-            }
         val parkingItems =
             itemList {
-                setNoItemsMessage("No parkings available.")
-                (service.parkings.value.toOption()?.directions ?: emptyList()).forEach { result ->
+                setNoItemsMessage(lang.settings.noParkingAvailable)
+                service.parkingsList.forEach { result ->
                     addItem(
                         row {
                             val span = DistanceSpan.create(Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS))
-                            val str = SpannableString("  $interpunct ${result.capacity} available spots")
+                            val str = SpannableString("  $interpunct ${result.capacity} ${lang.settings.availableSpots}")
                             str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
                             setTitle(str)
+                            result.nearest.address?.let { address ->
+                                addText(address)
+                            }
+                            setMetadata(metadata {
+                                setPlace(place(result.nearest.coord.carLocation()) {
+                                    setMarker(placeMarker {
+                                    })
+                                })
+                            })
                             setBrowsable(false)
                             setOnClickListener {
+//                                screenManager.push(ParkingScreen(carContext))
                                 val top = result.nearest.coord
-                                updateLocation(CarLocation.create(top.lat, top.lng))
+                                updateLocation(top.carLocation())
                             }
-                        },
+                        }
                     )
                 }
             }
@@ -136,6 +127,7 @@ class PlacesScreen(
                     placeMarker {
                         setIcon(CarIcon.APP_ICON, PlaceMarker.TYPE_ICON)
                         setColor(CarColor.BLUE)
+//                        setLabel("Arg")
                     },
                 )
             }
@@ -158,7 +150,7 @@ class PlacesScreen(
                     )
                     addAction(
                         action {
-                            setTitle("Parking")
+                            setTitle(lang.settings.parking)
                             setOnClickListener {
                                 service.searchParkings(currentLocation)
                             }
@@ -172,5 +164,9 @@ class PlacesScreen(
 //                invalidate()
 //            }
         }
+    }
+
+    private fun onClickDirections(d: ParkingDirections) {
+
     }
 }

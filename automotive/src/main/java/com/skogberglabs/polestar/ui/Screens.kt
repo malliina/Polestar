@@ -87,6 +87,23 @@ class MapScreen(carContext: CarContext) : Screen(carContext) {
         }
 }
 
+class ParkingScreen(carContext: CarContext) : Screen(carContext) {
+    override fun onGetTemplate(): Template {
+        return paneTemplate(
+            pane {
+                addRow(
+                    row {
+                        setTitle("Testing")
+                    }
+                )
+            }
+        ) {
+            setTitle("This is a parking template")
+            setHeaderAction(Action.BACK)
+        }
+    }
+}
+
 class CustomScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template =
         paneTemplate(

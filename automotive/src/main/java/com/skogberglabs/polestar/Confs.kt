@@ -62,6 +62,9 @@ data class CarSettingsLang(
     val noCars: String,
     val tracks: String,
     val noTracks: String,
+    val parking: String,
+    val availableSpots: String,
+    val noParkingAvailable: String
 )
 
 @JsonClass(generateAdapter = true)

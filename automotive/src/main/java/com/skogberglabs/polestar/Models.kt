@@ -36,7 +36,7 @@ data class Track(
 data class Tracks(val tracks: List<Track>)
 
 @JsonClass(generateAdapter = true)
-data class NearestCoord(val coord: Coord, val distance: Distance)
+data class NearestCoord(val coord: Coord, val distance: Distance, val address: String?)
 
 @JsonClass(generateAdapter = true)
 data class ParkingDirections(val from: Coord, val to: List<Coord>, val nearest: NearestCoord, val capacity: Int)
