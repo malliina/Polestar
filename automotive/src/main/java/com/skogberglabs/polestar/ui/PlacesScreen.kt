@@ -41,6 +41,7 @@ class PlacesScreen(
 ) : Screen(carContext), LifecycleEventObserver {
     private val locationSource = service.locationSource
     private val latestCoord = locationSource.locationLatest() ?: Coord(60.155, 24.877)
+//    private val latestCoord = Coord(60.155, 24.877)
     private var currentLocation: CarLocation = CarLocation.create(latestCoord.lat, latestCoord.lng)
 
     private var job: Job? = null
@@ -57,14 +58,14 @@ class PlacesScreen(
             Lifecycle.Event.ON_START -> {
                 job =
                     service.mainScope.launch {
-//                        service.tracks.drop(1).collect { ts ->
-//                            invalidate()
-//                        }
                         service.parkings.filter { it != Outcome.Idle }.collect { ps ->
                             when (ps) {
                                 is Outcome.Error -> {}
                                 Outcome.Idle -> {}
-                                Outcome.Loading -> {}
+                                Outcome.Loading -> {
+                                    Timber.i("Loading, refreshing...")
+                                    invalidate()
+                                }
                                 is Outcome.Success -> {
                                     val ds = ps.result.directions
                                     Timber.i("Got ${ds.size} directions, refreshing places list...")
@@ -92,50 +93,65 @@ class PlacesScreen(
     override fun onGetTemplate(): Template {
         Timber.i("Getting template...")
         val interpunct = "\u00b7"
-        val parkingItems =
-            itemList {
-                setNoItemsMessage(lang.settings.noParkingAvailable)
-                service.parkingsList.forEach { result ->
-                    addItem(
-                        row {
-                            val span = DistanceSpan.create(Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS))
-                            val str = SpannableString("  $interpunct ${result.capacity} ${lang.settings.availableSpots}")
-                            str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
-                            setTitle(str)
-                            result.nearest.address?.let { address ->
-                                addText(address)
-                            }
-                            setMetadata(metadata {
-                                setPlace(place(result.nearest.coord.carLocation()) {
-                                    setMarker(placeMarker {
-                                    })
-                                })
-                            })
-                            setBrowsable(false)
-                            setOnClickListener {
-//                                screenManager.push(ParkingScreen(carContext))
-                                val top = result.nearest.coord
-                                updateLocation(top.carLocation())
-                            }
-                        }
-                    )
-                }
-            }
         val myPlace =
             place(currentLocation) {
                 setMarker(
                     placeMarker {
                         setIcon(CarIcon.APP_ICON, PlaceMarker.TYPE_ICON)
                         setColor(CarColor.BLUE)
-//                        setLabel("Arg")
                     },
                 )
             }
         return placeListTemplate {
-            setTitle(lang.settings.tracks)
+            setTitle(lang.settings.parking)
             setHeaderAction(Action.BACK)
-//            setItemList(trackItems)
-            setItemList(parkingItems)
+            when (val s = service.parkings.value) {
+                Outcome.Loading -> {
+                    setLoading(true)
+                }
+                is Outcome.Success -> {
+                    val list = itemList {
+                        setNoItemsMessage(lang.settings.noParkingAvailable)
+                        s.result.directions.forEach { result ->
+                            addItem(
+                                row {
+                                    val span = DistanceSpan.create(Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS))
+                                    val str = SpannableString("  $interpunct ${result.capacity} ${lang.settings.availableSpots}")
+                                    str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
+                                    setTitle(str)
+                                    result.nearest.address?.let { address ->
+                                        addText(address)
+                                    }
+                                    setMetadata(metadata {
+                                        setPlace(place(result.nearest.coord.carLocation()) {
+                                            setMarker(placeMarker {
+                                            })
+                                        })
+                                    })
+                                    setBrowsable(false)
+                                    setOnClickListener {
+//                                screenManager.push(ParkingScreen(carContext))
+                                        val top = result.nearest.coord
+                                        updateLocation(top.carLocation())
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    setItemList(list)
+                    setLoading(false)
+                }
+                is Outcome.Error -> {
+                    setItemList(itemList {
+                        setNoItemsMessage(lang.settings.noParkingAvailable)
+                    })
+                }
+                Outcome.Idle -> {
+                    setItemList(itemList {
+                        setNoItemsMessage(lang.settings.noParkingAvailable)
+                    })
+                }
+            }
             setCurrentLocationEnabled(true)
             setAnchor(myPlace)
             setActionStrip(

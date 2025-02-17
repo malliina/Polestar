@@ -270,7 +270,7 @@ class AppService(
         searchParkings(Coord(loc.latitude, loc.longitude))
     }
 
-    fun searchParkings(near: Coord) {
+    private fun searchParkings(near: Coord) {
         parkingSearch.value = near
     }
 

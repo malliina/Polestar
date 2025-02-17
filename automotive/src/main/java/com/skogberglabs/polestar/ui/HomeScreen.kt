@@ -149,14 +149,14 @@ class HomeScreen(
                             }
                         }
                     )
-                    addAction(
-                        action {
-                            setTitle(lang.profile.goToMap)
-                            setOnClickListener {
-                                screenManager.push(MapContentScreen(carContext))
-                            }
-                        }
-                    )
+//                    addAction(
+//                        action {
+//                            setTitle(lang.profile.goToMap)
+//                            setOnClickListener {
+//                                screenManager.push(MapContentScreen(carContext))
+//                            }
+//                        }
+//                    )
                     setActionStrip(
                         actionStrip {
                             addAction(
