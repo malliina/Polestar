@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -30,6 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 interface CarViewModelInterface {
@@ -77,6 +77,8 @@ interface CarViewModelInterface {
     }
 }
 
+data class ParkingsSearch(val near: Coord, val at: Instant)
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppService(
     private val applicationContext: Context,
@@ -91,20 +93,19 @@ class AppService(
     private val carListener = CarListener(applicationContext)
     val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener, ioScope)
     private val activeCar = preferences.userPreferencesFlow().map { it.carId }
-    val tracks: StateFlow<Outcome<Tracks>> =
-        userState.userResult.flatMapLatest { user ->
-            when (user) {
-                is Outcome.Success -> tracksFlow()
-                Outcome.Idle -> flowOf(Outcome.Idle)
-                Outcome.Loading -> flowOf(Outcome.Loading)
-                is Outcome.Error -> flowOf(Outcome.Error(user.e))
-            }
-        }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
-    private val parkingSearch: MutableStateFlow<Coord?> = MutableStateFlow(null)
-    val parkings: StateFlow<Outcome<ParkingResponse>> = parkingSearch.filterNotNull().flatMapLatest { coord ->
-        parkingsFlow(coord)
+//    val tracks: StateFlow<Outcome<Tracks>> =
+//        userState.userResult.flatMapLatest { user ->
+//            when (user) {
+//                is Outcome.Success -> tracksFlow()
+//                Outcome.Idle -> flowOf(Outcome.Idle)
+//                Outcome.Loading -> flowOf(Outcome.Loading)
+//                is Outcome.Error -> flowOf(Outcome.Error(user.e))
+//            }
+//        }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+    private val parkingSearch: MutableStateFlow<ParkingsSearch?> = MutableStateFlow(null)
+    val parkings: StateFlow<Outcome<ParkingResponse>> = parkingSearch.filterNotNull().flatMapLatest { query ->
+        parkingsFlow(query)
     }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
-    val parkingsList: List<ParkingDirections> get() = parkings.value.toOption()?.directions ?: emptyList()
 
     override val profile: StateFlow<Outcome<ProfileInfo?>> =
         userState.userResult.flatMapLatest { user ->
@@ -232,17 +233,18 @@ class AppService(
             }
         }
 
-    private fun parkingsFlow(coord: Coord): Flow<Outcome<ParkingResponse>> =
+    private fun parkingsFlow(query: ParkingsSearch): Flow<Outcome<ParkingResponse>> =
         flow {
             emit(Outcome.Loading)
+            val near = query.near
             val outcome =
                 try {
-                    val response = http.get("/cars/parkings/search?lat=${coord.lat}&lng=${coord.lng}", Adapters.parkings)
-                    Timber.i("Loaded ${response.directions.size} directions.")
+                    val response = http.get("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}", Adapters.parkings)
+                    Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     // Emitting in a catch-clause fails
-                    Timber.e(e, "Failed to load parking directions.")
+                    Timber.e(e, "Failed to load available parking spots.")
                     Outcome.Error(e)
                 }
             emit(outcome)
@@ -271,7 +273,8 @@ class AppService(
     }
 
     private fun searchParkings(near: Coord) {
-        parkingSearch.value = near
+        Timber.i("Searching parkings near $near...")
+        parkingSearch.value = ParkingsSearch(near, Instant.now())
     }
 
     override fun selectCar(id: String) {

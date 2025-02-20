@@ -87,6 +87,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         adapter: JsonAdapter<T>,
     ): T {
         val request = authRequest(env.baseUrl.append(path)).get().build()
+        Timber.i("Fetching '${request.url}'...")
         return execute(request, adapter)
     }
 
@@ -130,6 +131,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                     throw e
                 }
             } else {
+                Timber.e(e, "Request to ${request.method} ${request.url} failed.")
                 throw e
             }
         }

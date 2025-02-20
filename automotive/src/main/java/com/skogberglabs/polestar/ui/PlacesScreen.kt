@@ -1,5 +1,7 @@
 package com.skogberglabs.polestar.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.text.SpannableString
 import android.text.Spanned
 import androidx.car.app.CarContext
@@ -60,8 +62,12 @@ class PlacesScreen(
                     service.mainScope.launch {
                         service.parkings.filter { it != Outcome.Idle }.collect { ps ->
                             when (ps) {
-                                is Outcome.Error -> {}
-                                Outcome.Idle -> {}
+                                is Outcome.Error -> {
+                                    Timber.i(ps.e, "Errored out.")
+                                    invalidate()
+                                }
+                                Outcome.Idle -> {
+                                }
                                 Outcome.Loading -> {
                                     Timber.i("Loading, refreshing...")
                                     invalidate()
@@ -74,6 +80,7 @@ class PlacesScreen(
                             }
                         }
                     }
+                service.searchParkings(currentLocation)
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
@@ -115,6 +122,7 @@ class PlacesScreen(
                         s.result.directions.forEach { result ->
                             addItem(
                                 row {
+                                    val parkingCoord = result.nearest.coord
                                     val span = DistanceSpan.create(Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS))
                                     val str = SpannableString("  $interpunct ${result.capacity} ${lang.settings.availableSpots}")
                                     str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
@@ -123,16 +131,17 @@ class PlacesScreen(
                                         addText(address)
                                     }
                                     setMetadata(metadata {
-                                        setPlace(place(result.nearest.coord.carLocation()) {
+                                        setPlace(place(parkingCoord.carLocation()) {
                                             setMarker(placeMarker {
                                             })
                                         })
                                     })
                                     setBrowsable(false)
                                     setOnClickListener {
-//                                screenManager.push(ParkingScreen(carContext))
-                                        val top = result.nearest.coord
-                                        updateLocation(top.carLocation())
+                                        // https://developer.android.com/training/cars/apps#handle-user-input
+                                        val navigationIntent = Intent(CarContext.ACTION_NAVIGATE, Uri.parse("geo:${parkingCoord.lat},${parkingCoord.lng}"))
+                                        carContext.startCarApp(navigationIntent)
+//                                        updateLocation(parkingCoord.carLocation())
                                     }
                                 }
                             )
@@ -143,13 +152,15 @@ class PlacesScreen(
                 }
                 is Outcome.Error -> {
                     setItemList(itemList {
-                        setNoItemsMessage(lang.settings.noParkingAvailable)
+                        setNoItemsMessage(lang.settings.failedToLoadParkings)
                     })
+                    setLoading(false)
                 }
                 Outcome.Idle -> {
                     setItemList(itemList {
-                        setNoItemsMessage(lang.settings.noParkingAvailable)
+                        setNoItemsMessage(lang.settings.searchParkingsHint)
                     })
+                    setLoading(false)
                 }
             }
             setCurrentLocationEnabled(true)
@@ -166,7 +177,7 @@ class PlacesScreen(
                     )
                     addAction(
                         action {
-                            setTitle(lang.settings.parking)
+                            setTitle(lang.settings.searchParkings)
                             setOnClickListener {
                                 service.searchParkings(currentLocation)
                             }
@@ -175,10 +186,10 @@ class PlacesScreen(
                 },
             )
 
-//            setOnContentRefreshListener {
-//                Timber.i("Refresh!")
-//                invalidate()
-//            }
+            setOnContentRefreshListener {
+                Timber.i("Refreshing...")
+                service.searchParkings(currentLocation)
+            }
         }
     }
 

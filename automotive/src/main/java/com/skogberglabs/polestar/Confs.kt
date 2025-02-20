@@ -64,7 +64,11 @@ data class CarSettingsLang(
     val noTracks: String,
     val parking: String,
     val availableSpots: String,
-    val noParkingAvailable: String
+    val noParkingAvailable: String,
+    val navigate: String,
+    val searchParkings: String,
+    val searchParkingsHint: String,
+    val failedToLoadParkings: String
 )
 
 @JsonClass(generateAdapter = true)

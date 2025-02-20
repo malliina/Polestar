@@ -25,10 +25,10 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
     ) {
         if (intent.action == ACTION_LOCATIONS) {
             LocationResult.extractResult(intent)?.let { result ->
-                Timber.i("Received ${result.locations.size} locations.")
+                Timber.d("Received ${result.locations.size} locations.")
                 val updates =
                     result.locations.map { loc ->
-                        Timber.i("Got ${loc.latitude}, ${loc.longitude}")
+                        Timber.d("Got ${loc.latitude}, ${loc.longitude}")
                         LocationUpdate(
                             loc.longitude,
                             loc.latitude,
