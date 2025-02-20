@@ -273,7 +273,6 @@ class AppService(
     }
 
     private fun searchParkings(near: Coord) {
-        Timber.i("Searching parkings near $near...")
         parkingSearch.value = ParkingsSearch(near, Instant.now())
     }
 
