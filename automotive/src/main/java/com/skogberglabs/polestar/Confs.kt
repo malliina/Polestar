@@ -68,7 +68,7 @@ data class CarSettingsLang(
     val navigate: String,
     val searchParkings: String,
     val searchParkingsHint: String,
-    val failedToLoadParkings: String
+    val failedToLoadParkings: String,
 )
 
 @JsonClass(generateAdapter = true)

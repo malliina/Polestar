@@ -88,7 +88,7 @@ class Google(private val client: GoogleSignInClient, private val userState: User
     suspend fun signOut() {
         Timber.i("Signing out...")
         try {
-            userState.update(Outcome.Loading)
+//            userState.update(Outcome.Loading)
             client.signOut().awaitVoid()
         } catch (e: Exception) {
             Timber.e(e, "Failed to sign out.")

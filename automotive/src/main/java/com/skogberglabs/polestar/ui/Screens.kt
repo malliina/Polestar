@@ -94,9 +94,9 @@ class ParkingScreen(carContext: CarContext) : Screen(carContext) {
                 addRow(
                     row {
                         setTitle("Testing")
-                    }
+                    },
                 )
-            }
+            },
         ) {
             setTitle("This is a parking template")
             setHeaderAction(Action.BACK)

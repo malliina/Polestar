@@ -43,7 +43,6 @@ class PlacesScreen(
 ) : Screen(carContext), LifecycleEventObserver {
     private val locationSource = service.locationSource
     private val latestCoord = locationSource.locationLatest() ?: Coord(60.155, 24.877)
-//    private val latestCoord = Coord(60.155, 24.877)
     private var currentLocation: CarLocation = CarLocation.create(latestCoord.lat, latestCoord.lng)
 
     private var job: Job? = null
@@ -117,49 +116,60 @@ class PlacesScreen(
                     setLoading(true)
                 }
                 is Outcome.Success -> {
-                    val list = itemList {
-                        setNoItemsMessage(lang.settings.noParkingAvailable)
-                        s.result.directions.forEach { result ->
-                            addItem(
-                                row {
-                                    val parkingCoord = result.nearest.coord
-                                    val span = DistanceSpan.create(Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS))
-                                    val str = SpannableString("  $interpunct ${result.capacity} ${lang.settings.availableSpots}")
-                                    str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
-                                    setTitle(str)
-                                    result.nearest.address?.let { address ->
-                                        addText(address)
-                                    }
-                                    setMetadata(metadata {
-                                        setPlace(place(parkingCoord.carLocation()) {
-                                            setMarker(placeMarker {
-                                            })
-                                        })
-                                    })
-                                    setBrowsable(false)
-                                    setOnClickListener {
-                                        // https://developer.android.com/training/cars/apps#handle-user-input
-                                        val navigationIntent = Intent(CarContext.ACTION_NAVIGATE, Uri.parse("geo:${parkingCoord.lat},${parkingCoord.lng}"))
-                                        carContext.startCarApp(navigationIntent)
+                    val list =
+                        itemList {
+                            setNoItemsMessage(lang.settings.noParkingAvailable)
+                            s.result.directions.forEach { result ->
+                                addItem(
+                                    row {
+                                        val parkingCoord = result.nearest.coord
+                                        val span = DistanceSpan.create(Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS))
+                                        val str = SpannableString("  $interpunct ${result.capacity} ${lang.settings.availableSpots}")
+                                        str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
+                                        setTitle(str)
+                                        result.nearest.address?.let { address ->
+                                            addText(address)
+                                        }
+                                        setMetadata(
+                                            metadata {
+                                                setPlace(
+                                                    place(parkingCoord.carLocation()) {
+                                                        setMarker(
+                                                            placeMarker {
+                                                            },
+                                                        )
+                                                    },
+                                                )
+                                            },
+                                        )
+                                        setBrowsable(false)
+                                        setOnClickListener {
+                                            // https://developer.android.com/training/cars/apps#handle-user-input
+                                            val navigationIntent = Intent(CarContext.ACTION_NAVIGATE, Uri.parse("geo:${parkingCoord.lat},${parkingCoord.lng}"))
+                                            carContext.startCarApp(navigationIntent)
 //                                        updateLocation(parkingCoord.carLocation())
-                                    }
-                                }
-                            )
+                                        }
+                                    },
+                                )
+                            }
                         }
-                    }
                     setItemList(list)
                     setLoading(false)
                 }
                 is Outcome.Error -> {
-                    setItemList(itemList {
-                        setNoItemsMessage(lang.settings.failedToLoadParkings)
-                    })
+                    setItemList(
+                        itemList {
+                            setNoItemsMessage(lang.settings.failedToLoadParkings)
+                        },
+                    )
                     setLoading(false)
                 }
                 Outcome.Idle -> {
-                    setItemList(itemList {
-                        setNoItemsMessage(lang.settings.searchParkingsHint)
-                    })
+                    setItemList(
+                        itemList {
+                            setNoItemsMessage(lang.settings.searchParkingsHint)
+                        },
+                    )
                     setLoading(false)
                 }
             }
@@ -194,6 +204,5 @@ class PlacesScreen(
     }
 
     private fun onClickDirections(d: ParkingDirections) {
-
     }
 }

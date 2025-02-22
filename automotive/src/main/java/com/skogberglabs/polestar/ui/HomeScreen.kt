@@ -30,13 +30,13 @@ sealed class AppState {
 
     data class Anon(val lang: CarLang) : AppState()
 
-    data object Loading : AppState()
+    data class Loading(val lang: CarLang?) : AppState()
 
     fun carLang(): CarLang? =
         when (this) {
             is Anon -> lang
             is LoggedIn -> lang
-            Loading -> null
+            is Loading -> lang
         }
 }
 
@@ -64,17 +64,17 @@ class HomeScreen(
                             val stateStr =
                                 when (state) {
                                     is AppState.Anon -> "anon"
-                                    AppState.Loading -> "loading"
+                                    is AppState.Loading -> "loading"
                                     is AppState.LoggedIn -> state.user.email.value
                                 }
-                            val navigated = checkPermissions()
+                            val navigated = checkPermissionsAndNavigate()
                             if (!navigated) {
                                 Timber.i("State updated to $stateStr, invalidating screen")
                                 invalidate()
                             }
                         }
                     }
-                checkPermissions()
+                checkPermissionsAndNavigate()
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
@@ -85,7 +85,7 @@ class HomeScreen(
         }
     }
 
-    private fun checkPermissions(): Boolean {
+    private fun checkPermissionsAndNavigate(): Boolean {
         if (carContext.isAllPermissionsGranted()) {
             if (service.navigateToPlaces) {
                 when (val state = service.state()) {
@@ -118,7 +118,7 @@ class HomeScreen(
     }
 
     override fun onGetTemplate(): Template {
-        return when (val state = service.state()) {
+        when (val state = service.state()) {
             is AppState.LoggedIn -> {
                 val lang = state.lang
                 val user = state.user
@@ -147,16 +147,8 @@ class HomeScreen(
                             setOnClickListener {
                                 screenManager.push(PlacesScreen(carContext, service, lang))
                             }
-                        }
+                        },
                     )
-//                    addAction(
-//                        action {
-//                            setTitle(lang.profile.goToMap)
-//                            setOnClickListener {
-//                                screenManager.push(MapContentScreen(carContext))
-//                            }
-//                        }
-//                    )
                     setActionStrip(
                         actionStrip {
                             addAction(
@@ -171,33 +163,35 @@ class HomeScreen(
                     )
                 }
             }
-            is AppState.Anon -> {
-                val lang = state.lang
-                val authLang = lang.profile.auth
-                val signInAction =
-                    action {
+            else -> {
+                state.carLang()?.let { lang ->
+                    val authLang = lang.profile.auth
+                    val signInAction =
+                        action {
+                            setTitle(authLang.ctaGoogle)
+                            setOnClickListener(
+                                ParkedOnlyOnClickListener.create {
+                                    val intent =
+                                        Intent(carContext, GoogleSignInActivity::class.java).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                    carContext.startActivity(intent)
+                                },
+                            )
+                        }
+                    val method = ProviderSignInMethod(signInAction)
+                    return signInTemplate(method) {
+                        setLoading(state is AppState.Loading)
                         setTitle(authLang.ctaGoogle)
-                        setOnClickListener(
-                            ParkedOnlyOnClickListener.create {
-                                val intent =
-                                    Intent(carContext, GoogleSignInActivity::class.java).apply {
-                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                    }
-                                carContext.startActivity(intent)
-                            },
-                        )
+                        setInstructions(authLang.instructions)
+                        setAdditionalText(authLang.additionalText)
                     }
-                val method = ProviderSignInMethod(signInAction)
-                return signInTemplate(method) {
-                    setTitle(authLang.ctaGoogle)
-                    setInstructions(authLang.instructions)
-                    setAdditionalText(authLang.additionalText)
+                } ?: run {
+                    return messageTemplate(carContext.getString(R.string.app_name)) {
+                        setLoading(true)
+                    }
                 }
             }
-            AppState.Loading ->
-                messageTemplate(carContext.getString(R.string.app_name)) {
-                    setLoading(true)
-                }
         }
     }
 }

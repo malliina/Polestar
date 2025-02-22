@@ -12,12 +12,14 @@ import com.skogberglabs.polestar.ui.AppState
 import com.skogberglabs.polestar.ui.Previews
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 interface CarViewModelInterface {
@@ -93,19 +96,13 @@ class AppService(
     private val carListener = CarListener(applicationContext)
     val locationUploader = LocationUploader(http, userState, preferences, locationSource, carListener, ioScope)
     private val activeCar = preferences.userPreferencesFlow().map { it.carId }
-//    val tracks: StateFlow<Outcome<Tracks>> =
-//        userState.userResult.flatMapLatest { user ->
-//            when (user) {
-//                is Outcome.Success -> tracksFlow()
-//                Outcome.Idle -> flowOf(Outcome.Idle)
-//                Outcome.Loading -> flowOf(Outcome.Loading)
-//                is Outcome.Error -> flowOf(Outcome.Error(user.e))
-//            }
-//        }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
     private val parkingSearch: MutableStateFlow<ParkingsSearch?> = MutableStateFlow(null)
-    val parkings: StateFlow<Outcome<ParkingResponse>> = parkingSearch.filterNotNull().flatMapLatest { query ->
-        parkingsFlow(query)
-    }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+
+    @OptIn(FlowPreview::class)
+    val parkings: StateFlow<Outcome<ParkingResponse>> =
+        parkingSearch.filterNotNull().flatMapLatest { query ->
+            parkingsFlow(query)
+        }.debounce(200.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
     override val profile: StateFlow<Outcome<ProfileInfo?>> =
         userState.userResult.flatMapLatest { user ->
@@ -138,17 +135,19 @@ class AppService(
         preferences.userPreferencesFlow()
             .map { it.lang?.let { lang -> Outcome.Success(lang) } ?: Outcome.Loading }
             .stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
+
+    @OptIn(FlowPreview::class)
     val appState: StateFlow<AppState> =
         currentLang.combine(profile) { lang, user ->
             when (lang) {
-                is Outcome.Error -> AppState.Loading
-                Outcome.Idle -> AppState.Loading
-                Outcome.Loading -> AppState.Loading
+                is Outcome.Error -> AppState.Loading(null)
+                Outcome.Idle -> AppState.Loading(null)
+                Outcome.Loading -> AppState.Loading(null)
                 is Outcome.Success ->
                     when (user) {
                         is Outcome.Error -> AppState.Anon(lang.result)
                         Outcome.Idle -> AppState.Anon(lang.result)
-                        Outcome.Loading -> AppState.Loading
+                        Outcome.Loading -> AppState.Loading(lang.result)
                         is Outcome.Success ->
                             user.result?.let {
                                 AppState.LoggedIn(
@@ -158,7 +157,7 @@ class AppService(
                             } ?: AppState.Anon(lang.result)
                     }
             }
-        }.stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading)
+        }.debounce(200.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading(null))
     private val navigateToPlacesState: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val navigateToPlaces get() = navigateToPlacesState.value
 
@@ -213,33 +212,13 @@ class AppService(
             }
         }
 
-    private fun tracksFlow(): Flow<Outcome<Tracks>> =
-        flow {
-            emit(Outcome.Loading)
-            val outcome =
-                try {
-                    val response = http.get("/tracks?limit=5", Adapters.tracks)
-                    Timber.i("Loaded ${response.tracks.size} tracks.")
-                    Outcome.Success(response)
-                } catch (e: Exception) {
-                    // Emitting in a catch-clause fails
-                    Timber.e(e, "Failed to load tracks. Retrying soon...")
-                    Outcome.Error(e)
-                }
-            emit(outcome)
-            if (!outcome.isSuccess()) {
-                delay(30.seconds)
-                emitAll(tracksFlow())
-            }
-        }
-
     private fun parkingsFlow(query: ParkingsSearch): Flow<Outcome<ParkingResponse>> =
         flow {
             emit(Outcome.Loading)
             val near = query.near
             val outcome =
                 try {
-                    val response = http.get("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}", Adapters.parkings)
+                    val response = http.get("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20", Adapters.parkings)
                     Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
                 } catch (e: Exception) {

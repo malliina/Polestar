@@ -15,40 +15,45 @@ import com.skogberglabs.polestar.listTemplate
 import com.skogberglabs.polestar.mapWithContenttemplate
 import timber.log.Timber
 
-class MapContentScreen(carContext: CarContext): Screen(carContext) {
+class MapContentScreen(carContext: CarContext) : Screen(carContext) {
     @OptIn(ExperimentalCarApi::class)
     override fun onGetTemplate(): Template {
-        val mapController = MapController.Builder()
-            .setMapActionStrip(
-                actionStrip {
-                    addAction(
-                        action {
-                            setIcon(CarIcon.APP_ICON)
+        val mapController =
+            MapController.Builder()
+                .setMapActionStrip(
+                    actionStrip {
+                        addAction(
+                            action {
+                                setIcon(CarIcon.APP_ICON)
 //                            setTitle("Hej")
-                            setOnClickListener {
-                                Timber.i("Click")
-                            }
-                        }
-                    )
+                                setOnClickListener {
+                                    Timber.i("Click")
+                                }
+                            },
+                        )
+                    },
+                )
+                .setPanModeListener { isPan ->
+                    Timber.i("Pan $isPan")
                 }
-            )
-            .setPanModeListener { isPan ->
-                Timber.i("Pan $isPan")
-            }
-            .build()
+                .build()
         return mapWithContenttemplate {
             setMapController(mapController)
-            setContentTemplate(listTemplate {
-                setTitle("List here")
-                setSingleList(itemList {
-                    addRow {
-                        setTitle("Row 1")
-                        setOnClickListener {
-                            Timber.i("Clicked row")
-                        }
-                    }
-                })
-            })
+            setContentTemplate(
+                listTemplate {
+                    setTitle("List here")
+                    setSingleList(
+                        itemList {
+                            addRow {
+                                setTitle("Row 1")
+                                setOnClickListener {
+                                    Timber.i("Clicked row")
+                                }
+                            }
+                        },
+                    )
+                },
+            )
         }
     }
 }

@@ -1,6 +1,9 @@
 # Polestar
 
-Exploring Android Automotive development.
+This Android Automotive app:
+
+- Sends the location of your car to www.car-map.com.
+- Finds nearby parking places in the Helsinki area.
 
 ## Releasing
 
