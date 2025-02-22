@@ -45,7 +45,7 @@ class HomeScreen(
     private val service: AppService,
 ) : Screen(carContext), LifecycleEventObserver {
     private var job: Job? = null
-
+    private var isFirstRender = true
     init {
         lifecycle.addObserver(this)
     }
@@ -68,10 +68,11 @@ class HomeScreen(
                                     is AppState.LoggedIn -> state.user.email.value
                                 }
                             val navigated = checkPermissionsAndNavigate()
-                            if (!navigated) {
+                            if (!navigated && !isFirstRender) {
                                 Timber.i("State updated to $stateStr, invalidating screen")
                                 invalidate()
                             }
+                            isFirstRender = false
                         }
                     }
                 checkPermissionsAndNavigate()

@@ -8,10 +8,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import kotlinx.coroutines.delay
 import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlin.time.Duration.Companion.milliseconds
 
 class Google(private val client: GoogleSignInClient, private val userState: UserState) {
     companion object {
@@ -94,7 +96,8 @@ class Google(private val client: GoogleSignInClient, private val userState: User
             Timber.e(e, "Failed to sign out.")
         } finally {
             userState.update(Outcome.Idle)
-            Timber.i("Signed out.")
+            Timber.i("Signed out. Returning soon...")
+            delay(550.milliseconds)
         }
     }
 }

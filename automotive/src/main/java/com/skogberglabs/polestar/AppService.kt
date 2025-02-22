@@ -104,7 +104,7 @@ class AppService(
             parkingsFlow(query)
         }.debounce(200.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
-    override val profile: StateFlow<Outcome<ProfileInfo?>> =
+    override val profile: StateFlow<Outcome<ProfileInfo>> =
         userState.userResult.flatMapLatest { user ->
             when (user) {
                 is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
@@ -148,16 +148,11 @@ class AppService(
                         is Outcome.Error -> AppState.Anon(lang.result)
                         Outcome.Idle -> AppState.Anon(lang.result)
                         Outcome.Loading -> AppState.Loading(lang.result)
-                        is Outcome.Success ->
-                            user.result?.let {
-                                AppState.LoggedIn(
-                                    it,
-                                    lang.result,
-                                )
-                            } ?: AppState.Anon(lang.result)
+                        is Outcome.Success -> AppState.LoggedIn(user.result, lang.result)
                     }
             }
-        }.debounce(200.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading(null))
+        }.debounce(500.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading(null))
+
     private val navigateToPlacesState: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val navigateToPlaces get() = navigateToPlacesState.value
 

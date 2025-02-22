@@ -46,6 +46,7 @@ class PlacesScreen(
     private var currentLocation: CarLocation = CarLocation.create(latestCoord.lat, latestCoord.lng)
 
     private var job: Job? = null
+    private var isFirstRender = true
 
     init {
         lifecycle.addObserver(this)
@@ -59,22 +60,23 @@ class PlacesScreen(
             Lifecycle.Event.ON_START -> {
                 job =
                     service.mainScope.launch {
-                        service.parkings.filter { it != Outcome.Idle }.collect { ps ->
+                        service.parkings.collect { ps ->
                             when (ps) {
                                 is Outcome.Error -> {
                                     Timber.i(ps.e, "Errored out.")
-                                    invalidate()
+                                    invalidateIfUpdate()
                                 }
                                 Outcome.Idle -> {
+                                    isFirstRender = false
                                 }
                                 Outcome.Loading -> {
                                     Timber.i("Loading, refreshing...")
-                                    invalidate()
+                                    invalidateIfUpdate()
                                 }
                                 is Outcome.Success -> {
                                     val ds = ps.result.directions
                                     Timber.i("Got ${ds.size} directions, refreshing places list...")
-                                    invalidate()
+                                    invalidateIfUpdate()
                                 }
                             }
                         }
@@ -83,11 +85,18 @@ class PlacesScreen(
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
-                job?.let { Timber.i("Canceled tracks job.") }
+                job?.let { Timber.i("Canceled parkings listener.") }
                 job = null
             }
             else -> {}
         }
+    }
+
+    private fun invalidateIfUpdate() {
+        if (!isFirstRender) {
+            invalidate()
+        }
+        isFirstRender = false
     }
 
     private fun updateLocation(loc: CarLocation) {
