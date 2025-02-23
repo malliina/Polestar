@@ -21,7 +21,6 @@ import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.Coord
 import com.skogberglabs.polestar.Outcome
-import com.skogberglabs.polestar.ParkingDirections
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.carLocation
@@ -36,6 +35,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
@@ -94,7 +94,8 @@ class PlacesScreen(
                         locationSource.currentLocation
                             .filterNotNull()
                             .distinctUntilChanged()
-                            .debounce(3.seconds).collect { coord ->
+                            .sample(15.seconds)
+                            .collect { coord ->
                                 updateLocation(CarLocation.create(coord.latitude, coord.longitude))
                             }
                     }
@@ -183,7 +184,6 @@ class PlacesScreen(
                                             // https://developer.android.com/training/cars/apps#handle-user-input
                                             val navigationIntent = Intent(CarContext.ACTION_NAVIGATE, Uri.parse("geo:${parkingCoord.lat},${parkingCoord.lng}"))
                                             carContext.startCarApp(navigationIntent)
-//                                        updateLocation(parkingCoord.carLocation())
                                         }
                                     },
                                 )
@@ -221,8 +221,5 @@ class PlacesScreen(
                 service.searchParkings(currentLocation)
             }
         }
-    }
-
-    private fun onClickDirections(d: ParkingDirections) {
     }
 }

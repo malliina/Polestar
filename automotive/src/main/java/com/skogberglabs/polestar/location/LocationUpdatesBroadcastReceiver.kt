@@ -40,7 +40,8 @@ class LocationUpdatesBroadcastReceiver : BroadcastReceiver() {
                         )
                     }
                 if (updates.isNotEmpty()) {
-                    locs.save(updates)
+                    val success = locs.save(updates)
+                    Timber.d("Saved ${updates.size} updates. Success: $success.")
                 }
             } ?: run {
                 LocationAvailability.extractLocationAvailability(intent)?.let { locationAvailability ->
