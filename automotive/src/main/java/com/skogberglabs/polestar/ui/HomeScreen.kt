@@ -1,12 +1,9 @@
 package com.skogberglabs.polestar.ui
 
-import android.content.Intent
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.CarIcon
-import androidx.car.app.model.ParkedOnlyOnClickListener
 import androidx.car.app.model.Template
-import androidx.car.app.model.signin.ProviderSignInMethod
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -20,7 +17,6 @@ import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.messageTemplate
-import com.skogberglabs.polestar.signInTemplate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -46,6 +42,7 @@ class HomeScreen(
 ) : Screen(carContext), LifecycleEventObserver {
     private var job: Job? = null
     private var isFirstRender = true
+
     init {
         lifecycle.addObserver(this)
     }
@@ -67,15 +64,18 @@ class HomeScreen(
                                     is AppState.Loading -> "loading"
                                     is AppState.LoggedIn -> state.user.email.value
                                 }
-                            val navigated = checkPermissionsAndNavigate()
-                            if (!navigated && !isFirstRender) {
-                                Timber.i("State updated to $stateStr, invalidating screen")
-                                invalidate()
+                            val destination = checkDestination()
+                            destination?.let { screen ->
+                                screenManager.push(screen)
+                            } ?: run {
+                                if (!isFirstRender) {
+                                    Timber.i("State updated to $stateStr, invalidating screen")
+                                    invalidate()
+                                }
+                                isFirstRender = false
                             }
-                            isFirstRender = false
                         }
                     }
-                checkPermissionsAndNavigate()
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
@@ -86,20 +86,24 @@ class HomeScreen(
         }
     }
 
-    private fun checkPermissionsAndNavigate(): Boolean {
+    // Screen preference: 1) permissions, 2) sign in, 3) map 4) home
+    private fun checkDestination(): Screen? {
         if (carContext.isAllPermissionsGranted()) {
-            if (service.navigateToPlaces) {
-                when (val state = service.state()) {
-                    is AppState.LoggedIn -> {
+            when (val state = service.state()) {
+                is AppState.LoggedIn -> {
+                    if (service.navigateToPlaces) {
                         if (state.user.activeCar != null) {
                             service.initialNavigation()
-                            Timber.i("Navigating to places...")
-                            screenManager.push(PlacesScreen(carContext, service, state.lang))
-                            return true
+                            Timber.i("Navigating to map...")
+                            return PlacesScreen(carContext, service, state.lang)
                         }
                     }
-                    else -> {}
                 }
+                is AppState.Anon -> {
+                    Timber.i("Navigating to sign in...")
+                    return SignInScreen(carContext, service)
+                }
+                else -> {}
             }
         } else {
             service.state().carLang()?.let { lang ->
@@ -111,11 +115,10 @@ class HomeScreen(
                         carContext.startForegroundService(serviceIntent)
                         sm.push(HomeScreen(carContext, service))
                     }
-                screenManager.push(permissionsScreen)
-                return true
+                return permissionsScreen
             }
         }
-        return false
+        return null
     }
 
     override fun onGetTemplate(): Template {
@@ -164,33 +167,16 @@ class HomeScreen(
                     )
                 }
             }
-            else -> {
-                state.carLang()?.let { lang ->
-                    val authLang = lang.profile.auth
-                    val signInAction =
-                        action {
-                            setTitle(authLang.ctaGoogle)
-                            setOnClickListener(
-                                ParkedOnlyOnClickListener.create {
-                                    val intent =
-                                        Intent(carContext, GoogleSignInActivity::class.java).apply {
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                        }
-                                    carContext.startActivity(intent)
-                                },
-                            )
-                        }
-                    val method = ProviderSignInMethod(signInAction)
-                    return signInTemplate(method) {
-                        setLoading(state is AppState.Loading)
-                        setTitle(authLang.ctaGoogle)
-                        setInstructions(authLang.instructions)
-                        setAdditionalText(authLang.additionalText)
-                    }
-                } ?: run {
-                    return messageTemplate(carContext.getString(R.string.app_name)) {
-                        setLoading(true)
-                    }
+            is AppState.Loading -> {
+                val appName = state.lang?.appName ?: carContext.getString(R.string.app_name)
+                return messageTemplate(appName) {
+                    setLoading(true)
+                }
+            }
+            is AppState.Anon -> {
+                val appName = state.lang.appName
+                return messageTemplate(appName) {
+                    setIcon(CarIcon.APP_ICON)
                 }
             }
         }

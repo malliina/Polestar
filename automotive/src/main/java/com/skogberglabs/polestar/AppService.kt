@@ -9,7 +9,6 @@ import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.isForegroundServiceGranted
 import com.skogberglabs.polestar.location.isLocationGranted
 import com.skogberglabs.polestar.ui.AppState
-import com.skogberglabs.polestar.ui.Previews
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -20,7 +19,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -36,7 +34,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 interface CarViewModelInterface {
-    val languages: Flow<List<CarLanguage>>
     val profile: Flow<Outcome<ProfileInfo?>>
 
     fun selectCar(id: String)
@@ -48,12 +45,6 @@ interface CarViewModelInterface {
     companion object {
         fun preview(ctx: Context) =
             object : CarViewModelInterface {
-                override val languages: StateFlow<List<CarLanguage>> =
-                    MutableStateFlow(
-                        Previews.conf(
-                            ctx,
-                        ).languages.map { it.language },
-                    )
                 val cars =
                     ProfileInfo(
                         ApiUserInfo(
@@ -90,6 +81,8 @@ class AppService(
 ) : CarViewModelInterface {
     private val userState = UserState.instance
     val google = Google.build(applicationContext, userState)
+
+//    val googleAuth = GoogleCredManager.build(applicationContext, userState)
     private val http = CarHttpClient(GoogleTokenSource(google))
     private val preferences = LocalDataSource(applicationContext)
     val locationSource = LocationSource.instance
@@ -102,7 +95,8 @@ class AppService(
     val parkings: StateFlow<Outcome<ParkingResponse>> =
         parkingSearch.filterNotNull().flatMapLatest { query ->
             parkingsFlow(query)
-        }.debounce(200.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+        }.debounce(200.milliseconds)
+            .stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
     override val profile: StateFlow<Outcome<ProfileInfo>> =
         userState.userResult.flatMapLatest { user ->
@@ -118,19 +112,9 @@ class AppService(
 
     fun profileLatest(): ProfileInfo? = profile.value.toOption()
 
-    private val savedLanguage: StateFlow<String?> =
-        preferences.userPreferencesFlow().map { it.language }.distinctUntilChanged()
-            .stateIn(ioScope, SharingStarted.Eagerly, null)
-
-    fun currentLanguage() = savedLanguage.value
-
-    override val languages: StateFlow<List<CarLanguage>> =
+    val prefs =
         preferences.userPreferencesFlow()
-            .map { c -> c.carConf?.let { it.languages.map { l -> l.language } } ?: emptyList() }
-            .stateIn(ioScope, SharingStarted.Eagerly, emptyList())
-
-    fun languagesLatest() = languages.value
-
+            .stateIn(ioScope, SharingStarted.Eagerly, UserPreferences.empty)
     private val currentLang: StateFlow<Outcome<CarLang>> =
         preferences.userPreferencesFlow()
             .map { it.lang?.let { lang -> Outcome.Success(lang) } ?: Outcome.Loading }

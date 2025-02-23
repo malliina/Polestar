@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 data class UserPreferences(val carId: String?, val language: String?, val carConf: CarConf?) {
+    companion object {
+        val empty = UserPreferences(null, null, null)
+    }
+
     var lang: CarLang? = carConf?.languages?.firstOrNull { l -> l.language.code == language } ?: carConf?.languages?.firstOrNull()
 }
 

@@ -31,10 +31,14 @@ import com.skogberglabs.polestar.place
 import com.skogberglabs.polestar.placeListTemplate
 import com.skogberglabs.polestar.placeMarker
 import com.skogberglabs.polestar.row
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.time.Duration.Companion.seconds
 
 class PlacesScreen(
     carContext: CarContext,
@@ -46,12 +50,14 @@ class PlacesScreen(
     private var currentLocation: CarLocation = CarLocation.create(latestCoord.lat, latestCoord.lng)
 
     private var job: Job? = null
+    private var locationJob: Job? = null
     private var isFirstRender = true
 
     init {
         lifecycle.addObserver(this)
     }
 
+    @OptIn(FlowPreview::class)
     override fun onStateChanged(
         source: LifecycleOwner,
         event: Lifecycle.Event,
@@ -62,12 +68,9 @@ class PlacesScreen(
                     service.mainScope.launch {
                         service.parkings.collect { ps ->
                             when (ps) {
-                                is Outcome.Error -> {
-                                    Timber.i(ps.e, "Errored out.")
-                                    invalidateIfUpdate()
-                                }
                                 Outcome.Idle -> {
-                                    isFirstRender = false
+                                    Timber.i("Parkings state is idle.")
+                                    service.searchParkings(currentLocation)
                                 }
                                 Outcome.Loading -> {
                                     Timber.i("Loading, refreshing...")
@@ -78,15 +81,30 @@ class PlacesScreen(
                                     Timber.i("Got ${ds.size} directions, refreshing places list...")
                                     invalidateIfUpdate()
                                 }
+
+                                is Outcome.Error -> {
+                                    Timber.i(ps.e, "Errored out.")
+                                    invalidateIfUpdate()
+                                }
                             }
                         }
                     }
-                service.searchParkings(currentLocation)
+                locationJob =
+                    service.mainScope.launch {
+                        locationSource.currentLocation
+                            .filterNotNull()
+                            .distinctUntilChanged()
+                            .debounce(3.seconds).collect { coord ->
+                                updateLocation(CarLocation.create(coord.latitude, coord.longitude))
+                            }
+                    }
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
                 job?.let { Timber.i("Canceled parkings listener.") }
                 job = null
+                locationJob?.cancel()
+                locationJob = null
             }
             else -> {}
         }
@@ -94,6 +112,7 @@ class PlacesScreen(
 
     private fun invalidateIfUpdate() {
         if (!isFirstRender) {
+            Timber.i("Invalidating map template...")
             invalidate()
         }
         isFirstRender = false
@@ -102,7 +121,7 @@ class PlacesScreen(
     private fun updateLocation(loc: CarLocation) {
         currentLocation = loc
         Timber.i("Invalidating due to location update")
-        invalidate()
+        invalidateIfUpdate()
     }
 
     override fun onGetTemplate(): Template {
@@ -121,6 +140,14 @@ class PlacesScreen(
             setTitle(lang.settings.parking)
             setHeaderAction(Action.BACK)
             when (val s = service.parkings.value) {
+                Outcome.Idle -> {
+//                    setItemList(
+//                        itemList {
+//                            setNoItemsMessage(lang.settings.searchParkingsHint)
+//                        },
+//                    )
+                    setLoading(true)
+                }
                 Outcome.Loading -> {
                     setLoading(true)
                 }
@@ -173,14 +200,6 @@ class PlacesScreen(
                     )
                     setLoading(false)
                 }
-                Outcome.Idle -> {
-                    setItemList(
-                        itemList {
-                            setNoItemsMessage(lang.settings.searchParkingsHint)
-                        },
-                    )
-                    setLoading(false)
-                }
             }
             setCurrentLocationEnabled(true)
             setAnchor(myPlace)
@@ -191,14 +210,6 @@ class PlacesScreen(
                             setTitle(lang.settings.title)
                             setOnClickListener {
                                 screenManager.push(SettingsScreen(carContext, lang, service))
-                            }
-                        },
-                    )
-                    addAction(
-                        action {
-                            setTitle(lang.settings.searchParkings)
-                            setOnClickListener {
-                                service.searchParkings(currentLocation)
                             }
                         },
                     )

@@ -88,6 +88,14 @@
             android:label="Car-Map">
             <meta-data android:name="distractionOptimized" android:value="false"/>
         </activity>
+        <activity
+            android:name=".ui.GoogleAuthActivity"
+            android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+            android:launchMode="singleTask"
+            android:exported="true"
+            android:label="Car-Map">
+            <meta-data android:name="distractionOptimized" android:value="false"/>
+        </activity>
         <receiver android:name=".BootEventReceiver" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

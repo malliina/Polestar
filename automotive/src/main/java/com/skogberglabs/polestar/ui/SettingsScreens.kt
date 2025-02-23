@@ -8,10 +8,12 @@ import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.BuildConfig
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.Outcome
+import com.skogberglabs.polestar.UserPreferences
 import com.skogberglabs.polestar.addRow
 import com.skogberglabs.polestar.itemList
 import com.skogberglabs.polestar.listTemplate
 import com.skogberglabs.polestar.row
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -52,7 +54,7 @@ class SettingsScreen(
                     addRow {
                         setTitle(lang.profile.chooseLanguage)
                         setOnClickListener {
-                            screenManager.push(SelectLanguageScreen(carContext, lang, service))
+                            screenManager.push(SelectLanguageScreen(carContext, service.prefs.value, service))
                         }
                     }
                     addRow {
@@ -87,23 +89,39 @@ class SettingsScreen(
 
 class SelectLanguageScreen(
     carContext: CarContext,
-    val lang: CarLang,
+    initialPrefs: UserPreferences,
     private val service: AppService,
 ) : Screen(carContext) {
+    private var current: UserPreferences
+
+    init {
+        current = initialPrefs
+        service.mainScope.launch {
+            service.prefs.drop(1).collect { prefs ->
+                current = prefs
+                invalidate()
+            }
+        }
+    }
+
+    private val langs get() = current.carConf?.languages?.map { it.language } ?: emptyList()
+
     override fun onGetTemplate(): Template {
         return listTemplate {
-            setTitle(lang.profile.chooseLanguage)
+            current.lang?.let { lang ->
+                setTitle(lang.profile.chooseLanguage)
+            }
             val list =
                 itemList {
-                    service.languagesLatest().forEach { lang ->
+                    langs.forEach { lang ->
                         addRow { setTitle(lang.name) }
                     }
                     setOnSelectedListener { v ->
-                        val selected = service.languagesLatest()[v]
+                        val selected = langs[v]
                         service.saveLanguage(selected.code)
                         Timber.i("Selected language $selected")
                     }
-                    val idx = service.languagesLatest().indexOfFirst { l -> l.code == service.currentLanguage() }
+                    val idx = langs.indexOfFirst { l -> l.code == current.language }
                     if (idx >= 0) {
                         setSelectedIndex(idx)
                     }
@@ -121,7 +139,8 @@ class SelectCarScreen(
 ) : Screen(carContext) {
     init {
         service.mainScope.launch {
-            service.profile.collect {
+            service.profile.drop(1).collect {
+                Timber.i("Invalidating select car screen...")
                 invalidate()
             }
         }

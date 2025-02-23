@@ -56,6 +56,8 @@ data class LocationUpdate(
     val bearingAccuracyDegrees: Float?,
     val date: OffsetDateTime,
 ) {
+    val coord get(): Coord = Coord(latitude, longitude)
+
     fun toPoint(car: CarState) =
         CarPoint(longitude, latitude, altitudeMeters, accuracyMeters, bearing, bearingAccuracyDegrees, car.speed, car.batteryLevel, car.batteryCapacity, car.rangeRemaining, car.outsideTemperature, car.nightMode, date)
 }

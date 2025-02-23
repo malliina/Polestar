@@ -34,7 +34,7 @@ class LocationSource : LocationSourceInterface {
     override val currentLocation: StateFlow<LocationUpdate?> =
         locationUpdates.map { it.lastOrNull() }.stateIn(scope, SharingStarted.Eagerly, null)
 
-    override fun locationLatest(): Coord? = currentLocation.value?.let { loc -> Coord(loc.latitude, loc.longitude) }
+    override fun locationLatest(): Coord? = currentLocation.value?.coord
 
     val locationServicesAvailable: StateFlow<Boolean?> =
         locationServicesAvailability.stateIn(scope, SharingStarted.Eagerly, null)

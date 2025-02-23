@@ -85,11 +85,13 @@ dependencies {
     implementation("androidx.car.app:app-automotive:$autoVersion")
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.2")
     implementation("com.jakewharton.timber:timber:5.0.1")
     val playServicesVersion = "21.3.0"
     implementation("com.google.android.gms:play-services-location:$playServicesVersion")
     implementation("com.google.android.gms:play-services-auth:$playServicesVersion")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
     val moshiVersion = "1.15.2"
     implementation("com.squareup.moshi:moshi:$moshiVersion")
     ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
