@@ -11,7 +11,7 @@ platform :android do
   lane :deploy do
     gradle(task: "bundle", build_type: "Release")
     upload_to_play_store(
-      track: "internal"
+      track: "automotive:internal"
     )
   end
 end
