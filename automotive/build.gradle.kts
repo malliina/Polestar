@@ -4,16 +4,75 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+val versionFilename = "version.code"
+
+abstract class UpdateVersionTask : DefaultTask() {
+    @get:Input
+    abstract val updatedVersion: Property<String?>
+
+    @TaskAction
+    fun action() {
+        val file = File("automotive/version.code")
+        if (!file.exists()) {
+            file.createNewFile()
+            file.writeText("1")
+            logger.warn("Created $file with initial version code.")
+        } else {
+            val nextCode = file.readText().trim().toInt() + 1
+            file.writeText("$nextCode")
+            logger.warn("Updated version code to $nextCode. Version is ${updatedVersion.get()}.")
+        }
+    }
+}
+
 android {
     namespace = "com.skogberglabs.polestar"
     compileSdk = 35
+    val code = file(versionFilename).readText().trim().toIntOrNull() ?: 1
+
+    tasks.register<UpdateVersionTask>("updateVersion") {
+        updatedVersion.convention(defaultConfig.versionName)
+    }
+
+    tasks.register("upVer") {
+        doFirst {
+            logger.warn("Incrementing version...")
+            val file = File("automotive/version.code")
+            if (!file.exists()) {
+                file.createNewFile()
+                file.writeText("1")
+                logger.warn("Created $file with initial version code.")
+            } else {
+                val nextCode = file.readText().trim().toInt() + 1
+                file.writeText("$nextCode")
+                logger.warn("Updated version code to $nextCode.")
+            }
+        }
+        doLast {
+            // git status --porcelain
+            val process = ProcessBuilder()
+                .command("git", "add", ".")
+//                .directory(rootProject.projectDir)
+                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .start()
+            val exit = process.waitFor()
+            val result = process.inputStream.bufferedReader().readText()
+//            exec {
+//                workingDir "${buildDir}"
+//                executable 'echo'
+//                args 'Hello world!'
+//            }
+            logger.warn("Porcelain with $exit returned '${result}'.")
+        }
+    }
 
     defaultConfig {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 29 // Android 10
         targetSdk = 35
-        versionCode = 49
-        versionName = "1.22.7"
+        versionCode = code
+        versionName = "1.22.$code"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
