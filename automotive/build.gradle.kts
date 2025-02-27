@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -6,23 +8,12 @@ plugins {
 
 val versionFilename = "version.code"
 
-abstract class UpdateVersionTask : DefaultTask() {
-    @get:Input
-    abstract val updatedVersion: Property<String?>
-
-    @TaskAction
-    fun action() {
-        val file = File("automotive/version.code")
-        if (!file.exists()) {
-            file.createNewFile()
-            file.writeText("1")
-            logger.warn("Created $file with initial version code.")
-        } else {
-            val nextCode = file.readText().trim().toInt() + 1
-            file.writeText("$nextCode")
-            logger.warn("Updated version code to $nextCode. Version is ${updatedVersion.get()}.")
-        }
+fun Project.execToString(spec: ExecSpec.() -> Unit): String = ByteArrayOutputStream().use { outputStream ->
+    exec {
+        spec()
+        standardOutput = outputStream
     }
+    outputStream.toString().trim()
 }
 
 android {
@@ -30,40 +21,46 @@ android {
     compileSdk = 35
     val code = file(versionFilename).readText().trim().toIntOrNull() ?: 1
 
-    tasks.register<UpdateVersionTask>("updateVersion") {
-        updatedVersion.convention(defaultConfig.versionName)
-    }
+    fun makeVersion(c: Int): String = "1.22.$c"
 
-    tasks.register("upVer") {
+    tasks.register("release") {
+        notCompatibleWithConfigurationCache("Not supported.")
+        var nextCode = 1
         doFirst {
+            val porcelain = execToString {
+                commandLine("git", "status", "--porcelain")
+            }
+            if (porcelain.isNotBlank()) {
+                throw Exception("Git status is not empty.")
+            }
             logger.warn("Incrementing version...")
             val file = File("automotive/version.code")
             if (!file.exists()) {
                 file.createNewFile()
-                file.writeText("1")
-                logger.warn("Created $file with initial version code.")
+                file.writeText("$nextCode")
+                logger.warn("Created $file with initial version code of $nextCode.")
             } else {
-                val nextCode = file.readText().trim().toInt() + 1
+                nextCode = file.readText().trim().toInt() + 1
                 file.writeText("$nextCode")
                 logger.warn("Updated version code to $nextCode.")
             }
         }
         doLast {
-            // git status --porcelain
-            val process = ProcessBuilder()
-                .command("git", "add", ".")
-//                .directory(rootProject.projectDir)
-                .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-                .redirectError(ProcessBuilder.Redirect.INHERIT)
-                .start()
-            val exit = process.waitFor()
-            val result = process.inputStream.bufferedReader().readText()
-//            exec {
-//                workingDir "${buildDir}"
-//                executable 'echo'
-//                args 'Hello world!'
-//            }
-            logger.warn("Porcelain with $exit returned '${result}'.")
+            exec {
+                commandLine("git", "add", "version.code")
+            }
+            exec {
+                commandLine("git", "commit", "-m", "Incrementing version code to $nextCode.")
+            }
+            val ver = makeVersion(nextCode)
+            val tag = "v$ver"
+            exec {
+                commandLine("git", "tag", tag)
+            }
+            exec {
+                commandLine("git", "push", "origin", "tag", tag)
+            }
+            logger.warn("Pushed $tag.")
         }
     }
 
@@ -72,7 +69,7 @@ android {
         minSdk = 29 // Android 10
         targetSdk = 35
         versionCode = code
-        versionName = "1.22.$code"
+        versionName = makeVersion(code)
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
