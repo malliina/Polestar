@@ -58,6 +58,9 @@ android {
                 commandLine("git", "tag", tag)
             }
             exec {
+                commandLine("git", "push", "origin", "master")
+            }
+            exec {
                 commandLine("git", "push", "origin", "tag", tag)
             }
             logger.warn("Pushed $tag.")

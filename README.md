@@ -7,11 +7,11 @@ This Android Automotive app:
 
 ## Releasing
 
-1. Increment the version name and build number in [build.gradle.kts](automotive/build.gradle.kts).
-2. Create a tag vx.y.z where x.y.z matches the version name: `git tag vx.y.z`.
-3. Push the code GitHub.
-4. Check [.github/workflows/fastlane.yml](.github/workflows/fastlane.yml) for details.
-5. Create a new release of the latest build for internal testing in Google Play Console.
+To release a new version of the app to the Google Play Store internal testing track:
+
+    ./gradlew release
+
+Check [.github/workflows/fastlane.yml](.github/workflows/fastlane.yml) for details.
 
 ## SHA1 fingerprints
 
