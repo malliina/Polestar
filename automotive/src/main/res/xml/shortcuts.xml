@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <capability android:name="actions.intent.GET_PARKING_FACILITY">
+        <intent>
+            <url-template
+                android:value="https://www.car-map.com{?name,address,disambiguatingDescription,latitude,longitude}"/>
+            <parameter
+                android:name="parkingFacility.name"
+                android:key="name"/>
+            <parameter
+                android:name="parkingFacility.address"
+                android:key="address"/>
+            <parameter
+                android:name="parkingFacility.disambiguatingDescription"
+                android:key="disambiguatingDescription"/>
+            <parameter
+                android:name="parkingFacility.geo.latitude"
+                android:key="latitude"/>
+            <parameter
+                android:name="parkingFacility.geo.longitude"
+                android:key="longitude"/>
+        </intent>
+    </capability>
+</shortcuts>

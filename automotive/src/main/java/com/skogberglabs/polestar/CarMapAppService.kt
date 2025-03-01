@@ -4,9 +4,9 @@ import android.content.Intent
 import androidx.car.app.CarAppService
 import androidx.car.app.Screen
 import androidx.car.app.Session
-import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.validation.HostValidator
 import com.skogberglabs.polestar.ui.HomeScreen
+import timber.log.Timber
 
 class CarTrackerAppService : CarAppService() {
     override fun createHostValidator(): HostValidator = HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
@@ -17,9 +17,18 @@ class CarTrackerAppService : CarAppService() {
     }
 }
 
-@androidx.annotation.OptIn(ExperimentalCarApi::class)
-class CarSession(
-    val app: CarApp,
-) : Session() {
-    override fun onCreateScreen(intent: Intent): Screen = HomeScreen(carContext, app.appService)
+class CarSession(val app: CarApp) : Session() {
+    override fun onCreateScreen(intent: Intent): Screen {
+        intent.data?.let { uri ->
+            Timber.i("Creating screen with $uri...")
+        }
+        return HomeScreen(carContext, app.appService)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.data?.let { uri ->
+            Timber.i("Received intent with $uri...")
+        }
+    }
 }
