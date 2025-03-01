@@ -62,7 +62,7 @@ android {
             changelogFile.writeText(changelog)
             logger.warn("Wrote $changelogFile.")
             exec {
-                commandLine("git", "add", "version.code", changelogPath)
+                commandLine("git", "add", "version.code", "../$changelogPath")
             }
             exec {
                 commandLine("git", "commit", "-m", "Incrementing version code to $nextCode.")
