@@ -31,6 +31,14 @@ Runs all the tests
 
 Release a new version to internal testers
 
+### android notes
+
+```sh
+[bundle exec] fastlane android notes
+```
+
+Generate release notes
+
 ----
 
 This README.md is auto-generated and will be re-generated every time [_fastlane_](https://fastlane.tools) is run.

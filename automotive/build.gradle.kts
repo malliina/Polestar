@@ -49,9 +49,21 @@ android {
                 logger.warn("Updated version code to $nextCode.")
             }
         }
+        doFirst {
+            val latestTag = execToString {
+                commandLine("git", "describe", "--abbrev=0", "--tags")
+            }
+            // Commit messages since the latest tag
+            val changelog = execToString {
+                commandLine("git", "log", "--pretty=- %s", "$latestTag..")
+            }
+            val changelogFile = File("fastlane/metadata/android/en-US/changelogs/$nextCode.txt")
+            changelogFile.writeText(changelog)
+            logger.warn("Wrote $changelogFile.")
+        }
         doLast {
             exec {
-                commandLine("git", "add", "version.code")
+                commandLine("git", "add", "version.code", "fastlane/metadata/android/en-US/changelogs/$nextCode.txt")
             }
             exec {
                 commandLine("git", "commit", "-m", "Incrementing version code to $nextCode.")
