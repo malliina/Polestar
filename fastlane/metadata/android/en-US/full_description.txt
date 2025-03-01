@@ -1,0 +1,3 @@
+Saves all routes driven with your car to car-map.com. Sign in to the app and to car-map.com with the same Google account. Then follow the movement of your car in real-time, or check out previously driven routes.
+
+The location of your car is not shared with third parties.
