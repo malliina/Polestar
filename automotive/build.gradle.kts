@@ -25,6 +25,8 @@ android {
     fun makeVersion(c: Int): String = "1.22.$c"
 
     tasks.register("release") {
+        group = "build"
+        description = "Releases a new version to Google Play Store for internal testing."
         notCompatibleWithConfigurationCache("Not supported.")
         var nextCode = 1
         doFirst {
