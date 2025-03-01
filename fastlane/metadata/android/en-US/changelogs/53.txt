@@ -1,0 +1,4 @@
+- Fix path
+- Rearrange build
+- Write changelog on release
+- Add meta
