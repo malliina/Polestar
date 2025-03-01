@@ -49,7 +49,7 @@ android {
                 logger.warn("Updated version code to $nextCode.")
             }
         }
-        doFirst {
+        doLast {
             val latestTag = execToString {
                 commandLine("git", "describe", "--abbrev=0", "--tags")
             }
@@ -57,13 +57,12 @@ android {
             val changelog = execToString {
                 commandLine("git", "log", "--pretty=- %s", "$latestTag..")
             }
-            val changelogFile = File("fastlane/metadata/android/en-US/changelogs/$nextCode.txt")
+            val changelogPath = "fastlane/metadata/android/en-US/changelogs/$nextCode.txt"
+            val changelogFile = File(changelogPath)
             changelogFile.writeText(changelog)
             logger.warn("Wrote $changelogFile.")
-        }
-        doLast {
             exec {
-                commandLine("git", "add", "version.code", "fastlane/metadata/android/en-US/changelogs/$nextCode.txt")
+                commandLine("git", "add", "version.code", changelogPath)
             }
             exec {
                 commandLine("git", "commit", "-m", "Incrementing version code to $nextCode.")
