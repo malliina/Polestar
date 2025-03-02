@@ -107,7 +107,11 @@ class HomeScreen(
             }
         } else {
             service.state().carLang()?.let { lang ->
-                val content = RequestPermissionScreen.permissionContent(carContext.notGrantedPermissions(), lang.permissions)
+                val content =
+                    RequestPermissionScreen.permissionContent(
+                        carContext.notGrantedPermissions(),
+                        lang.permissions,
+                    )
                 val permissionsScreen =
                     RequestPermissionScreen(carContext, content, lang.permissions) { sm ->
                         val nlang = lang.notifications

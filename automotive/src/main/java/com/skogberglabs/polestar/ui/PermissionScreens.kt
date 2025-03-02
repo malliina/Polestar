@@ -112,7 +112,9 @@ class RequestPermissionScreen(
     }
 }
 
-class NoPermissionScreen(carContext: CarContext, val content: PermissionContent, val lang: PermissionsLang) : Screen(carContext) {
+class NoPermissionScreen(carContext: CarContext, val content: PermissionContent, val lang: PermissionsLang) : Screen(
+    carContext,
+) {
     override fun onGetTemplate(): Template {
         val openSettingsAction =
             action {
@@ -130,7 +132,9 @@ class NoPermissionScreen(carContext: CarContext, val content: PermissionContent,
                 setTitle("Try again")
                 setOnClickListener {
                     Timber.i("Trying again...")
-                    screenManager.push(RequestPermissionScreen(carContext, content, lang, onGranted = { screenManager.popToRoot() }))
+                    screenManager.push(
+                        RequestPermissionScreen(carContext, content, lang, onGranted = { screenManager.popToRoot() }),
+                    )
                 }
             }
         return messageTemplate("Please open Settings and grant app-level permissions for this app.") {

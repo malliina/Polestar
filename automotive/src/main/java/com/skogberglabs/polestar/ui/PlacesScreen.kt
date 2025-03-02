@@ -159,8 +159,14 @@ class PlacesScreen(
                                 addItem(
                                     row {
                                         val parkingCoord = result.nearest.coord
-                                        val span = DistanceSpan.create(Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS))
-                                        val str = SpannableString("  $interpunct ${result.capacity} ${lang.settings.availableSpots}")
+                                        val span =
+                                            DistanceSpan.create(
+                                                Distance.create(result.nearest.distance.meters, Distance.UNIT_METERS),
+                                            )
+                                        val str =
+                                            SpannableString(
+                                                "  $interpunct ${result.capacity} ${lang.settings.availableSpots}",
+                                            )
                                         str.setSpan(span, 0, 1, Spanned.SPAN_INCLUSIVE_EXCLUSIVE)
                                         setTitle(str)
                                         result.nearest.address?.let { address ->
@@ -181,7 +187,11 @@ class PlacesScreen(
                                         setBrowsable(false)
                                         setOnClickListener {
                                             // https://developer.android.com/training/cars/apps#handle-user-input
-                                            val navigationIntent = Intent(CarContext.ACTION_NAVIGATE, Uri.parse("geo:${parkingCoord.lat},${parkingCoord.lng}"))
+                                            val navigationIntent =
+                                                Intent(
+                                                    CarContext.ACTION_NAVIGATE,
+                                                    Uri.parse("geo:${parkingCoord.lat},${parkingCoord.lng}"),
+                                                )
                                             carContext.startCarApp(navigationIntent)
                                         }
                                     },

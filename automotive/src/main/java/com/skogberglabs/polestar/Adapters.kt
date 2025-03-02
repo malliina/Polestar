@@ -100,7 +100,8 @@ class PrimitiveAdapter {
     fun writeRpm(p: Rpm): Int = p.rpm
 
     @FromJson
-    fun gear(i: Int): Gear = Gear.values().firstOrNull { v -> v.value == i } ?: throw JsonDataException("Invalid gear: '$i'.")
+    fun gear(i: Int): Gear =
+        Gear.values().firstOrNull { v -> v.value == i } ?: throw JsonDataException("Invalid gear: '$i'.")
 
     @ToJson
     fun writeGear(p: Gear): Int = p.value

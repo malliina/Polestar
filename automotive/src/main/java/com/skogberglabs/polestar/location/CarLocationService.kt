@@ -47,9 +47,14 @@ class CarLocationService : Service() {
         const val Text = "text"
 
         fun createNotificationChannels(context: Context) {
-            val channel = NotificationChannel(LOCATIONS_CHANNEL, "Car notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel =
+                NotificationChannel(LOCATIONS_CHANNEL, "Car notifications", NotificationManager.IMPORTANCE_DEFAULT)
             val bootChannel =
-                NotificationChannel(BootEventReceiver.BOOT_CHANNEL, "App boot notifications", NotificationManager.IMPORTANCE_HIGH)
+                NotificationChannel(
+                    BootEventReceiver.BOOT_CHANNEL,
+                    "App boot notifications",
+                    NotificationManager.IMPORTANCE_HIGH,
+                )
             val manager = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val channels = listOf(channel, bootChannel)
             manager.createNotificationChannels(channels)
@@ -98,11 +103,19 @@ class CarLocationService : Service() {
                                 if (applicationContext.isLocationGranted()) {
                                     client.requestLocationUpdates(locationRequest, pendingIntent)
                                     if (isForegroundServiceGranted()) {
-                                        startForeground(NotificationIds.FOREGROUND_ID, notification(title, text), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
-                                        Timber.i("Promoted location service to a foreground service, permissions granted ${isAllPermissionsGranted()}.")
+                                        startForeground(
+                                            NotificationIds.FOREGROUND_ID,
+                                            notification(title, text),
+                                            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION,
+                                        )
+                                        Timber.i(
+                                            "Promoted location service to a foreground service, permissions granted ${isAllPermissionsGranted()}.",
+                                        )
                                         started = true
                                     } else {
-                                        Timber.i("Foreground location service permission not granted, not promoting, other permissions granted ${isAllPermissionsGranted()}.")
+                                        Timber.i(
+                                            "Foreground location service permission not granted, not promoting, other permissions granted ${isAllPermissionsGranted()}.",
+                                        )
                                     }
                                 }
                             }
@@ -129,7 +142,12 @@ class CarLocationService : Service() {
                 Intent(context, LocationUpdatesBroadcastReceiver::class.java).apply {
                     action = LocationUpdatesBroadcastReceiver.ACTION_LOCATIONS
                 }
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+            PendingIntent.getBroadcast(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
+            )
         }
         pendingIntent = pi
     }

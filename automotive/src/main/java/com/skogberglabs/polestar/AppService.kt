@@ -197,7 +197,11 @@ class AppService(
             val near = query.near
             val outcome =
                 try {
-                    val response = http.get("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20", Adapters.parkings)
+                    val response =
+                        http.get(
+                            "/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20",
+                            Adapters.parkings,
+                        )
                     Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
                 } catch (e: Exception) {

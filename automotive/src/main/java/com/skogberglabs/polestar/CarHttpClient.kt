@@ -127,7 +127,9 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                         request.newBuilder().header(Authorization, "Bearer $newToken").build()
                     executeOnce(newAttempt, reader)
                 } else {
-                    Timber.w("Token expired and unable to renew token. Failing request ${request.method} ${request.url}.")
+                    Timber.w(
+                        "Token expired and unable to renew token. Failing request ${request.method} ${request.url}.",
+                    )
                     throw e
                 }
             } else {

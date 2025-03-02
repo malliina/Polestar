@@ -50,13 +50,15 @@ android {
             }
         }
         doLast {
-            val latestTag = execToString {
-                commandLine("git", "describe", "--abbrev=0", "--tags")
-            }
+            val latestTag =
+                execToString {
+                    commandLine("git", "describe", "--abbrev=0", "--tags")
+                }
             // Commit messages since the latest tag
-            val changelog = execToString {
-                commandLine("git", "log", "--pretty=- %s", "$latestTag..")
-            }
+            val changelog =
+                execToString {
+                    commandLine("git", "log", "--pretty=- %s", "$latestTag..")
+                }
             val changelogPath = "fastlane/metadata/android/en-US/changelogs/$nextCode.txt"
             val changelogFile = File(changelogPath)
             changelogFile.writeText(changelog)
