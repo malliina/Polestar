@@ -32,7 +32,6 @@ import com.skogberglabs.polestar.placeMarker
 import com.skogberglabs.polestar.row
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -176,7 +175,6 @@ class PlacesScreen(
                                                     place(parkingCoord.carLocation()) {
                                                         setMarker(
                                                             placeMarker {
-                                                                setLabel("${result.capacity}")
                                                             },
                                                         )
                                                     },
