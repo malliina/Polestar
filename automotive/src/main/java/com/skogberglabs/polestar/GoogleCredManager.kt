@@ -7,6 +7,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import kotlinx.coroutines.delay
@@ -38,9 +39,9 @@ class GoogleCredManager(private val client: CredentialManager, private val userS
             return null
         }
 
-        private fun options() =
+        private fun options(filterByAuthorized: Boolean) =
             GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(true)
+                .setFilterByAuthorizedAccounts(filterByAuthorized)
                 .setServerClientId(webClientId)
                 .setAutoSelectEnabled(true)
                 .build()
@@ -48,9 +49,12 @@ class GoogleCredManager(private val client: CredentialManager, private val userS
 
     suspend fun startSignIn(activityContext: Context) {
         userState.update(Outcome.Loading)
-        val request = GetCredentialRequest.Builder().addCredentialOption(options()).build()
         try {
-            val result = client.getCredential(activityContext, request)
+            val result = try {
+                client.getCredential(activityContext, buildRequest(filterByAuthorized = true))
+            } catch (e: NoCredentialException) {
+                client.getCredential(activityContext, buildRequest(filterByAuthorized = false))
+            }
             handleSignIn(result, silent = false)
         } catch (e: GetCredentialException) {
             fail(e)
@@ -61,7 +65,10 @@ class GoogleCredManager(private val client: CredentialManager, private val userS
         }
     }
 
-    fun fail(e: Exception) {
+    private fun buildRequest(filterByAuthorized: Boolean) =
+        GetCredentialRequest.Builder().addCredentialOption(options(filterByAuthorized)).build()
+
+    private fun fail(e: Exception) {
         Timber.w(e, "Google auth failed.")
         userState.update(Outcome.Error(e))
     }
@@ -74,7 +81,7 @@ class GoogleCredManager(private val client: CredentialManager, private val userS
 //            userState.update(Outcome.Loading)
             val request =
                 GetCredentialRequest.Builder()
-                    .addCredentialOption(options())
+                    .addCredentialOption(options(filterByAuthorized = true))
                     .setPreferImmediatelyAvailableCredentials(true)
                     .build()
             val result = client.getCredential(appContext, request)
