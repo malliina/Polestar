@@ -33,6 +33,8 @@ import com.skogberglabs.polestar.row
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
@@ -92,8 +94,9 @@ class PlacesScreen(
                     service.mainScope.launch {
                         locationSource.currentLocation
                             .filterNotNull()
-                            .distinctUntilChanged()
                             .sample(15.seconds)
+                            .distinctUntilChangedBy { it.approx }
+                            .filter { it.approx != Coord.location(currentLocation).approx }
                             .collect { coord ->
                                 updateLocation(CarLocation.create(coord.latitude, coord.longitude))
                             }
@@ -120,7 +123,7 @@ class PlacesScreen(
 
     private fun updateLocation(loc: CarLocation) {
         currentLocation = loc
-        Timber.i("Invalidating due to location update")
+        Timber.i("Invalidating due to location update to $loc")
         invalidateIfUpdate()
     }
 
@@ -141,11 +144,6 @@ class PlacesScreen(
             setHeaderAction(Action.BACK)
             when (val s = service.parkings.value) {
                 Outcome.Idle -> {
-//                    setItemList(
-//                        itemList {
-//                            setNoItemsMessage(lang.settings.searchParkingsHint)
-//                        },
-//                    )
                     setLoading(true)
                 }
                 Outcome.Loading -> {
@@ -178,6 +176,7 @@ class PlacesScreen(
                                                     place(parkingCoord.carLocation()) {
                                                         setMarker(
                                                             placeMarker {
+                                                                setLabel("${result.capacity}")
                                                             },
                                                         )
                                                     },

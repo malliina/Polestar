@@ -1,5 +1,6 @@
 package com.skogberglabs.polestar
 
+import androidx.car.app.model.CarLocation
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
@@ -98,4 +99,15 @@ data class CarLang(
 data class CarConf(val languages: List<CarLang>)
 
 @JsonClass(generateAdapter = true)
-data class Coord(val lat: Double, val lng: Double)
+data class Coord(val lat: Double, val lng: Double) {
+    companion object {
+        fun format(d: Double) {
+            val trunc = (d * 100000).toInt().toDouble() / 100000
+            "%1.5f".format(trunc).replace(',', '.')
+        }
+
+        fun location(carLocation: CarLocation) = Coord(carLocation.latitude, carLocation.longitude)
+    }
+
+    val approx get(): String = "${format(lat)},${format(lng)}"
+}

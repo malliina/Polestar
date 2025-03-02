@@ -58,6 +58,8 @@ data class LocationUpdate(
 ) {
     val coord get(): Coord = Coord(latitude, longitude)
 
+    val approx get(): String = coord.approx
+
     fun toPoint(car: CarState) =
         CarPoint(longitude, latitude, altitudeMeters, accuracyMeters, bearing, bearingAccuracyDegrees, car.speed, car.batteryLevel, car.batteryCapacity, car.rangeRemaining, car.outsideTemperature, car.nightMode, date)
 }
