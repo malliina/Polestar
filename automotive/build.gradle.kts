@@ -10,10 +10,6 @@ plugins {
 
 val versionFilename = "version.code"
 
-fun execToString(vararg cmd: String): String = providers.exec {
-    commandLine(cmd.asList())
-}.standardOutput.asText.get()
-
 interface InjectedExecOps {
     @get:Inject val execOps: ExecOperations
 }
@@ -25,10 +21,6 @@ android {
 
     fun makeVersion(c: Int): String = "1.22.$c"
 
-    tasks.register("demo") {
-        execToString("git", "tag", "argh2")
-    }
-
     tasks.register("release") {
         group = "build"
         description = "Releases a new version to Google Play Store for internal testing."
@@ -38,14 +30,15 @@ android {
         fun execute(vararg cmd: String) = execOps.exec {
             commandLine(cmd.asList())
         }
-        doFirst {
-            val porcelain = ByteArrayOutputStream().use { outputStream ->
-                execOps.exec {
-                    commandLine("git", "status", "--porcelain")
-                    standardOutput = outputStream
-                }
-                outputStream.toString().trim()
+        fun executeToString(vararg cmd: String) = ByteArrayOutputStream().use { outputStream ->
+            execOps.exec {
+                commandLine(cmd.asList())
+                standardOutput = outputStream
             }
+            outputStream.toString().trim()
+        }
+        doFirst {
+            val porcelain = executeToString("git", "status", "--porcelain")
             if (porcelain.isNotBlank()) {
                 throw Exception("Git status is not empty.")
             }
@@ -62,10 +55,9 @@ android {
             }
         }
         doLast {
-            val latestTag =
-                execToString("git", "describe", "--abbrev=0", "--tags")
+            val latestTag = executeToString("git", "describe", "--abbrev=0", "--tags")
             // Commit messages since the latest tag
-            val changelog = execToString("git", "log", "--pretty=- %s", "$latestTag..")
+            val changelog = executeToString("git", "log", "--pretty=- %s", "$latestTag..")
             val changelogPath = "fastlane/metadata/android/en-US/changelogs/$nextCode.txt"
             val changelogFile = File(changelogPath)
             changelogFile.writeText(changelog)
