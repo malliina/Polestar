@@ -1,9 +1,10 @@
 import java.io.ByteArrayOutputStream
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.ktlint)
 }
 
 val versionFilename = "version.code"
@@ -154,27 +155,23 @@ android {
     }
 }
 
-val autoVersion = "1.4.0"
-
 dependencies {
-    implementation("androidx.car.app:app:$autoVersion")
-    implementation("androidx.car.app:app-automotive:$autoVersion")
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.appcompat:appcompat:1.7.0")
-    implementation("androidx.datastore:datastore-preferences:1.1.3")
-    implementation("com.jakewharton.timber:timber:5.0.1")
-    val playServicesVersion = "21.3.0"
-    implementation("com.google.android.gms:play-services-location:$playServicesVersion")
-    implementation("com.google.android.gms:play-services-auth:$playServicesVersion")
-    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
-    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    val moshiVersion = "1.15.2"
-    implementation("com.squareup.moshi:moshi:$moshiVersion")
-    ksp("com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion")
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("androidx.car.app:app-testing:$autoVersion")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation("com.google.assistant.appactions:testing:1.0.0")
+    implementation(libs.androidx.app)
+    implementation(libs.androidx.app.automotive)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.timber)
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.auth)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.moshi)
+    ksp(libs.moshi.kotlin.codegen)
+    implementation(libs.okhttp)
+    testImplementation(libs.junit)
+    testImplementation(libs.androidx.app.testing)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.testing)
 }
