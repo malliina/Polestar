@@ -1,5 +1,3 @@
-import java.io.ByteArrayOutputStream
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.devtools.ksp)
@@ -10,14 +8,9 @@ plugins {
 
 val versionFilename = "version.code"
 
-fun Project.execToString(spec: ExecSpec.() -> Unit): String =
-    ByteArrayOutputStream().use { outputStream ->
-        exec {
-            spec()
-            standardOutput = outputStream
-        }
-        outputStream.toString().trim()
-    }
+fun execToString(vararg cmd: String): String = providers.exec {
+    commandLine(cmd.asList())
+}.standardOutput.asText.get()
 
 android {
     namespace = "com.skogberglabs.polestar"
@@ -26,16 +19,17 @@ android {
 
     fun makeVersion(c: Int): String = "1.22.$c"
 
+    tasks.register("demo") {
+        execToString("git", "tag", "argh2")
+    }
+
     tasks.register("release") {
         group = "build"
         description = "Releases a new version to Google Play Store for internal testing."
         notCompatibleWithConfigurationCache("Not supported.")
         var nextCode = 1
         doFirst {
-            val porcelain =
-                execToString {
-                    commandLine("git", "status", "--porcelain")
-                }
+            val porcelain = execToString("git", "status", "--porcelain")
             if (porcelain.isNotBlank()) {
                 throw Exception("Git status is not empty.")
             }
@@ -53,35 +47,20 @@ android {
         }
         doLast {
             val latestTag =
-                execToString {
-                    commandLine("git", "describe", "--abbrev=0", "--tags")
-                }
+                execToString("git", "describe", "--abbrev=0", "--tags")
             // Commit messages since the latest tag
-            val changelog =
-                execToString {
-                    commandLine("git", "log", "--pretty=- %s", "$latestTag..")
-                }
+            val changelog = execToString("git", "log", "--pretty=- %s", "$latestTag..")
             val changelogPath = "fastlane/metadata/android/en-US/changelogs/$nextCode.txt"
             val changelogFile = File(changelogPath)
             changelogFile.writeText(changelog)
             logger.warn("Wrote $changelogFile.")
-            exec {
-                commandLine("git", "add", "version.code", "../$changelogPath")
-            }
-            exec {
-                commandLine("git", "commit", "-m", "Incrementing version code to $nextCode.")
-            }
+            execToString("git", "add", "version.code", "../$changelogPath")
+            execToString("git", "commit", "-m", "Incrementing version code to $nextCode.")
             val ver = makeVersion(nextCode)
             val tag = "v$ver"
-            exec {
-                commandLine("git", "tag", tag)
-            }
-            exec {
-                commandLine("git", "push", "origin", "master")
-            }
-            exec {
-                commandLine("git", "push", "origin", "tag", tag)
-            }
+            execToString("git", "tag", tag)
+            execToString("git", "push", "origin", "master")
+            execToString("git", "push", "origin", "tag", tag)
             logger.warn("Pushed $tag.")
         }
     }
