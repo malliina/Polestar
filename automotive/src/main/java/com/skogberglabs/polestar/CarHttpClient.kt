@@ -5,6 +5,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.serializer
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -81,6 +82,8 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             t
         }
 
+    suspend inline fun <reified T> get(path: String): T = get(path, serializer())
+
     suspend fun <T> get(
         path: String,
         adapter: KSerializer<T>,
@@ -90,6 +93,11 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         return execute(request, adapter)
     }
 
+    suspend inline fun <reified Req, reified Res> post(
+        path: String,
+        body: Req,
+    ): Res = post(path, body, serializer(), serializer())
+
     suspend fun <Req, Res> post(
         path: String,
         body: Req,
@@ -97,7 +105,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         reader: KSerializer<Res>,
     ): Res = body(path, body, writer, reader) { req, rb -> req.post(rb) }
 
-    suspend fun <Req, Res> body(
+    private suspend fun <Req, Res> body(
         path: String,
         body: Req,
         writer: KSerializer<Req>,
@@ -112,7 +120,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
 
     private suspend fun <T> execute(
         request: Request,
-        reader: KSerializer<T>
+        reader: KSerializer<T>,
     ): T =
         try {
             executeOnce(request, reader)

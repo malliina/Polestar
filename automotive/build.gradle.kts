@@ -27,16 +27,20 @@ android {
         notCompatibleWithConfigurationCache("Not supported.")
         val execOps = project.objects.newInstance<InjectedExecOps>().execOps
         var nextCode = 1
-        fun execute(vararg cmd: String) = execOps.exec {
-            commandLine(cmd.asList())
-        }
-        fun executeToString(vararg cmd: String) = ByteArrayOutputStream().use { outputStream ->
+
+        fun execute(vararg cmd: String) =
             execOps.exec {
                 commandLine(cmd.asList())
-                standardOutput = outputStream
             }
-            outputStream.toString().trim()
-        }
+
+        fun executeToString(vararg cmd: String) =
+            ByteArrayOutputStream().use { outputStream ->
+                execOps.exec {
+                    commandLine(cmd.asList())
+                    standardOutput = outputStream
+                }
+                outputStream.toString().trim()
+            }
         doFirst {
             val porcelain = executeToString("git", "status", "--porcelain")
             if (porcelain.isNotBlank()) {

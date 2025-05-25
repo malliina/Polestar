@@ -56,11 +56,14 @@ class LocationUploader(
             .combine(carIds.filterNotNull()) { locs, id ->
                 try {
                     val result =
-                        http.post(
+                        http.post<LocationUpdates, SimpleMessage>(
                             path,
-                            LocationUpdates(locs.map { it.toPoint(carListener.carInfo.value) }, id),
-                            LocationUpdates.serializer(),
-                            SimpleMessage.serializer(),
+                            LocationUpdates(
+                                locs.map {
+                                    it.toPoint(carListener.carInfo.value)
+                                },
+                                id,
+                            ),
                         )
                     Timber.d("Uploaded ${locs.size} locations to $path.")
                     Outcome.Success(result)

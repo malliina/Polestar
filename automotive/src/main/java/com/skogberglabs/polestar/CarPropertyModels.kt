@@ -1,15 +1,8 @@
 package com.skogberglabs.polestar
 
 import com.skogberglabs.polestar.ui.formatted
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
 
 @JvmInline
 @Serializable
@@ -81,8 +74,6 @@ val Float.kilopascals get() = Pressure(this * 1000)
 val Float.metersPerSecond get() = Speed(this)
 val Double.meters get() = Distance(this)
 
-
-
 @Serializable
 data class CarState(
     val outsideTemperature: Temperature?,
@@ -122,7 +113,11 @@ enum class DataUnit {
     Other,
 }
 
-data class VehicleProp(val id: Int, val propertyType: PropertyType = PropertyType.FloatProp, val dataUnit: DataUnit = DataUnit.Other) {
+data class VehicleProp(
+    val id: Int,
+    val propertyType: PropertyType = PropertyType.FloatProp,
+    val dataUnit: DataUnit = DataUnit.Other,
+) {
     companion object {
         fun bool(id: Int) = VehicleProp(id, PropertyType.BoolProp)
 

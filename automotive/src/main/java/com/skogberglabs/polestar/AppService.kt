@@ -177,7 +177,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get("/cars/conf", CarConf.serializer())
+                    val response = http.get<CarConf>("/cars/conf")
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     // Emitting in a catch-clause fails
@@ -198,10 +198,7 @@ class AppService(
             val outcome =
                 try {
                     val response =
-                        http.get(
-                            "/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20",
-                            ParkingResponse.serializer(),
-                        )
+                        http.get<ParkingResponse>("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20")
                     Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
                 } catch (e: Exception) {
@@ -217,7 +214,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get("/users/me", UserContainer.serializer())
+                    val response = http.get<UserContainer>("/users/me")
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load profile. Retrying soon...")

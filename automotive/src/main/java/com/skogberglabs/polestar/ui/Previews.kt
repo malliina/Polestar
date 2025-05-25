@@ -7,7 +7,9 @@ import com.skogberglabs.polestar.R
 
 object Previews {
     fun conf(ctx: Context): CarConf =
-        ctx.resources.openRawResource(R.raw.conf).bufferedReader().use { JsonConf.decode(it.readText(), CarConf.serializer()) }
+        ctx.resources.openRawResource(
+            R.raw.conf,
+        ).bufferedReader().use { JsonConf.decode(it.readText(), CarConf.serializer()) }
 
     fun lang(ctx: Context) = conf(ctx).languages.first()
 }

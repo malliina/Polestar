@@ -59,7 +59,7 @@ class LocalDataSource(private val context: Context) : DataSource {
     override suspend fun saveConf(conf: CarConf): UserPreferences {
         val snapshot =
             context.dataStore.edit { preferences ->
-                preferences[PreferencesKeys.Conf] = JsonConf.encode(conf, CarConf.serializer())
+                preferences[PreferencesKeys.Conf] = JsonConf.encode(conf)
             }
         return parse(snapshot)
     }

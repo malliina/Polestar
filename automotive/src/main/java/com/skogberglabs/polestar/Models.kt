@@ -62,7 +62,12 @@ data class LocationUpdate(
     val approx get(): String = coord.approx
 
     fun toPoint(car: CarState) =
-        CarPoint(longitude, latitude, altitudeMeters, accuracyMeters, bearing, bearingAccuracyDegrees, car.speed, car.batteryLevel, car.batteryCapacity, car.rangeRemaining, car.outsideTemperature, car.nightMode, date)
+        CarPoint(
+            longitude, latitude, altitudeMeters,
+            accuracyMeters, bearing, bearingAccuracyDegrees,
+            car.speed, car.batteryLevel, car.batteryCapacity,
+            car.rangeRemaining, car.outsideTemperature, car.nightMode, date,
+        )
 }
 
 @Serializable
@@ -88,6 +93,7 @@ data class LocationUpdates(val updates: List<CarPoint>, val carId: String)
 interface Primitive {
     val value: String
 }
+
 @JvmInline
 @Serializable
 value class Email(val email: String) : Primitive {
