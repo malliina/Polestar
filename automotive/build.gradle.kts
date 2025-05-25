@@ -1,3 +1,5 @@
+import java.io.ByteArrayOutputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.devtools.ksp)
@@ -11,6 +13,10 @@ val versionFilename = "version.code"
 fun execToString(vararg cmd: String): String = providers.exec {
     commandLine(cmd.asList())
 }.standardOutput.asText.get()
+
+interface InjectedExecOps {
+    @get:Inject val execOps: ExecOperations
+}
 
 android {
     namespace = "com.skogberglabs.polestar"
@@ -27,9 +33,19 @@ android {
         group = "build"
         description = "Releases a new version to Google Play Store for internal testing."
         notCompatibleWithConfigurationCache("Not supported.")
+        val execOps = project.objects.newInstance<InjectedExecOps>().execOps
         var nextCode = 1
+        fun execute(vararg cmd: String) = execOps.exec {
+            commandLine(cmd.asList())
+        }
         doFirst {
-            val porcelain = execToString("git", "status", "--porcelain")
+            val porcelain = ByteArrayOutputStream().use { outputStream ->
+                execOps.exec {
+                    commandLine("git", "status", "--porcelain")
+                    standardOutput = outputStream
+                }
+                outputStream.toString().trim()
+            }
             if (porcelain.isNotBlank()) {
                 throw Exception("Git status is not empty.")
             }
@@ -54,13 +70,13 @@ android {
             val changelogFile = File(changelogPath)
             changelogFile.writeText(changelog)
             logger.warn("Wrote $changelogFile.")
-            execToString("git", "add", "version.code", "../$changelogPath")
-            execToString("git", "commit", "-m", "Incrementing version code to $nextCode.")
+            execute("git", "add", "version.code", "../$changelogPath")
+            execute("git", "commit", "-m", "Incrementing version code to $nextCode.")
             val ver = makeVersion(nextCode)
             val tag = "v$ver"
-            execToString("git", "tag", tag)
-            execToString("git", "push", "origin", "master")
-            execToString("git", "push", "origin", "tag", tag)
+            execute("git", "tag", tag)
+            execute("git", "push", "origin", "master")
+            execute("git", "push", "origin", "tag", tag)
             logger.warn("Pushed $tag.")
         }
     }
