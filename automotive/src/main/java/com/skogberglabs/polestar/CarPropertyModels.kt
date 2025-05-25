@@ -1,40 +1,63 @@
 package com.skogberglabs.polestar
 
 import com.skogberglabs.polestar.ui.formatted
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
-data class Power(val watts: Float)
+@JvmInline
+@Serializable
+value class Power(val watts: Float)
 
-data class Energy(val wattHours: Float) {
+@JvmInline
+@Serializable
+value class Energy(val wattHours: Float) {
     private val kWhRounded get() = (wattHours / 1000).formatted(2)
     val describeKWh: String get() = "$kWhRounded kWh"
 }
 
-data class Distance(val meters: Double) {
+@JvmInline
+@Serializable
+value class Distance(val meters: Double) {
     private val kmRounded get() = kilometers.formatted(2)
     val kilometers get() = meters / 1000
-    val describeKm = "$kmRounded km"
+    val describeKm get() = "$kmRounded km"
 }
 
-data class DistanceF(val meters: Float) {
+@JvmInline
+@Serializable
+value class DistanceF(val meters: Float) {
     private val kmRounded get() = (meters / 1000).formatted(2)
-    val describeKm = "$kmRounded km"
+    val describeKm get() = "$kmRounded km"
 }
 
-data class Temperature(val celsius: Float) {
+@JvmInline
+@Serializable
+value class Temperature(val celsius: Float) {
     private val rounded get() = celsius.formatted(2)
-    val describeCelsius = "$rounded °C"
+    val describeCelsius get() = "$rounded °C"
 }
 
-data class Pressure(val pascals: Float)
+@JvmInline
+@Serializable
+value class Pressure(val pascals: Float)
 
-data class Speed(val metersPerSecond: Float) {
-    private val kmhRounded = (metersPerSecond * 3.6).formatted(2)
-    val describeKmh = "$kmhRounded km/h"
+@JvmInline
+@Serializable
+value class Speed(val metersPerSecond: Float) {
+    private val kmhRounded get() = (metersPerSecond * 3.6).formatted(2)
+    val describeKmh get() = "$kmhRounded km/h"
 }
 
-data class Rpm(val rpm: Int)
+@JvmInline
+@Serializable
+value class Rpm(val rpm: Int)
 
 enum class Gear(val value: Int) {
     Drive(8),
@@ -44,7 +67,7 @@ enum class Gear(val value: Int) {
     ;
 
     companion object {
-        fun find(i: Int): Gear? = values().firstOrNull { it.value == i }
+        fun find(i: Int): Gear? = entries.find { it.value == i }
     }
 }
 
@@ -58,7 +81,9 @@ val Float.kilopascals get() = Pressure(this * 1000)
 val Float.metersPerSecond get() = Speed(this)
 val Double.meters get() = Distance(this)
 
-@JsonClass(generateAdapter = true)
+
+
+@Serializable
 data class CarState(
     val outsideTemperature: Temperature?,
     val batteryLevel: Energy?,
@@ -67,7 +92,7 @@ data class CarState(
     val rangeRemaining: DistanceF?,
     val gear: Gear?,
     val nightMode: Boolean?,
-    val updated: OffsetDateTime?,
+    val updated: StringDateTime?,
 ) {
     companion object {
         val empty = CarState(null, null, null, null, null, null, null, null)

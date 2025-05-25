@@ -1,11 +1,10 @@
 package com.skogberglabs.polestar
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonDataException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.KSerializer
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
@@ -84,7 +83,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
 
     suspend fun <T> get(
         path: String,
-        adapter: JsonAdapter<T>,
+        adapter: KSerializer<T>,
     ): T {
         val request = authRequest(env.baseUrl.append(path)).get().build()
         Timber.i("Fetching '${request.url}'...")
@@ -94,26 +93,26 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
     suspend fun <Req, Res> post(
         path: String,
         body: Req,
-        writer: JsonAdapter<Req>,
-        reader: JsonAdapter<Res>,
+        writer: KSerializer<Req>,
+        reader: KSerializer<Res>,
     ): Res = body(path, body, writer, reader) { req, rb -> req.post(rb) }
 
     suspend fun <Req, Res> body(
         path: String,
         body: Req,
-        writer: JsonAdapter<Req>,
-        reader: JsonAdapter<Res>,
+        writer: KSerializer<Req>,
+        reader: KSerializer<Res>,
         install: (Request.Builder, RequestBody) -> Request.Builder,
     ): Res =
         withContext(Dispatchers.IO) {
             val url = env.baseUrl.append(path)
-            val requestBody = writer.toJson(body).toRequestBody(MediaTypeJson)
+            val requestBody = JsonConf.encode(body, writer).toRequestBody(MediaTypeJson)
             execute(install(authRequest(url), requestBody).build(), reader)
         }
 
     private suspend fun <T> execute(
         request: Request,
-        reader: JsonAdapter<T>,
+        reader: KSerializer<T>
     ): T =
         try {
             executeOnce(request, reader)
@@ -140,15 +139,14 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
 
     private suspend fun <T> executeOnce(
         request: Request,
-        reader: JsonAdapter<T>,
+        reader: KSerializer<T>,
     ): T =
         withContext(Dispatchers.IO) {
             make(client.newCall(request)).use { response ->
                 val body = response.body
                 if (response.isSuccessful) {
                     body?.let { b ->
-                        reader.fromJson(b.source())
-                            ?: throw JsonDataException("Moshi returned null for response body from '${request.url}'.")
+                        JsonConf.decode(b.string(), reader)
                     } ?: run {
                         throw BodyException(request)
                     }
@@ -158,7 +156,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                             try {
                                 val str = b.string()
                                 Timber.w("Request ${request.method} ${request.url} errored with body $str")
-                                Adapters.errors.read(str)
+                                JsonConf.decode(str, Errors.serializer())
                             } catch (e: Exception) {
                                 null
                             }

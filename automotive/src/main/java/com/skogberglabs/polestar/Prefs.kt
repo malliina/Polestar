@@ -59,7 +59,7 @@ class LocalDataSource(private val context: Context) : DataSource {
     override suspend fun saveConf(conf: CarConf): UserPreferences {
         val snapshot =
             context.dataStore.edit { preferences ->
-                preferences[PreferencesKeys.Conf] = Adapters.carConf.toJson(conf)
+                preferences[PreferencesKeys.Conf] = JsonConf.encode(conf, CarConf.serializer())
             }
         return parse(snapshot)
     }
@@ -70,7 +70,7 @@ class LocalDataSource(private val context: Context) : DataSource {
             preferences[PreferencesKeys.LanguageCode],
             preferences[PreferencesKeys.Conf]?.let { str ->
                 try {
-                    Adapters.carConf.fromJson(str)
+                    JsonConf.decode(str, CarConf.serializer())
                 } catch (e: Exception) {
                     Timber.w(e, "Failed to parse cached conf. This is normal if new keys have been introduced.")
                     null

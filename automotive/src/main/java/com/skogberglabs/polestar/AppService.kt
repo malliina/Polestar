@@ -50,11 +50,11 @@ interface CarViewModelInterface {
                         ApiUserInfo(
                             Email("a@b.com"),
                             listOf(
-                                CarInfo("a", "Mos", 1L),
-                                CarInfo("b", "Tesla", 1L),
-                                CarInfo("a", "Toyota", 1L),
-                                CarInfo("a", "Rivian", 1L),
-                                CarInfo("a", "Cybertruck", 1L),
+                                CarInfo(1, "Mos", 1L),
+                                CarInfo(1, "Tesla", 1L),
+                                CarInfo(1, "Toyota", 1L),
+                                CarInfo(1, "Rivian", 1L),
+                                CarInfo(1, "Cybertruck", 1L),
                             ),
                         ),
                         null,
@@ -177,7 +177,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get("/cars/conf", Adapters.carConf)
+                    val response = http.get("/cars/conf", CarConf.serializer())
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     // Emitting in a catch-clause fails
@@ -200,7 +200,7 @@ class AppService(
                     val response =
                         http.get(
                             "/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20",
-                            Adapters.parkings,
+                            ParkingResponse.serializer(),
                         )
                     Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
@@ -217,7 +217,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get("/users/me", Adapters.userContainer)
+                    val response = http.get("/users/me", UserContainer.serializer())
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load profile. Retrying soon...")

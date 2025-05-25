@@ -1,9 +1,10 @@
 package com.skogberglabs.polestar
 
-import com.squareup.moshi.JsonClass
-import java.time.OffsetDateTime
+import kotlinx.serialization.Serializable
 
-data class SpeedKnots(val knots: Double) {
+@JvmInline
+@Serializable
+value class SpeedKnots(val knots: Double) {
     fun toSpeed() = Speed(knots.toFloat() * knotInKmh / meterPerSecondInKmh)
 
     companion object {
@@ -12,18 +13,18 @@ data class SpeedKnots(val knots: Double) {
     }
 }
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TrackTime(val dateTime: String)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Times(val start: TrackTime, val end: TrackTime)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class TopPoint(val coord: Coord, val time: TrackTime, val speed: SpeedKnots) {
     val carSpeed: Speed get() = speed.toSpeed()
 }
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Track(
     val trackName: String,
     val boatName: String,
@@ -32,21 +33,21 @@ data class Track(
     val times: Times,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Tracks(val tracks: List<Track>)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class NearestCoord(val coord: Coord, val distance: Distance, val address: String?)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ParkingDirections(val from: Coord, val to: List<Coord>, val nearest: NearestCoord, val capacity: Int)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ParkingResponse(val directions: List<ParkingDirections>)
 
 // Inspiration from https://github.com/android/location-samples/blob/main/LocationUpdatesBackgroundKotlin/app/src/main/java/com/google/android/gms/location/sample/locationupdatesbackgroundkotlin/data/MyLocationManager.kt
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class LocationUpdate(
     val longitude: Double,
     val latitude: Double,
@@ -54,7 +55,7 @@ data class LocationUpdate(
     val accuracyMeters: Float?,
     val bearing: Float?,
     val bearingAccuracyDegrees: Float?,
-    val date: OffsetDateTime,
+    val date: StringDateTime,
 ) {
     val coord get(): Coord = Coord(latitude, longitude)
 
@@ -64,7 +65,7 @@ data class LocationUpdate(
         CarPoint(longitude, latitude, altitudeMeters, accuracyMeters, bearing, bearingAccuracyDegrees, car.speed, car.batteryLevel, car.batteryCapacity, car.rangeRemaining, car.outsideTemperature, car.nightMode, date)
 }
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CarPoint(
     val longitude: Double,
     val latitude: Double,
@@ -78,23 +79,26 @@ data class CarPoint(
     val rangeRemaining: DistanceF?,
     val outsideTemperature: Temperature?,
     val nightMode: Boolean?,
-    val date: OffsetDateTime,
+    val date: StringDateTime,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class LocationUpdates(val updates: List<CarPoint>, val carId: String)
 
 interface Primitive {
     val value: String
 }
-
-data class Email(val email: String) : Primitive {
+@JvmInline
+@Serializable
+value class Email(val email: String) : Primitive {
     override val value: String get() = email
 
     override fun toString(): String = email
 }
 
-data class IdToken(val token: String) : Primitive {
+@JvmInline
+@Serializable
+value class IdToken(val token: String) : Primitive {
     override val value: String get() = token
 
     override fun toString(): String = token

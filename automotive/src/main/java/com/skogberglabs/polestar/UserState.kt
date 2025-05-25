@@ -18,6 +18,6 @@ class UserState {
 
 data class ProfileInfo(val user: ApiUserInfo, val carId: String?) {
     val email = user.email
-    val activeCar = user.boats.firstOrNull { car -> car.id == carId }
+    val activeCar = user.boats.find { car -> car.idStr == carId }
     val hasCars = user.boats.isNotEmpty()
 }

@@ -1,6 +1,6 @@
 package com.skogberglabs.polestar
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 import okhttp3.Request
 
 open class HttpException(message: String, val request: Request) : Exception(message) {
@@ -18,17 +18,17 @@ class ErrorsException(val errors: Errors, code: Int, request: Request) :
     val isTokenExpired: Boolean get() = errors.errors.any { e -> e.key == "token_expired" }
 }
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SimpleMessage(val message: String)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class SingleError(val key: String, val message: String) {
     companion object {
         fun backend(message: String) = SingleError("backend", message)
     }
 }
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Errors(val errors: List<SingleError>) {
     companion object {
         fun input(message: String) = single("input", message)

@@ -1,12 +1,14 @@
 package com.skogberglabs.polestar
 
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
-data class CarInfo(val id: String, val name: String, val addedMillis: Long)
+@Serializable
+data class CarInfo(val id: Int, val name: String, val addedMillis: Long) {
+    val idStr: String get() = "$id"
+}
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class ApiUserInfo(val email: Email, val boats: List<CarInfo>)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class UserContainer(val user: ApiUserInfo)

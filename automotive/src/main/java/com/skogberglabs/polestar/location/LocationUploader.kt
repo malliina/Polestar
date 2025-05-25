@@ -1,6 +1,5 @@
 package com.skogberglabs.polestar.location
 
-import com.skogberglabs.polestar.Adapters
 import com.skogberglabs.polestar.CarHttpClient
 import com.skogberglabs.polestar.CarListener
 import com.skogberglabs.polestar.LocalDataSource
@@ -60,8 +59,8 @@ class LocationUploader(
                         http.post(
                             path,
                             LocationUpdates(locs.map { it.toPoint(carListener.carInfo.value) }, id),
-                            Adapters.locationUpdates,
-                            Adapters.message,
+                            LocationUpdates.serializer(),
+                            SimpleMessage.serializer(),
                         )
                     Timber.d("Uploaded ${locs.size} locations to $path.")
                     Outcome.Success(result)

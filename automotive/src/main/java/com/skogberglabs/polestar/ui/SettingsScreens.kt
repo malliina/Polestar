@@ -162,7 +162,7 @@ class SelectCarScreen(
                                     setTitle(car.name)
                                     if (!hasSelected) {
                                         setOnClickListener {
-                                            service.selectCar(car.id)
+                                            service.selectCar(car.idStr)
                                             Timber.i("Clicked car ${car.id} (${car.name})")
                                             screenManager.pop()
                                         }
@@ -173,7 +173,7 @@ class SelectCarScreen(
                         if (hasSelected) {
                             setOnSelectedListener { v ->
                                 val selected = cars()[v]
-                                service.selectCar(selected.id)
+                                service.selectCar(selected.idStr)
                                 Timber.i("Selected car ${selected.name}")
                             }
                         }

@@ -1,12 +1,12 @@
 package com.skogberglabs.polestar
 
 import androidx.car.app.model.CarLocation
-import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class AuthLang(val ctaGoogle: String, val instructions: String, val additionalText: String)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CarProfileLang(
     val signedInAs: String,
     val driving: String,
@@ -22,7 +22,7 @@ data class CarProfileLang(
     val nothingHere: String,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CarStatsLang(
     val speed: String,
     val altitude: String,
@@ -38,10 +38,10 @@ data class CarStatsLang(
     val outsideTemperature: String,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PermissionContentLang(val title: String, val message: String)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class PermissionsLang(
     val grantCta: String,
     val grantAccess: String,
@@ -55,7 +55,7 @@ data class PermissionsLang(
     val all: PermissionContentLang,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CarSettingsLang(
     val title: String,
     val openSettings: String,
@@ -72,10 +72,10 @@ data class CarSettingsLang(
     val failedToLoadParkings: String,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CarLanguage(val code: String, val name: String)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class NotificationLang(
     val appRunning: String,
     val enjoy: String,
@@ -84,7 +84,7 @@ data class NotificationLang(
     val startTracking: String,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CarLang(
     val appName: String,
     val language: CarLanguage,
@@ -95,10 +95,10 @@ data class CarLang(
     val notifications: NotificationLang,
 )
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class CarConf(val languages: List<CarLang>)
 
-@JsonClass(generateAdapter = true)
+@Serializable
 data class Coord(val lat: Double, val lng: Double) {
     companion object {
         fun format(d: Double) {

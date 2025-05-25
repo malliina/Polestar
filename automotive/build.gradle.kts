@@ -2,8 +2,9 @@ import java.io.ByteArrayOutputStream
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.devtools.ksp)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ktlint)
 }
 
@@ -158,17 +159,16 @@ android {
 dependencies {
     implementation(libs.androidx.app)
     implementation(libs.androidx.app.automotive)
-    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.androidx.datastore.preferences)
-    implementation(libs.timber)
+    implementation(libs.googleid)
     implementation(libs.play.services.location)
     implementation(libs.play.services.auth)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
-    implementation(libs.moshi)
-    ksp(libs.moshi.kotlin.codegen)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
+    implementation(libs.timber)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.app.testing)
     androidTestImplementation(libs.androidx.junit)
