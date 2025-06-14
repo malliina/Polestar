@@ -10,6 +10,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
@@ -22,6 +23,8 @@ object JsonConf {
             encodeDefaults = true
             classDiscriminatorMode = ClassDiscriminatorMode.NONE
         }
+
+    inline fun <reified T> decode(string: String): T = decode(string, serializer())
 
     fun <T> decode(
         string: String,

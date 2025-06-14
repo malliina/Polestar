@@ -7,6 +7,7 @@ import androidx.car.app.model.Template
 import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.BuildConfig
 import com.skogberglabs.polestar.CarLang
+import com.skogberglabs.polestar.CarRef
 import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.UserPreferences
 import com.skogberglabs.polestar.addRow
@@ -162,7 +163,7 @@ class SelectCarScreen(
                                     setTitle(car.name)
                                     if (!hasSelected) {
                                         setOnClickListener {
-                                            service.selectCar(car.idStr)
+                                            service.selectCar(CarRef(car.idStr, car.token))
                                             Timber.i("Clicked car ${car.id} (${car.name})")
                                             screenManager.pop()
                                         }
@@ -173,7 +174,8 @@ class SelectCarScreen(
                         if (hasSelected) {
                             setOnSelectedListener { v ->
                                 val selected = cars()[v]
-                                service.selectCar(selected.idStr)
+                                val ref = CarRef(selected.idStr, selected.token)
+                                service.selectCar(ref)
                                 Timber.i("Selected car ${selected.name}")
                             }
                         }

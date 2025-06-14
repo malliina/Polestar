@@ -3,7 +3,7 @@ package com.skogberglabs.polestar
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CarInfo(val id: Int, val name: String, val addedMillis: Long) {
+data class CarInfo(val id: Int, val name: String, val token: String, val addedMillis: Long) {
     val idStr: String get() = "$id"
 }
 

@@ -36,7 +36,7 @@ import kotlin.time.Duration.Companion.seconds
 interface CarViewModelInterface {
     val profile: Flow<Outcome<ProfileInfo?>>
 
-    fun selectCar(id: String)
+    fun selectCar(ref: CarRef)
 
     fun saveLanguage(code: String)
 
@@ -50,11 +50,11 @@ interface CarViewModelInterface {
                         ApiUserInfo(
                             Email("a@b.com"),
                             listOf(
-                                CarInfo(1, "Mos", 1L),
-                                CarInfo(1, "Tesla", 1L),
-                                CarInfo(1, "Toyota", 1L),
-                                CarInfo(1, "Rivian", 1L),
-                                CarInfo(1, "Cybertruck", 1L),
+                                CarInfo(1, "Mos", "t", 1L),
+                                CarInfo(1, "Tesla", "t",1L),
+                                CarInfo(1, "Toyota","t", 1L),
+                                CarInfo(1, "Rivian", "t", 1L),
+                                CarInfo(1, "Cybertruck","t", 1L),
                             ),
                         ),
                         null,
@@ -62,7 +62,7 @@ interface CarViewModelInterface {
                 override val profile: StateFlow<Outcome<ProfileInfo?>> =
                     MutableStateFlow(Outcome.Success(cars))
 
-                override fun selectCar(id: String) {}
+                override fun selectCar(ref: CarRef) {}
 
                 override fun saveLanguage(code: String) {}
 
@@ -177,7 +177,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get<CarConf>("/cars/conf")
+                    val response = http.get<CarConf>("/cars/conf", null)
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     // Emitting in a catch-clause fails
@@ -198,7 +198,7 @@ class AppService(
             val outcome =
                 try {
                     val response =
-                        http.get<ParkingResponse>("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20")
+                        http.get<ParkingResponse>("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20", null)
                     Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
                 } catch (e: Exception) {
@@ -214,7 +214,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get<UserContainer>("/users/me")
+                    val response = http.get<UserContainer>("/users/me", null)
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load profile. Retrying soon...")
@@ -235,9 +235,9 @@ class AppService(
         parkingSearch.value = ParkingsSearch(near, Instant.now())
     }
 
-    override fun selectCar(id: String) {
+    override fun selectCar(ref: CarRef) {
         ioScope.launch {
-            preferences.saveCarId(id)
+            preferences.saveCar(ref)
         }
     }
 

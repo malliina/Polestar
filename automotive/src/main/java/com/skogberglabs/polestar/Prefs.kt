@@ -7,9 +7,16 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import timber.log.Timber
 
-data class UserPreferences(val carId: String?, val language: String?, val carConf: CarConf?) {
+@Serializable
+data class CarRef(val id: String, val token: String) {
+    override fun toString(): String = "car '$id'"
+}
+
+data class UserPreferences(val selectedCar: CarRef?, val language: String?, val carConf: CarConf?) {
+    val carId: String? get() = selectedCar?.id
     companion object {
         val empty = UserPreferences(null, null, null)
     }
@@ -24,7 +31,7 @@ private val Context.dataStore by preferencesDataStore(
 interface DataSource {
     fun userPreferencesFlow(): Flow<UserPreferences>
 
-    suspend fun saveCarId(carId: String?)
+    suspend fun saveCar(car: CarRef?)
 
     suspend fun saveLanguage(code: String)
 
@@ -37,13 +44,13 @@ class LocalDataSource(private val context: Context) : DataSource {
             parse(preferences)
         }
 
-    override suspend fun saveCarId(carId: String?) {
+    override suspend fun saveCar(car: CarRef?) {
         context.dataStore.edit { preferences ->
-            carId?.let { id ->
-                preferences[PreferencesKeys.CarId] = id
-                Timber.i("Using car '$id'.")
+            car?.let { ref ->
+                preferences[PreferencesKeys.Car] = JsonConf.encode(ref)
+                Timber.i("Using $ref.")
             } ?: run {
-                preferences.remove(PreferencesKeys.CarId)
+                preferences.remove(PreferencesKeys.Car)
                 Timber.i("Unselected car.")
             }
         }
@@ -66,11 +73,18 @@ class LocalDataSource(private val context: Context) : DataSource {
 
     private fun parse(preferences: Preferences): UserPreferences =
         UserPreferences(
-            preferences[PreferencesKeys.CarId],
+            preferences[PreferencesKeys.Car]?.let { str ->
+                try {
+                    JsonConf.decode(str)
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to parse selected car. This is normal if new keys have been introduced.")
+                    null
+                }
+            },
             preferences[PreferencesKeys.LanguageCode],
             preferences[PreferencesKeys.Conf]?.let { str ->
                 try {
-                    JsonConf.decode(str, CarConf.serializer())
+                    JsonConf.decode(str)
                 } catch (e: Exception) {
                     Timber.w(e, "Failed to parse cached conf. This is normal if new keys have been introduced.")
                     null
@@ -80,7 +94,7 @@ class LocalDataSource(private val context: Context) : DataSource {
 }
 
 private object PreferencesKeys {
-    val CarId = stringPreferencesKey("carId2")
+    val Car = stringPreferencesKey("car")
     val Conf = stringPreferencesKey("conf")
     val LanguageCode = stringPreferencesKey("language")
 }

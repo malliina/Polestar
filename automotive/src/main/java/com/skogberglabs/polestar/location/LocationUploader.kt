@@ -48,12 +48,12 @@ class LocationUploader(
         }.shareIn(ioScope, SharingStarted.Eagerly, replay = 1)
     val status: StateFlow<Outcome<SimpleMessage>> = message.stateIn(ioScope, SharingStarted.Eagerly, Outcome.Loading)
 
-    private val carIds = prefs.userPreferencesFlow().map { it.carId }
+    private val selectedCar = prefs.userPreferencesFlow().map { it.selectedCar }
 
-    private suspend fun sendLocations(): Flow<Outcome<SimpleMessage>> =
+    private fun sendLocations(): Flow<Outcome<SimpleMessage>> =
         locations.locationUpdates
             .filter { it.isNotEmpty() }
-            .combine(carIds.filterNotNull()) { locs, id ->
+            .combine(selectedCar.filterNotNull()) { locs, car ->
                 try {
                     val result =
                         http.post<LocationUpdates, SimpleMessage>(
@@ -62,8 +62,9 @@ class LocationUploader(
                                 locs.map {
                                     it.toPoint(carListener.carInfo.value)
                                 },
-                                id,
+                                car.id,
                             ),
+                            car.token
                         )
                     Timber.d("Uploaded ${locs.size} locations to $path.")
                     Outcome.Success(result)
