@@ -5,6 +5,12 @@ This Android Automotive app:
 - Sends the location of your car to www.car-map.com.
 - Finds nearby parking places in the Helsinki area.
 
+## Development
+
+Decent logcat filter:
+
+     (level:warn & package:com.google.android.apps.automotive.templates.host |  level:info & package:mine)
+
 ## Releasing
 
 To release a new version of the app to the Google Play Store internal testing track:

@@ -51,10 +51,10 @@ interface CarViewModelInterface {
                             Email("a@b.com"),
                             listOf(
                                 CarInfo(1, "Mos", "t", 1L),
-                                CarInfo(1, "Tesla", "t",1L),
-                                CarInfo(1, "Toyota","t", 1L),
+                                CarInfo(1, "Tesla", "t", 1L),
+                                CarInfo(1, "Toyota", "t", 1L),
                                 CarInfo(1, "Rivian", "t", 1L),
-                                CarInfo(1, "Cybertruck","t", 1L),
+                                CarInfo(1, "Cybertruck", "t", 1L),
                             ),
                         ),
                         null,
@@ -81,8 +81,7 @@ class AppService(
 ) : CarViewModelInterface {
     private val userState = UserState.instance
     val google = Google.build(applicationContext, userState)
-
-//    val googleAuth = GoogleCredManager.build(applicationContext, userState)
+//    val google = GoogleCredManager.build(applicationContext, userState)
     private val http = CarHttpClient(GoogleTokenSource(google))
     private val preferences = LocalDataSource(applicationContext)
     val locationSource = LocationSource.instance
@@ -198,7 +197,10 @@ class AppService(
             val outcome =
                 try {
                     val response =
-                        http.get<ParkingResponse>("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20", null)
+                        http.get<ParkingResponse>(
+                            "/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20",
+                            null,
+                        )
                     Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
                 } catch (e: Exception) {

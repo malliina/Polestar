@@ -17,6 +17,7 @@ data class CarRef(val id: String, val token: String) {
 
 data class UserPreferences(val selectedCar: CarRef?, val language: String?, val carConf: CarConf?) {
     val carId: String? get() = selectedCar?.id
+
     companion object {
         val empty = UserPreferences(null, null, null)
     }

@@ -64,7 +64,7 @@ class LocationUploader(
                                 },
                                 car.id,
                             ),
-                            car.token
+                            car.token,
                         )
                     Timber.d("Uploaded ${locs.size} locations to $path.")
                     Outcome.Success(result)

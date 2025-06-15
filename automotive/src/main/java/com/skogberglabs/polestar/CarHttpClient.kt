@@ -41,6 +41,17 @@ class GoogleTokenSource(private val google: Google) : TokenSource {
         }
 }
 
+class GoogleCredTokenSource(private val google: GoogleCredManager) : TokenSource {
+    override suspend fun fetchToken(): IdToken? =
+        try {
+            Timber.w("Fetching a token without an activity is not supported.")
+            null
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to fetch token")
+            null
+        }
+}
+
 class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvConf = EnvConf.current) {
     companion object {
         private const val Accept = "Accept"
@@ -54,7 +65,10 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         // POST requests where gzip support is advertised. This disables it as a workaround.
 //        val postPutHeaders = mapOf("Accept-Encoding" to "identity")
 
-        fun headers(token: IdToken?, carToken: String?): Map<String, String> {
+        fun headers(
+            token: IdToken?,
+            carToken: String?,
+        ): Map<String, String> {
             val alwaysIncluded =
                 mapOf(
                     Accept to MediaTypeJson.toString(),
@@ -84,7 +98,10 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             t
         }
 
-    suspend inline fun <reified T> get(path: String, carToken: String?): T = get(path, carToken, serializer())
+    suspend inline fun <reified T> get(
+        path: String,
+        carToken: String?,
+    ): T = get(path, carToken, serializer())
 
     suspend fun <T> get(
         path: String,
@@ -220,7 +237,10 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             }
         }
 
-    private suspend fun authRequest(url: FullUrl, carToken: String?) = newRequest(url, headers(fetchToken(), carToken))
+    private suspend fun authRequest(
+        url: FullUrl,
+        carToken: String?,
+    ) = newRequest(url, headers(fetchToken(), carToken))
 
     private fun newRequest(
         url: FullUrl,

@@ -98,6 +98,7 @@ class CarLocationService : Service() {
                 START_LOCATIONS -> {
                     i.getStringExtra(Title)?.let { title ->
                         i.getStringExtra(Text)?.let { text ->
+                            // TODO fix this; use boat token exclusively
                             app.appService.signInSilently()
                             if (!started) {
                                 if (applicationContext.isLocationGranted()) {

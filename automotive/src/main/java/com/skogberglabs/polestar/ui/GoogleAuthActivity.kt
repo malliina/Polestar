@@ -19,7 +19,7 @@ class GoogleAuthActivity : ComponentActivity() {
         super.onStart()
         val ctx = this
         service.mainScope.launch {
-//            service.googleAuth.startSignIn(ctx)
+//            service.google.startSignIn(ctx, opportunistic = false)
             finish()
         }
     }

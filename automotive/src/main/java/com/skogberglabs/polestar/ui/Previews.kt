@@ -9,7 +9,7 @@ object Previews {
     fun conf(ctx: Context): CarConf =
         ctx.resources.openRawResource(
             R.raw.conf,
-        ).bufferedReader().use { JsonConf.decode(it.readText(), CarConf.serializer()) }
+        ).bufferedReader().use { JsonConf.decode(it.readText()) }
 
     fun lang(ctx: Context) = conf(ctx).languages.first()
 }
