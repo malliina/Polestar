@@ -11,12 +11,13 @@ import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.CarLang
 import com.skogberglabs.polestar.ProfileInfo
 import com.skogberglabs.polestar.R
-import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
+import com.skogberglabs.polestar.appendAction
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.messageTemplate
+import com.skogberglabs.polestar.titledAction
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -58,6 +59,7 @@ class HomeScreen(
                 job =
                     service.mainScope.launch {
                         service.appState.collect { state ->
+                            Timber.i("Got state $state.")
                             val stateStr =
                                 when (state) {
                                     is AppState.Anon -> "anon"
@@ -66,7 +68,7 @@ class HomeScreen(
                                 }
                             val destination = checkDestination()
                             destination?.let { screen ->
-                                screenManager.push(screen)
+                                screenManager.pushLogged(screen)
                             } ?: run {
                                 if (!isFirstRender) {
                                     Timber.i("State updated to $stateStr, invalidating screen")
@@ -117,7 +119,7 @@ class HomeScreen(
                         val nlang = lang.notifications
                         val serviceIntent = CarLocationService.intent(carContext, nlang.appRunning, nlang.enjoy)
                         carContext.startForegroundService(serviceIntent)
-                        sm.push(HomeScreen(carContext, service))
+                        sm.pushLogged(HomeScreen(carContext, service))
                     }
                 return permissionsScreen
             }
@@ -140,30 +142,23 @@ class HomeScreen(
                     user.activeCar?.let {
                         setIcon(CarIcon.APP_ICON)
                     } ?: run {
-                        addAction(
-                            action {
-                                setTitle(lang.settings.selectCar)
-                                setOnClickListener {
-                                    screenManager.push(SelectCarScreen(carContext, lang, service))
-                                }
-                            },
-                        )
-                    }
-                    addAction(
-                        action {
-                            setTitle(lang.profile.goToMap)
+                        appendAction(lang.settings.selectCar) {
                             setOnClickListener {
-                                screenManager.push(PlacesScreen(carContext, service, lang))
+                                screenManager.pushLogged(SelectCarScreen(carContext, lang, service))
                             }
-                        },
-                    )
+                        }
+                    }
+                    appendAction(lang.profile.goToMap) {
+                        setOnClickListener {
+                            screenManager.pushLogged(PlacesScreen(carContext, service, lang))
+                        }
+                    }
                     setActionStrip(
                         actionStrip {
                             addAction(
-                                action {
-                                    setTitle(lang.settings.title)
+                                titledAction(lang.settings.title) {
                                     setOnClickListener {
-                                        screenManager.push(SettingsScreen(carContext, lang, service))
+                                        screenManager.pushLogged(SettingsScreen(carContext, lang, service))
                                     }
                                 },
                             )

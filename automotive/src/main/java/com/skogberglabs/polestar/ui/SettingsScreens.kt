@@ -49,13 +49,13 @@ class SettingsScreen(
                     addRow {
                         setTitle(lang.settings.selectCar)
                         setOnClickListener {
-                            screenManager.push(SelectCarScreen(carContext, lang, service))
+                            screenManager.pushLogged(SelectCarScreen(carContext, lang, service))
                         }
                     }
                     addRow {
                         setTitle(lang.profile.chooseLanguage)
                         setOnClickListener {
-                            screenManager.push(SelectLanguageScreen(carContext, service.prefs.value, service))
+                            screenManager.pushLogged(SelectLanguageScreen(carContext, service.prefs.value, service))
                         }
                     }
                     addRow {
@@ -65,7 +65,7 @@ class SettingsScreen(
                                 service.google.signOut()
                                 // .pop() crashes the app since the AllGoodScreen template has changed since last time
 //                            screenManager.pop()
-                                screenManager.push(HomeScreen(carContext, service))
+                                screenManager.pushLogged(HomeScreen(carContext, service))
                             }
                         }
                     }

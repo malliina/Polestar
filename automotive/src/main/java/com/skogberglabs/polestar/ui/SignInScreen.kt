@@ -39,7 +39,7 @@ class SignInScreen(
                             when (state) {
                                 is AppState.LoggedIn -> {
                                     Timber.i("Logged in, pushing home screen...")
-                                    screenManager.push(HomeScreen(carContext, service))
+                                    screenManager.pushLogged(HomeScreen(carContext, service))
                                 }
                                 else -> {
                                 }

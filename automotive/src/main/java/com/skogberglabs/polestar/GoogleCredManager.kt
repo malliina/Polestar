@@ -49,15 +49,24 @@ class GoogleCredManager(
                 .build()
     }
 
-    suspend fun startSignIn(activityContext: Context, opportunistic: Boolean) {
+    suspend fun startSignIn(
+        activityContext: Context,
+        opportunistic: Boolean,
+    ) {
         userState.update(Outcome.Loading)
         try {
             val result =
                 try {
-                    client.getCredential(activityContext, buildRequest(filterByAuthorized = true, immediatelyAvailable = opportunistic))
+                    client.getCredential(
+                        activityContext,
+                        buildRequest(filterByAuthorized = true, immediatelyAvailable = opportunistic),
+                    )
                 } catch (e: NoCredentialException) {
                     Timber.i("No credential available. Trying with setFilterByAuthorizedAccounts = false...")
-                    client.getCredential(activityContext, buildRequest(filterByAuthorized = false, immediatelyAvailable = opportunistic))
+                    client.getCredential(
+                        activityContext,
+                        buildRequest(filterByAuthorized = false, immediatelyAvailable = opportunistic),
+                    )
                 }
             handleSignIn(result)
         } catch (e: GetCredentialException) {
@@ -83,9 +92,7 @@ class GoogleCredManager(
         userState.update(Outcome.Error(e))
     }
 
-    private fun handleSignIn(
-        account: GetCredentialResponse,
-    ): UserInfo? {
+    private fun handleSignIn(account: GetCredentialResponse): UserInfo? {
         try {
             readUser(account)?.let { user ->
                 Timber.i("Got user ${user.email}...")

@@ -81,6 +81,7 @@ class AppService(
 ) : CarViewModelInterface {
     private val userState = UserState.instance
     val google = Google.build(applicationContext, userState)
+
 //    val google = GoogleCredManager.build(applicationContext, userState)
     private val http = CarHttpClient(GoogleTokenSource(google))
     private val preferences = LocalDataSource(applicationContext)
@@ -136,7 +137,7 @@ class AppService(
             }
         }.debounce(500.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading(null))
 
-    private val navigateToPlacesState: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    private val navigateToPlacesState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val navigateToPlaces get() = navigateToPlacesState.value
 
     fun initialNavigation() {

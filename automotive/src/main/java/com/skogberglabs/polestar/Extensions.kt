@@ -1,6 +1,8 @@
 package com.skogberglabs.polestar
 
 import androidx.annotation.OptIn
+import androidx.car.app.Screen
+import androidx.car.app.ScreenManager
 import androidx.car.app.annotations.ExperimentalCarApi
 import androidx.car.app.model.Action
 import androidx.car.app.model.ActionStrip
@@ -22,6 +24,7 @@ import androidx.car.app.navigation.model.MapTemplate
 import androidx.car.app.navigation.model.MapWithContentTemplate
 import androidx.car.app.navigation.model.NavigationTemplate
 import androidx.car.app.navigation.model.PlaceListNavigationTemplate
+import timber.log.Timber
 
 fun Coord.carLocation(): CarLocation = CarLocation.create(lat, lng)
 
@@ -64,6 +67,19 @@ fun mapWithContenttemplate(build: MapWithContentTemplate.Builder.() -> Unit): Ma
     MapWithContentTemplate.Builder().apply(build).build()
 
 fun action(build: Action.Builder.() -> Unit) = Action.Builder().apply(build).build()
+
+fun titledAction(
+    title: String,
+    make: Action.Builder.() -> Unit,
+) = action {
+    setTitle(title)
+    make()
+}
+
+fun MessageTemplate.Builder.appendAction(
+    title: String,
+    make: Action.Builder.() -> Unit,
+) = addAction(titledAction(title) { make() })
 
 fun messageTemplate(
     message: String,

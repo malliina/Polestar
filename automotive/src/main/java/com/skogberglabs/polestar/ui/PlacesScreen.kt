@@ -215,7 +215,7 @@ class PlacesScreen(
                         action {
                             setTitle(lang.settings.title)
                             setOnClickListener {
-                                screenManager.push(SettingsScreen(carContext, lang, service))
+                                screenManager.pushLogged(SettingsScreen(carContext, lang, service))
                             }
                         },
                     )

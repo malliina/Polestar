@@ -59,7 +59,7 @@ class PlaceNavScreen(carContext: CarContext) : Screen(carContext) {
                         setTitle("My places")
                         setBrowsable(true)
                         setOnClickListener {
-//                        screenManager.push(NoPermissionScreen(carContext, PermissionContent.allForeground))
+//                        screenManager.pushLogged(NoPermissionScreen(carContext, PermissionContent.allForeground))
                         }
                     },
                 )

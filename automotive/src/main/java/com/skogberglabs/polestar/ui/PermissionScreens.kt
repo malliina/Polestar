@@ -83,7 +83,7 @@ class RequestPermissionScreen(
                         if (carContext.isAllPermissionsGranted()) {
                             onGranted(screenManager)
                         } else {
-                            screenManager.push(
+                            screenManager.pushLogged(
                                 RequestPermissionScreen(
                                     carContext,
                                     permissionContent(carContext.notGrantedPermissions(), lang),
@@ -95,7 +95,7 @@ class RequestPermissionScreen(
                     } else {
                         val str = rejectedPermissions.joinToString(separator = ", ")
                         Timber.i("Rejected permissions: $str.")
-                        screenManager.push(NoPermissionScreen(carContext, content, lang))
+                        screenManager.pushLogged(NoPermissionScreen(carContext, content, lang))
                     }
                 }
             }
@@ -132,7 +132,7 @@ class NoPermissionScreen(carContext: CarContext, val content: PermissionContent,
                 setTitle("Try again")
                 setOnClickListener {
                     Timber.i("Trying again...")
-                    screenManager.push(
+                    screenManager.pushLogged(
                         RequestPermissionScreen(carContext, content, lang, onGranted = { screenManager.popToRoot() }),
                     )
                 }
