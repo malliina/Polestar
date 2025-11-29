@@ -17,7 +17,7 @@ interface InjectedExecOps {
 
 android {
     namespace = "com.skogberglabs.polestar"
-    compileSdk = 35
+    compileSdk = 36
     val code = file(versionFilename).readText().trim().toIntOrNull() ?: 1
 
     fun makeVersion(c: Int): String = "1.22.$c"
@@ -81,7 +81,7 @@ android {
     defaultConfig {
         applicationId = "com.skogberglabs.polestar"
         minSdk = 29 // Android 10
-        targetSdk = 35
+        targetSdk = 36
         versionCode = code
         versionName = makeVersion(code)
 
