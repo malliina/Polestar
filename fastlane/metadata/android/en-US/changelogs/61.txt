@@ -1,0 +1,6 @@
+- Car image
+- Deps
+- Upgrade agp
+- Screens
+- Deps; clarify auth
+- Pass car token to backend
