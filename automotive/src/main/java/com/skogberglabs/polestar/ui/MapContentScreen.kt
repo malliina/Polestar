@@ -12,7 +12,7 @@ import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.addRow
 import com.skogberglabs.polestar.itemList
 import com.skogberglabs.polestar.listTemplate
-import com.skogberglabs.polestar.mapWithContenttemplate
+import com.skogberglabs.polestar.mapWithContentTemplate
 import timber.log.Timber
 
 class MapContentScreen(carContext: CarContext) : Screen(carContext) {
@@ -37,7 +37,7 @@ class MapContentScreen(carContext: CarContext) : Screen(carContext) {
                     Timber.i("Pan $isPan")
                 }
                 .build()
-        return mapWithContenttemplate {
+        return mapWithContentTemplate {
             setMapController(mapController)
             setContentTemplate(
                 listTemplate {

@@ -1,7 +1,30 @@
 package com.skogberglabs.polestar
 
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import org.json.JSONException
 import java.util.regex.Pattern
+
+typealias FullUrlJson = @Serializable(FullUrlSerializer::class) FullUrl
+
+class FullUrlSerializer: KSerializer<FullUrl> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor(FullUrl::class.simpleName!!, PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): FullUrl = FullUrl.parse(decoder.decodeString())
+
+    override fun serialize(
+        encoder: Encoder,
+        value: FullUrl,
+    ) {
+        encoder.encodeString(value.url)
+    }
+}
 
 data class FullUrl(val proto: String, val hostAndPort: String, val uri: String) {
     private val host: String = hostAndPort.takeWhile { c -> c != ':' }

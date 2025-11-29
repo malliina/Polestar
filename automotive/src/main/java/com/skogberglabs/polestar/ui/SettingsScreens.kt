@@ -11,6 +11,7 @@ import com.skogberglabs.polestar.CarRef
 import com.skogberglabs.polestar.Outcome
 import com.skogberglabs.polestar.UserPreferences
 import com.skogberglabs.polestar.addRow
+import com.skogberglabs.polestar.installHeader
 import com.skogberglabs.polestar.itemList
 import com.skogberglabs.polestar.listTemplate
 import com.skogberglabs.polestar.row
@@ -43,7 +44,10 @@ class SettingsScreen(
                 is Outcome.Success -> "Uploaded locations, got message: '${s.result.message}'."
             }
         return listTemplate {
-            setTitle(lang.settings.title)
+            installHeader {
+                setTitle(lang.settings.title)
+                setStartHeaderAction(Action.BACK)
+            }
             val list =
                 itemList {
                     addRow {
@@ -65,7 +69,7 @@ class SettingsScreen(
                                 service.google.signOut()
                                 // .pop() crashes the app since the AllGoodScreen template has changed since last time
 //                            screenManager.pop()
-                                screenManager.pushLogged(HomeScreen(carContext, service))
+                                screenManager.pushLogged(PaneHomeScreen(carContext, service))
                             }
                         }
                     }
@@ -83,7 +87,6 @@ class SettingsScreen(
                     }
                 }
             setSingleList(list)
-            setHeaderAction(Action.BACK)
         }
     }
 }

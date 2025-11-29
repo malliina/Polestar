@@ -1,7 +1,10 @@
 package com.skogberglabs.polestar
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.os.Looper
 import androidx.car.app.model.CarLocation
+import androidx.core.graphics.drawable.IconCompat
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.LocationSource
 import com.skogberglabs.polestar.location.LocationUploader
@@ -10,6 +13,7 @@ import com.skogberglabs.polestar.location.isForegroundServiceGranted
 import com.skogberglabs.polestar.location.isLocationGranted
 import com.skogberglabs.polestar.ui.AppState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -24,11 +28,16 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import okhttp3.Request
+import okio.buffer
+import okio.sink
 import timber.log.Timber
+import java.io.File
 import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -58,6 +67,8 @@ interface CarViewModelInterface {
                             ),
                         ),
                         null,
+                        emptyList(),
+                        null
                     )
                 override val profile: StateFlow<Outcome<ProfileInfo?>> =
                     MutableStateFlow(Outcome.Success(cars))
@@ -96,19 +107,21 @@ class AppService(
         parkingSearch.filterNotNull().flatMapLatest { query ->
             parkingsFlow(query)
         }.debounce(200.milliseconds)
+            .flowOn(Dispatchers.IO)
             .stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
     override val profile: StateFlow<Outcome<ProfileInfo>> =
         userState.userResult.flatMapLatest { user ->
             when (user) {
-                is Outcome.Success -> meFlow().map { it.map { u -> u.user } }
+                is Outcome.Success -> meFlow().map { it.map { u -> u } }
                 Outcome.Idle -> flowOf(Outcome.Idle)
                 Outcome.Loading -> flowOf(Outcome.Loading)
                 is Outcome.Error -> flowOf(Outcome.Error(user.e))
             }
         }.combine(activeCar) { user, carId ->
-            user.map { ProfileInfo(it, carId) }
-        }.stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
+            user.map { ProfileInfo(it.user, carId, it.cars, it.localCarImage) }
+        }.flowOn(Dispatchers.IO)
+            .stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
     fun profileLatest(): ProfileInfo? = profile.value.toOption()
 
@@ -212,13 +225,21 @@ class AppService(
             emit(outcome)
         }
 
-    private fun meFlow(): Flow<Outcome<UserContainer>> =
+    private fun meFlow(): Flow<Outcome<UserData>> =
         flow {
             emit(Outcome.Loading)
             val outcome =
                 try {
                     val response = http.get<UserContainer>("/users/me", null)
-                    Outcome.Success(response)
+                    val cars = http.get<VehiclesResponse>("/boats", null)
+                    val localImage = cars.cars.map { v -> v.studioImage }.firstOrNull()?.let { url ->
+                        val file = download(url, "car.png")
+                        val bmp = BitmapFactory.decodeFile(file.absolutePath)
+                        IconCompat.createWithBitmap(bmp)
+                    }
+                    val isMain = Looper.myLooper() == Looper.getMainLooper()
+                    Timber.i("Got main $isMain $cars")
+                    Outcome.Success(UserData(response.user, cars.cars, localImage))
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load profile. Retrying soon...")
                     Outcome.Error(e)
@@ -229,6 +250,17 @@ class AppService(
                 emitAll(meFlow())
             }
         }
+
+    private suspend fun download(url: FullUrl, to: String): File {
+        val req = Request.Builder().url(url.url).build()
+        val response = CarHttpClient.client.newCall(req).await()
+        val downloadedFile = File(applicationContext.cacheDir, to)
+        val bytes = downloadedFile.sink().buffer().use { sink ->
+            sink.writeAll(response.body.source())
+        }
+        Timber.i("Downloaded $bytes bytes to $downloadedFile.")
+        return downloadedFile
+    }
 
     fun searchParkings(loc: CarLocation) {
         searchParkings(Coord(loc.latitude, loc.longitude))

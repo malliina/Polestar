@@ -1,5 +1,6 @@
 package com.skogberglabs.polestar
 
+import androidx.core.graphics.drawable.IconCompat
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,7 +17,7 @@ class UserState {
     }
 }
 
-data class ProfileInfo(val user: ApiUserInfo, val carId: String?) {
+data class ProfileInfo(val user: ApiUserInfo, val carId: String?, val cars: List<Vehicle>, val localCarImage: IconCompat?) {
     val email = user.email
     val activeCar = user.boats.find { car -> car.idStr == carId }
     val hasCars = user.boats.isNotEmpty()

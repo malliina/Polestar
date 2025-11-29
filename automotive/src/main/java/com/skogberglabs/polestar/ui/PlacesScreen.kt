@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
+import androidx.core.net.toUri
 
 class PlacesScreen(
     carContext: CarContext,
@@ -127,7 +128,6 @@ class PlacesScreen(
     }
 
     override fun onGetTemplate(): Template {
-        Timber.i("Getting template...")
         val interpunct = "\u00b7"
         val myPlace =
             place(currentLocation) {
@@ -187,7 +187,7 @@ class PlacesScreen(
                                             val navigationIntent =
                                                 Intent(
                                                     CarContext.ACTION_NAVIGATE,
-                                                    Uri.parse("geo:${parkingCoord.lat},${parkingCoord.lng}"),
+                                                    "geo:${parkingCoord.lat},${parkingCoord.lng}".toUri(),
                                                 )
                                             carContext.startCarApp(navigationIntent)
                                         }

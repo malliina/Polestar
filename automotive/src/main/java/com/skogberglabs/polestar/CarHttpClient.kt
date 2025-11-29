@@ -61,9 +61,13 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         private val MediaTypeJson = "application/vnd.car.v1+json".toMediaType()
 //        private val MediaTypeJson = "application/vnd.boat.v2+json".toMediaType()
 
-        // OkHttp automatically advertises gzip compression, but Azure returns HTTP 502 for failed
-        // POST requests where gzip support is advertised. This disables it as a workaround.
-//        val postPutHeaders = mapOf("Accept-Encoding" to "identity")
+        val client: OkHttpClient =
+            OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .callTimeout(60, TimeUnit.SECONDS)
+                .build()
 
         fun headers(
             token: IdToken?,
@@ -80,14 +84,6 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             return idTokenAuth + carTokenAuth + alwaysIncluded
         }
     }
-
-    private val client: OkHttpClient =
-        OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .callTimeout(60, TimeUnit.SECONDS)
-            .build()
 
     private var token: IdToken? = null
 
@@ -176,66 +172,25 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             make(client.newCall(request)).use { response ->
                 val body = response.body
                 if (response.isSuccessful) {
-                    body?.let { b ->
-                        JsonConf.decode(b.string(), reader)
-                    } ?: run {
-                        throw BodyException(request)
-                    }
+                    JsonConf.decode(body.string(), reader)
                 } else {
-                    val errors =
-                        body?.let { b ->
-                            try {
-                                val str = b.string()
-                                Timber.w("Request ${request.method} ${request.url} errored with body $str")
-                                JsonConf.decode(str, Errors.serializer())
-                            } catch (e: Exception) {
-                                null
-                            }
-                        }
-                    errors?.let {
+                    val errors = try {
+                        val str = body.string()
+                        Timber.w("Request ${request.method} ${request.url} errored with body $str")
+                        JsonConf.decode(str, Errors.serializer())
+                    } catch (e: Exception) {
+                        null
+                    }
+                    if (errors != null) {
                         Timber.w("Throwing error.")
-                        throw ErrorsException(it, response.code, request)
-                    } ?: run {
-                        throw StatusException(response.code, request)
+                        throw ErrorsException(errors, response.code, request)
                     }
+                    throw StatusException(response.code, request)
                 }
             }
         }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private suspend fun make(call: Call): Response =
-        suspendCancellableCoroutine { cont ->
-            val callback =
-                object : Callback {
-                    override fun onResponse(
-                        call: Call,
-                        response: Response,
-                    ) {
-                        cont.resume(response) {
-                            // If we have a response but we're cancelled while resuming, we need to
-                            // close() the unused response
-                            if (response.body != null) {
-                                response.closeQuietly()
-                            }
-                        }
-                    }
-
-                    override fun onFailure(
-                        call: Call,
-                        e: IOException,
-                    ) {
-                        cont.resumeWithException(e)
-                    }
-                }
-            call.enqueue(callback)
-            cont.invokeOnCancellation {
-                try {
-                    call.cancel()
-                } catch (t: Throwable) {
-                    // Ignore cancel exception
-                }
-            }
-        }
+    private suspend fun make(call: Call): Response = call.await()
 
     private suspend fun authRequest(
         url: FullUrl,
@@ -260,3 +215,35 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         return builder
     }
 }
+
+suspend fun Call.await(): Response =
+    suspendCancellableCoroutine { cont ->
+        val callback =
+            object : Callback {
+                override fun onResponse(
+                    call: Call,
+                    response: Response,
+                ) {
+                    cont.resume(response) { t, v, ctx ->
+                        // If we have a response but we're cancelled while resuming, we need to
+                        // close() the unused response
+                        response.closeQuietly()
+                    }
+                }
+
+                override fun onFailure(
+                    call: Call,
+                    e: IOException,
+                ) {
+                    cont.resumeWithException(e)
+                }
+            }
+        enqueue(callback)
+        cont.invokeOnCancellation {
+            try {
+                cancel()
+            } catch (t: Throwable) {
+                // Ignore cancel exception
+            }
+        }
+    }

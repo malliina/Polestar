@@ -5,7 +5,7 @@ import androidx.car.app.CarAppService
 import androidx.car.app.Screen
 import androidx.car.app.Session
 import androidx.car.app.validation.HostValidator
-import com.skogberglabs.polestar.ui.HomeScreen
+import com.skogberglabs.polestar.ui.PaneHomeScreen
 import timber.log.Timber
 
 class CarTrackerAppService : CarAppService() {
@@ -22,7 +22,7 @@ class CarSession(val app: CarApp) : Session() {
         intent.data?.let { uri ->
             Timber.i("Creating screen with $uri...")
         }
-        return HomeScreen(carContext, app.appService)
+        return PaneHomeScreen(carContext, app.appService)
     }
 
     override fun onNewIntent(intent: Intent) {

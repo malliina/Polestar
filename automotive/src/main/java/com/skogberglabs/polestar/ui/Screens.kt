@@ -9,13 +9,11 @@ import androidx.car.app.model.Action
 import androidx.car.app.model.Template
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
-import com.skogberglabs.polestar.itemList
-import com.skogberglabs.polestar.mapTemplate
+import com.skogberglabs.polestar.installHeader
 import com.skogberglabs.polestar.messageTemplate
 import com.skogberglabs.polestar.navigationTemplate
 import com.skogberglabs.polestar.pane
 import com.skogberglabs.polestar.paneTemplate
-import com.skogberglabs.polestar.placeListNavigationTemplate
 import com.skogberglabs.polestar.row
 import timber.log.Timber
 
@@ -23,7 +21,9 @@ class EmptyScreen(carContext: CarContext) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         Screens.installProfileRootBackBehavior(this)
         return messageTemplate("?") {
-            setHeaderAction(Action.BACK)
+            installHeader {
+                setStartHeaderAction(Action.BACK)
+            }
         }
     }
 }
@@ -48,43 +48,6 @@ object Screens {
             }
         carContext.onBackPressedDispatcher.addCallback(backCallback)
     }
-}
-
-class PlaceNavScreen(carContext: CarContext) : Screen(carContext) {
-    override fun onGetTemplate(): Template {
-        val myItems =
-            itemList {
-                addItem(
-                    row {
-                        setTitle("My places")
-                        setBrowsable(true)
-                        setOnClickListener {
-//                        screenManager.pushLogged(NoPermissionScreen(carContext, PermissionContent.allForeground))
-                        }
-                    },
-                )
-            }
-        return placeListNavigationTemplate {
-            setHeaderAction(Action.APP_ICON)
-            setItemList(myItems)
-        }
-    }
-}
-
-class MapScreen(carContext: CarContext) : Screen(carContext) {
-    override fun onGetTemplate(): Template =
-        mapTemplate {
-            setPane(
-                pane {
-                    addAction(Action.BACK)
-                    addRow(
-                        row {
-                            setTitle("This shows a map.")
-                        },
-                    )
-                },
-            )
-        }
 }
 
 class ParkingScreen(carContext: CarContext) : Screen(carContext) {

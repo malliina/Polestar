@@ -160,6 +160,7 @@ dependencies {
     implementation(libs.play.services.auth)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
+    implementation(libs.okio)
     implementation(libs.timber)
     testImplementation(libs.junit)
     testImplementation(libs.androidx.app.testing)

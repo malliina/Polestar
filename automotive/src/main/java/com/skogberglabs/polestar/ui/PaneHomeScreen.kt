@@ -1,26 +1,30 @@
 package com.skogberglabs.polestar.ui
 
+import android.graphics.Bitmap
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.CarIcon
 import androidx.car.app.model.Template
+import androidx.core.graphics.drawable.IconCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.skogberglabs.polestar.AppService
 import com.skogberglabs.polestar.R
-import com.skogberglabs.polestar.appendAction
+import com.skogberglabs.polestar.installAction
 import com.skogberglabs.polestar.installHeader
+import com.skogberglabs.polestar.installRow
 import com.skogberglabs.polestar.location.CarLocationService
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
-import com.skogberglabs.polestar.messageTemplate
+import com.skogberglabs.polestar.pane
+import com.skogberglabs.polestar.paneTemplate
 import com.skogberglabs.polestar.titledAction
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-class HomeScreen(
+class PaneHomeScreen(
     carContext: CarContext,
     private val service: AppService,
 ) : Screen(carContext), LifecycleEventObserver {
@@ -101,7 +105,7 @@ class HomeScreen(
                         val nlang = lang.notifications
                         val serviceIntent = CarLocationService.intent(carContext, nlang.appRunning, nlang.enjoy)
                         carContext.startForegroundService(serviceIntent)
-                        sm.pushLogged(HomeScreen(carContext, service))
+                        sm.pushLogged(PaneHomeScreen(carContext, service))
                     }
                 return permissionsScreen
             }
@@ -115,11 +119,27 @@ class HomeScreen(
                 val lang = state.lang
                 val user = state.user
                 val plang = lang.profile
-                val message =
-                    user.activeCar?.let { car ->
-                        "${plang.driving} ${car.name}. ${plang.cloudInstructions}"
-                    } ?: "${plang.signedInAs} ${user.email}."
-                return messageTemplate(message) {
+                val messages = user.activeCar?.let { car ->
+                    listOf("${plang.driving} ${car.name}.", plang.cloudInstructions)
+                } ?: listOf("${plang.signedInAs} ${user.email}.")
+                return paneTemplate(
+                    pane {
+                        messages.forEach { message ->
+                            installRow(message)
+                        }
+                        installAction(lang.profile.goToMap, isPrimary = true) {
+                            screenManager.pushLogged(PlacesScreen(carContext, service, lang))
+                        }
+                        if (user.activeCar == null) {
+                            installAction(lang.settings.selectCar, isPrimary = false) {
+                                screenManager.pushLogged(SelectCarScreen(carContext, lang, service))
+                            }
+                        }
+                        user.localCarImage?.let { icon ->
+                            setImage(CarIcon.Builder(icon).build())
+                        }
+                    }
+                ) {
                     installHeader {
                         setTitle(lang.appName)
                         addEndHeaderAction(
@@ -130,33 +150,17 @@ class HomeScreen(
                             }
                         )
                     }
-                    user.activeCar?.let {
-                        setIcon(CarIcon.APP_ICON)
-                    } ?: run {
-                        appendAction(lang.settings.selectCar) {
-                            setOnClickListener {
-                                screenManager.pushLogged(SelectCarScreen(carContext, lang, service))
-                            }
-                        }
-                    }
-                    appendAction(lang.profile.goToMap) {
-                        setOnClickListener {
-                            screenManager.pushLogged(PlacesScreen(carContext, service, lang))
-                        }
-                    }
                 }
             }
             is AppState.Loading -> {
-                val appName = state.lang?.appName ?: carContext.getString(R.string.app_name)
-                return messageTemplate(appName) {
+                return paneTemplate(pane {
                     setLoading(true)
+                }) {
                 }
             }
             is AppState.Anon -> {
                 val appName = state.lang.appName
-                return messageTemplate(appName) {
-                    setIcon(CarIcon.APP_ICON)
-                }
+                return paneTemplate(pane { installRow(appName) }) {}
             }
         }
     }
