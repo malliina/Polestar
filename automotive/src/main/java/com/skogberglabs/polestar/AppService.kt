@@ -2,7 +2,6 @@ package com.skogberglabs.polestar
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.os.Looper
 import androidx.car.app.model.CarLocation
 import androidx.core.graphics.drawable.IconCompat
 import com.skogberglabs.polestar.location.CarLocationService
@@ -65,10 +64,10 @@ interface CarViewModelInterface {
                                 CarInfo(1, "Rivian", "t", 1L),
                                 CarInfo(1, "Cybertruck", "t", 1L),
                             ),
+                            emptyList()
                         ),
                         null,
-                        emptyList(),
-                        null
+                        null,
                     )
                 override val profile: StateFlow<Outcome<ProfileInfo?>> =
                     MutableStateFlow(Outcome.Success(cars))
@@ -112,6 +111,7 @@ class AppService(
 
     override val profile: StateFlow<Outcome<ProfileInfo>> =
         userState.userResult.flatMapLatest { user ->
+            Timber.i("Now got $user")
             when (user) {
                 is Outcome.Success -> meFlow().map { it.map { u -> u } }
                 Outcome.Idle -> flowOf(Outcome.Idle)
@@ -119,7 +119,7 @@ class AppService(
                 is Outcome.Error -> flowOf(Outcome.Error(user.e))
             }
         }.combine(activeCar) { user, carId ->
-            user.map { ProfileInfo(it.user, carId, it.cars, it.localCarImage) }
+            user.map { ProfileInfo(it.user, carId, it.localCarImage) }
         }.flowOn(Dispatchers.IO)
             .stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
@@ -164,12 +164,12 @@ class AppService(
         ioScope.launch { initialize() }
     }
 
-    fun signInSilently() {
-        ioScope.launch { google.signInSilently() }
+    fun signInSilently(tag: String) {
+        ioScope.launch { google.signInSilently(tag) }
     }
 
     private suspend fun initialize() {
-        google.signInSilently()
+        google.signInSilently("initialize")
         // If loading conf fails, retries every 30 seconds until it succeeds once
         confFlow().map { it.toOption() }.filterNotNull().take(1).collect { conf ->
             val updated = preferences.saveConf(conf)
@@ -230,16 +230,13 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get<UserContainer>("/users/me", null)
-                    val cars = http.get<VehiclesResponse>("/boats", null)
-                    val localImage = cars.cars.map { v -> v.studioImage }.firstOrNull()?.let { url ->
+                    val response = http.get<UserContainer>("/users/me?includeCars=true", null)
+                    val localImage = response.user.cars.map { v -> v.studioImage }.firstOrNull()?.let { url ->
                         val file = download(url, "car.png")
                         val bmp = BitmapFactory.decodeFile(file.absolutePath)
                         IconCompat.createWithBitmap(bmp)
                     }
-                    val isMain = Looper.myLooper() == Looper.getMainLooper()
-                    Timber.i("Got main $isMain $cars")
-                    Outcome.Success(UserData(response.user, cars.cars, localImage))
+                    Outcome.Success(UserData(response.user, localImage))
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load profile. Retrying soon...")
                     Outcome.Error(e)

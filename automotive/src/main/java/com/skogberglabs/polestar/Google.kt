@@ -51,10 +51,12 @@ class Google(private val client: GoogleSignInClient, private val userState: User
         userState.update(Outcome.Error(e))
     }
 
-    suspend fun signInSilently(): UserInfo? =
+    suspend fun signInSilently(tag: String): UserInfo? =
         try {
-            Timber.i("Signing in silently...")
-            userState.update(Outcome.Loading)
+            Timber.i("Signing in silently via $tag...")
+            if (!userState.isSuccess) {
+                userState.update(Outcome.Loading)
+            }
             val task = client.silentSignIn()
             val account = if (task.isSuccessful) task.result else task.await()
             handleSignIn(account, silent = true)
@@ -71,7 +73,7 @@ class Google(private val client: GoogleSignInClient, private val userState: User
     ): UserInfo? {
         try {
             readUser(account)?.let { user ->
-                Timber.i("Got user ${user.email}...")
+                Timber.i("Got user ${user.email} silent $silent...")
                 userState.update(Outcome.Success(user))
                 return user
             }

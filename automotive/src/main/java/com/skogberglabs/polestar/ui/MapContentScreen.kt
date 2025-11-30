@@ -10,6 +10,7 @@ import androidx.car.app.navigation.model.MapController
 import com.skogberglabs.polestar.action
 import com.skogberglabs.polestar.actionStrip
 import com.skogberglabs.polestar.addRow
+import com.skogberglabs.polestar.installHeader
 import com.skogberglabs.polestar.itemList
 import com.skogberglabs.polestar.listTemplate
 import com.skogberglabs.polestar.mapWithContentTemplate
@@ -41,7 +42,9 @@ class MapContentScreen(carContext: CarContext) : Screen(carContext) {
             setMapController(mapController)
             setContentTemplate(
                 listTemplate {
-                    setTitle("List here")
+                    installHeader {
+                        setTitle("List here")
+                    }
                     setSingleList(
                         itemList {
                             addRow {

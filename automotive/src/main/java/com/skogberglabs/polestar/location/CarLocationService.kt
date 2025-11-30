@@ -99,7 +99,7 @@ class CarLocationService : Service() {
                     i.getStringExtra(Title)?.let { title ->
                         i.getStringExtra(Text)?.let { text ->
                             // TODO fix this; use boat token exclusively
-                            app.appService.signInSilently()
+                            app.appService.signInSilently("start command")
                             if (!started) {
                                 if (applicationContext.isLocationGranted()) {
                                     client.requestLocationUpdates(locationRequest, pendingIntent)

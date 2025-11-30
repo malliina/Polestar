@@ -61,8 +61,10 @@ class ParkingScreen(carContext: CarContext) : Screen(carContext) {
                 )
             },
         ) {
-            setTitle("This is a parking template")
-            setHeaderAction(Action.BACK)
+            installHeader {
+                setTitle("This is a parking template")
+                setStartHeaderAction(Action.BACK)
+            }
         }
     }
 }
@@ -100,8 +102,10 @@ class CustomScreen(carContext: CarContext) : Screen(carContext) {
                 )
             },
         ) {
-            setTitle("This is a pane template")
-            setHeaderAction(Action.BACK)
+            installHeader {
+                setTitle("This is a pane template")
+                setStartHeaderAction(Action.BACK)
+            }
         }
 }
 

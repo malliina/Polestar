@@ -34,7 +34,7 @@ interface TokenSource {
 class GoogleTokenSource(private val google: Google) : TokenSource {
     override suspend fun fetchToken(): IdToken? =
         try {
-            google.signInSilently()?.idToken
+            google.signInSilently("token")?.idToken
         } catch (e: Exception) {
             Timber.w(e, "Failed to fetch token")
             null

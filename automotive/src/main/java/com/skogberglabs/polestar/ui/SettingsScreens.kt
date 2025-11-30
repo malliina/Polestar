@@ -112,8 +112,11 @@ class SelectLanguageScreen(
 
     override fun onGetTemplate(): Template {
         return listTemplate {
-            current.lang?.let { lang ->
-                setTitle(lang.profile.chooseLanguage)
+            installHeader {
+                current.lang?.let { lang ->
+                    setTitle(lang.profile.chooseLanguage)
+                }
+                addEndHeaderAction(Action.BACK)
             }
             val list =
                 itemList {
@@ -131,7 +134,6 @@ class SelectLanguageScreen(
                     }
                 }
             setSingleList(list)
-            setHeaderAction(Action.BACK)
         }
     }
 }
@@ -156,7 +158,10 @@ class SelectCarScreen(
         val idx = cars().indexOfFirst { car -> car.id == service.profileLatest()?.activeCar?.id }
         val hasSelected = idx >= 0
         return listTemplate {
-            setTitle(lang.settings.selectCar)
+            installHeader {
+                setTitle(lang.settings.selectCar)
+                addEndHeaderAction(Action.BACK)
+            }
             val list =
                 itemList {
                     if (cars().isNotEmpty()) {
@@ -190,7 +195,6 @@ class SelectCarScreen(
                     }
                 }
             setSingleList(list)
-            setHeaderAction(Action.BACK)
         }
     }
 }

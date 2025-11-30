@@ -9,7 +9,7 @@ data class CarInfo(val id: Int, val name: String, val token: String, val addedMi
 }
 
 @Serializable
-data class ApiUserInfo(val email: Email, val boats: List<CarInfo>)
+data class ApiUserInfo(val email: Email, val boats: List<CarInfo>, val cars: List<Vehicle>)
 
 @Serializable
 data class UserContainer(val user: ApiUserInfo)
@@ -18,7 +18,7 @@ data class UserContainer(val user: ApiUserInfo)
 data class VehicleBattery(val chargeLevelPercentage: Int, val chargingStatus: String)
 @Serializable
 data class Vehicle(val vin: String, val registrationNumber: String, val studioImage: FullUrlJson)
-@Serializable
-data class VehiclesResponse(val cars: List<Vehicle>)
 
-data class UserData(val user: ApiUserInfo, val cars: List<Vehicle>, val localCarImage: IconCompat?)
+data class UserData(val user: ApiUserInfo, val localCarImage: IconCompat?) {
+    val cars = user.cars
+}

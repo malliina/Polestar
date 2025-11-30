@@ -9,16 +9,18 @@ class UserState {
         val instance = UserState()
     }
 
-    private val current: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
-    val userResult: StateFlow<Outcome<UserInfo>> = current
+    private val flow: MutableStateFlow<Outcome<UserInfo>> = MutableStateFlow(Outcome.Idle)
 
+    val userResult: StateFlow<Outcome<UserInfo>> = flow
+    val isSuccess: Boolean get() = userResult.value.isSuccess()
     fun update(outcome: Outcome<UserInfo>) {
-        current.value = outcome
+        flow.value = outcome
     }
 }
 
-data class ProfileInfo(val user: ApiUserInfo, val carId: String?, val cars: List<Vehicle>, val localCarImage: IconCompat?) {
+data class ProfileInfo(val user: ApiUserInfo, val carId: String?, val localCarImage: IconCompat?) {
     val email = user.email
     val activeCar = user.boats.find { car -> car.idStr == carId }
     val hasCars = user.boats.isNotEmpty()
+    val cars = user.cars
 }

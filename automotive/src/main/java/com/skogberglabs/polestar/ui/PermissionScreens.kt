@@ -14,6 +14,7 @@ import com.skogberglabs.polestar.CarListener
 import com.skogberglabs.polestar.PermissionContentLang
 import com.skogberglabs.polestar.PermissionsLang
 import com.skogberglabs.polestar.action
+import com.skogberglabs.polestar.installHeader
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.messageTemplate
@@ -107,7 +108,9 @@ class RequestPermissionScreen(
             }
         return messageTemplate(content.message) {
             addAction(myAction)
-            setHeaderAction(Action.BACK)
+            installHeader {
+                setStartHeaderAction(Action.BACK)
+            }
         }
     }
 }
@@ -140,7 +143,9 @@ class NoPermissionScreen(carContext: CarContext, val content: PermissionContent,
         return messageTemplate("Please open Settings and grant app-level permissions for this app.") {
             addAction(openSettingsAction)
             addAction(tryAgainAction)
-            setHeaderAction(Action.BACK)
+            installHeader {
+                setStartHeaderAction(Action.BACK)
+            }
         }
     }
 }
