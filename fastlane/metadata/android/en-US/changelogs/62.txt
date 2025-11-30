@@ -1,0 +1,2 @@
+- Update ksp
+- Reduce HTTP calls; fix ksp deps
