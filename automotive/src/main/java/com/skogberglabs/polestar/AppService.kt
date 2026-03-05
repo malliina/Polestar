@@ -10,6 +10,7 @@ import com.skogberglabs.polestar.location.LocationUploader
 import com.skogberglabs.polestar.location.isAllPermissionsGranted
 import com.skogberglabs.polestar.location.isForegroundServiceGranted
 import com.skogberglabs.polestar.location.isLocationGranted
+import com.skogberglabs.polestar.logs.LogsHttpClient
 import com.skogberglabs.polestar.ui.AppState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -169,6 +170,9 @@ class AppService(
     }
 
     private suspend fun initialize() {
+        LogsHttpClient.instance.sendLogs().collect {
+
+        }
         google.signInSilently("initialize")
         // If loading conf fails, retries every 30 seconds until it succeeds once
         confFlow().map { it.toOption() }.filterNotNull().take(1).collect { conf ->
