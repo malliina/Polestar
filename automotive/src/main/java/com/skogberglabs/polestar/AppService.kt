@@ -111,13 +111,17 @@ class AppService(
             .stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
     override val profile: StateFlow<Outcome<ProfileInfo>> =
-        userState.userResult.flatMapLatest { user ->
-            Timber.i("Now got $user")
-            when (user) {
+        userState.userResult.flatMapLatest { result ->
+            when (result) {
+                is Outcome.Success -> Timber.i("Got result '${result.result.email}'.")
+                is Outcome.Error -> Timber.e(result.e, "Failed to get result.")
+                else -> {}
+            }
+            when (result) {
                 is Outcome.Success -> meFlow().map { it.map { u -> u } }
                 Outcome.Idle -> flowOf(Outcome.Idle)
                 Outcome.Loading -> flowOf(Outcome.Loading)
-                is Outcome.Error -> flowOf(Outcome.Error(user.e))
+                is Outcome.Error -> flowOf(Outcome.Error(result.e))
             }
         }.combine(activeCar) { user, carId ->
             user.map { ProfileInfo(it.user, carId, it.localCarImage) }

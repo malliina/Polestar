@@ -9,6 +9,6 @@ fun Double.formatted(n: Int): String = String.format("%.${n}f", this)
 fun Float.formatted(n: Int): String = String.format("%.${n}f", this)
 
 fun ScreenManager.pushLogged(screen: Screen) {
-    Timber.i("Pushing $screen...")
+    Timber.i("Pushing ${screen.javaClass.simpleName}...")
     push(screen)
 }

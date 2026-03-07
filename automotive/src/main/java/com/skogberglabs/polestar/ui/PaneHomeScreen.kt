@@ -39,7 +39,7 @@ class PaneHomeScreen(
         source: LifecycleOwner,
         event: Lifecycle.Event,
     ) {
-        Timber.i("Event $event")
+        Timber.i("Event $event of ${javaClass.simpleName}")
         // Checks permissions on every start
         when (event) {
             Lifecycle.Event.ON_START -> {
@@ -67,7 +67,6 @@ class PaneHomeScreen(
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
-                job?.let { Timber.i("Canceled job.") }
                 job = null
             }
             else -> {}

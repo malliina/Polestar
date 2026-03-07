@@ -49,7 +49,6 @@ class SignInScreen(
             }
             Lifecycle.Event.ON_STOP -> {
                 job?.cancel()
-                job?.let { Timber.i("Canceled job.") }
                 job = null
             }
             else -> {}
