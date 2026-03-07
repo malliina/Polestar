@@ -22,7 +22,7 @@ class BootEventReceiver : BroadcastReceiver() {
         context: Context,
         intent: Intent,
     ) {
-        Timber.i("Boot event receiver received $intent")
+        Timber.i("Boot event receiver received $intent.")
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             Timber.i("Boot completed.")
             context.currentLangBlocking()?.let { lang ->

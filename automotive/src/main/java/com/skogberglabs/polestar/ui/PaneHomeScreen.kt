@@ -39,7 +39,7 @@ class PaneHomeScreen(
         source: LifecycleOwner,
         event: Lifecycle.Event,
     ) {
-        Timber.i("Event $event of ${javaClass.simpleName}")
+        Timber.i("Event $event of ${javaClass.simpleName}.")
         // Checks permissions on every start
         when (event) {
             Lifecycle.Event.ON_START -> {

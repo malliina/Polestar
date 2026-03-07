@@ -38,7 +38,8 @@ class SignInScreen(
                         service.appState.collect { state ->
                             when (state) {
                                 is AppState.LoggedIn -> {
-                                    Timber.i("Logged in, pushing home screen...")
+
+                                    Timber.i("Logged in as '${state.user.email}'.")
                                     screenManager.pushLogged(PaneHomeScreen(carContext, service))
                                 }
                                 else -> {
