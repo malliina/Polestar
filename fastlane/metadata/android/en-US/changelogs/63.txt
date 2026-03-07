@@ -1,0 +1,8 @@
+- Gradle daemon
+- Logging
+- Improve logging
+- Add logs client
+- Gradle tweaks
+- Up ksp
+- New DSL
+- Up deps
