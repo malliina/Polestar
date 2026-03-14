@@ -16,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -164,8 +165,15 @@ class AppService(
 
     fun state(): AppState = appState.value
 
+    private var logsJob: Job? = null
+
     fun onCreate() {
         carListener.connect()
+        logsJob = ioScope.launch {
+            LogsHttpClient.instance.sendLogs().collect {
+
+            }
+        }
         ioScope.launch { initialize() }
     }
 
@@ -174,9 +182,6 @@ class AppService(
     }
 
     private suspend fun initialize() {
-        LogsHttpClient.instance.sendLogs().collect {
-
-        }
         google.signInSilently("initialize")
         // If loading conf fails, retries every 30 seconds until it succeeds once
         confFlow().map { it.toOption() }.filterNotNull().take(1).collect { conf ->

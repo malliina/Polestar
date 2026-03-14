@@ -45,7 +45,7 @@ class LogsHttpClient(val http: CarHttpClient, val timber: TimberClient) {
         } catch (e: Exception) {
             Outcome.Error(e)
         }
-        if (outcome.isSuccess()) {
+        if (!outcome.isSuccess()) {
             delay(30.seconds)
             emitAll(sendFlow(logs))
         }
@@ -77,7 +77,7 @@ class TimberClient: Timber.Tree() {
             Instant.now(),
             message,
             tag ?: "android",
-            "thread",
+            Thread.currentThread().name,
             LogLevel.fromTimber(priority),
             t?.stackTraceToString()
         )
