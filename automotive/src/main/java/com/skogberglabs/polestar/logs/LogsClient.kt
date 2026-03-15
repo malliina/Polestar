@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class LogsTokenSource(val http: CarHttpClient): TokenSource {
     override suspend fun fetchToken(): IdToken =
-        http.post<TokenRequest, TokenResponse>("/sources/token", TokenRequest("polestar-android"), null).token
+        http.post<TokenRequest, TokenResponse>("/sources/token", TokenRequest("polestar-android")).token
 }
 
 class LogsHttpClient(val http: CarHttpClient, val timber: TimberClient) {
@@ -52,7 +52,7 @@ class LogsHttpClient(val http: CarHttpClient, val timber: TimberClient) {
     }
 
     suspend fun send(events: List<LogEvent>): Published {
-        return http.post<LogEvents, Published>("/sources/logs", LogEvents(events), null)
+        return http.post<LogEvents, Published>("/sources/logs", LogEvents(events))
     }
 }
 

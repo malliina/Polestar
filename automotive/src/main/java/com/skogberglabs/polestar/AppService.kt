@@ -203,7 +203,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get<CarConf>("/cars/conf", null)
+                    val response = http.get<CarConf>("/cars/conf")
                     Outcome.Success(response)
                 } catch (e: Exception) {
                     // Emitting in a catch-clause fails
@@ -224,10 +224,7 @@ class AppService(
             val outcome =
                 try {
                     val response =
-                        http.get<ParkingResponse>(
-                            "/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20",
-                            null,
-                        )
+                        http.get<ParkingResponse>("/cars/parkings/search?lat=${near.lat}&lng=${near.lng}&limit=20")
                     Timber.i("Loaded ${response.directions.size} parkings near ${near.lat},${near.lng}.")
                     Outcome.Success(response)
                 } catch (e: Exception) {
@@ -243,7 +240,7 @@ class AppService(
             emit(Outcome.Loading)
             val outcome =
                 try {
-                    val response = http.get<UserContainer>("/users/me?includeCars=true", null)
+                    val response = http.get<UserContainer>("/users/me?includeCars=true")
                     val localImage = response.user.cars.map { v -> v.studioImage }.firstOrNull()?.let { url ->
                         val file = download(url, "car.png")
                         val bmp = BitmapFactory.decodeFile(file.absolutePath)

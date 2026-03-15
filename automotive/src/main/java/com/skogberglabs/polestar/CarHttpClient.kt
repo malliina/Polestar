@@ -58,6 +58,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         private const val Authorization = "Authorization"
         private const val CsrfToken = "Csrf-Token"
         private const val UserAgent = "User-Agent"
+        const val XToken = "X-Token"
         private val MediaTypeJson = "application/vnd.car.v1+json".toMediaType()
 //        private val MediaTypeJson = "application/vnd.boat.v2+json".toMediaType()
 
@@ -69,10 +70,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                 .callTimeout(60, TimeUnit.SECONDS)
                 .build()
 
-        fun headers(
-            token: IdToken?,
-            carToken: String?,
-        ): Map<String, String> {
+        fun headers(token: IdToken?): Map<String, String> {
             val alwaysIncluded =
                 mapOf(
                     Accept to MediaTypeJson.toString(),
@@ -80,8 +78,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                     UserAgent to "Car-Map/${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 )
             val idTokenAuth = if (token != null) mapOf(Authorization to "Bearer $token") else emptyMap()
-            val carTokenAuth = if (carToken != null) mapOf("X-Token" to carToken) else emptyMap()
-            return idTokenAuth + carTokenAuth + alwaysIncluded
+            return idTokenAuth + alwaysIncluded
         }
     }
 
@@ -94,17 +91,10 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
             t
         }
 
-    suspend inline fun <reified T> get(
-        path: String,
-        carToken: String?,
-    ): T = get(path, carToken, serializer())
+    suspend inline fun <reified T> get(path: String): T = get(path, serializer())
 
-    suspend fun <T> get(
-        path: String,
-        carToken: String?,
-        adapter: KSerializer<T>,
-    ): T {
-        val request = authRequest(env.baseUrl.append(path), carToken).get().build()
+    suspend fun <T> get(path: String, adapter: KSerializer<T>): T {
+        val request = authRequest(env.baseUrl.append(path), emptyMap()).get().build()
         Timber.i("Fetching '${request.url}'...")
         return execute(request, adapter)
     }
@@ -112,21 +102,27 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
     suspend inline fun <reified Req, reified Res> post(
         path: String,
         body: Req,
-        carToken: String?,
-    ): Res = post(path, body, carToken, serializer(), serializer())
+        carToken: String,
+    ): Res = post(path, body,  mapOf(XToken to carToken))
+
+    suspend inline fun <reified Req, reified Res> post(
+        path: String,
+        body: Req,
+        extraHeaders: Map<String, String> = emptyMap(),
+    ): Res = post(path, body, extraHeaders, serializer(), serializer())
 
     suspend fun <Req, Res> post(
         path: String,
         body: Req,
-        carToken: String?,
+        extraHeaders: Map<String, String>,
         writer: KSerializer<Req>,
         reader: KSerializer<Res>,
-    ): Res = body(path, body, carToken, writer, reader) { req, rb -> req.post(rb) }
+    ): Res = body(path, body, extraHeaders, writer, reader) { req, rb -> req.post(rb) }
 
     private suspend fun <Req, Res> body(
         path: String,
         body: Req,
-        carToken: String?,
+        extraHeaders: Map<String, String>,
         writer: KSerializer<Req>,
         reader: KSerializer<Res>,
         install: (Request.Builder, RequestBody) -> Request.Builder,
@@ -134,7 +130,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         withContext(Dispatchers.IO) {
             val url = env.baseUrl.append(path)
             val requestBody = JsonConf.encode(body, writer).toRequestBody(MediaTypeJson)
-            execute(install(authRequest(url, carToken), requestBody).build(), reader)
+            execute(install(authRequest(url, extraHeaders), requestBody).build(), reader)
         }
 
     private suspend fun <T> execute(
@@ -194,8 +190,8 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
 
     private suspend fun authRequest(
         url: FullUrl,
-        carToken: String?,
-    ) = newRequest(url, headers(fetchToken(), carToken))
+        extraHeaders: Map<String, String>,
+    ) = newRequest(url, headers(fetchToken()) + extraHeaders)
 
     private fun newRequest(
         url: FullUrl,
