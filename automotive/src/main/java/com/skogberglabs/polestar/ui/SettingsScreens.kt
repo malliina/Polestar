@@ -116,7 +116,7 @@ class SelectLanguageScreen(
                 current.lang?.let { lang ->
                     setTitle(lang.profile.chooseLanguage)
                 }
-                addEndHeaderAction(Action.BACK)
+                setStartHeaderAction(Action.BACK)
             }
             val list =
                 itemList {
@@ -126,7 +126,7 @@ class SelectLanguageScreen(
                     setOnSelectedListener { v ->
                         val selected = langs[v]
                         service.saveLanguage(selected.code)
-                        Timber.i("Selected language $selected")
+                        Timber.i("Selected language ${selected.name}")
                     }
                     val idx = langs.indexOfFirst { l -> l.code == current.language }
                     if (idx >= 0) {
@@ -160,7 +160,7 @@ class SelectCarScreen(
         return listTemplate {
             installHeader {
                 setTitle(lang.settings.selectCar)
-                addEndHeaderAction(Action.BACK)
+                setStartHeaderAction(Action.BACK)
             }
             val list =
                 itemList {
