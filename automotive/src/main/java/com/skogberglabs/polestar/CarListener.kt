@@ -57,7 +57,7 @@ class CarListener(private val context: Context) {
                         updated.updateTime()
                     }
                 } else {
-                    Timber.i("Property ${v.propertyId} in status ${v.status}.")
+                    Timber.i("Property ${v.propertyId} in status ${v.propertyStatus}.")
                 }
             }
 
