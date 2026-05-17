@@ -1,16 +1,13 @@
 package com.skogberglabs.polestar.ui
 
-import android.graphics.Bitmap
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
 import androidx.car.app.model.CarIcon
 import androidx.car.app.model.Template
-import androidx.core.graphics.drawable.IconCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.skogberglabs.polestar.AppService
-import com.skogberglabs.polestar.R
 import com.skogberglabs.polestar.installAction
 import com.skogberglabs.polestar.installHeader
 import com.skogberglabs.polestar.installRow
