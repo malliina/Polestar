@@ -28,7 +28,7 @@ class CarListener(private val context: Context) {
     private val callback =
         object : CarPropertyManager.CarPropertyEventCallback {
             override fun onChangeEvent(v: CarPropertyValue<*>) {
-                if (v.propertyStatus == CarPropertyValue.STATUS_AVAILABLE) {
+                if (v.status == CarPropertyValue.STATUS_AVAILABLE) {
 //                Timber.i("Property ${v.propertyId} changed to ${v.value}.")
                     carState.update {
                         val updated =
@@ -57,7 +57,7 @@ class CarListener(private val context: Context) {
                         updated.updateTime()
                     }
                 } else {
-                    Timber.i("Property ${v.propertyId} in status ${v.propertyStatus}.")
+                    Timber.i("Property ${v.propertyId} in status ${v.status}.")
                 }
             }
 
@@ -124,8 +124,11 @@ class CarListener(private val context: Context) {
                 "The following props are available: $str"
             }
         Timber.i(message)
+//        val registrations = vehicleProps.map { prop ->
+//            carPropertyManager.subscribePropertyEvents(prop, CarPropertyManager.SENSOR_RATE_ONCHANGE, callback)
+//        }
         val registrations = vehicleProps.map { prop ->
-            carPropertyManager.subscribePropertyEvents(prop, CarPropertyManager.SENSOR_RATE_ONCHANGE, callback)
+            carPropertyManager.registerCallback(callback, prop, CarPropertyManager.SENSOR_RATE_ONCHANGE)
         }
     }
 
