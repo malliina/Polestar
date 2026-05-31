@@ -18,6 +18,7 @@ import com.skogberglabs.polestar.pane
 import com.skogberglabs.polestar.paneTemplate
 import com.skogberglabs.polestar.titledAction
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -32,6 +33,12 @@ class PaneHomeScreen(
         lifecycle.addObserver(this)
     }
 
+    private fun stringify(state: AppState) = when (state) {
+        is AppState.Anon -> "anon"
+        is AppState.Loading -> "loading"
+        is AppState.LoggedIn -> state.user.email.value
+    }
+
     override fun onStateChanged(
         source: LifecycleOwner,
         event: Lifecycle.Event,
@@ -42,7 +49,9 @@ class PaneHomeScreen(
             Lifecycle.Event.ON_START -> {
                 job =
                     service.mainScope.launch {
-                        service.appState.collect { state ->
+                        service.appState.distinctUntilChanged { old, new ->
+                            stringify(old) == stringify(new)
+                        }.collect { state ->
                             val stateStr =
                                 when (state) {
                                     is AppState.Anon -> "anon"
@@ -53,6 +62,7 @@ class PaneHomeScreen(
                             destination?.let { screen ->
                                 screenManager.pushLogged(screen)
                             } ?: run {
+                                Timber.i("State is $stateStr first $isFirstRender...")
                                 if (!isFirstRender) {
                                     Timber.i("State updated to $stateStr, invalidating screen")
                                     invalidate()

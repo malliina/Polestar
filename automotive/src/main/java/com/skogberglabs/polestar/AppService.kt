@@ -259,14 +259,20 @@ class AppService(
         }
 
     private suspend fun download(url: FullUrl, to: String): File {
-        val req = Request.Builder().url(url.url).build()
-        val response = CarHttpClient.client.newCall(req).await()
-        val downloadedFile = File(applicationContext.cacheDir, to)
-        val bytes = downloadedFile.sink().buffer().use { sink ->
-            sink.writeAll(response.body.source())
+        val destFile = File(applicationContext.filesDir, to)
+        val localSize = destFile.length()
+        // Request builder is not reusable
+        val remoteSize = CarHttpClient.client.newCall(Request.Builder().url(url.url).head().build()).await().headers["content-length"]?.toLongOrNull() ?: 0L
+        if (!destFile.exists() || localSize == 0L || remoteSize != localSize) {
+            val response = CarHttpClient.client.newCall(Request.Builder().url(url.url).build()).await()
+            val bytes = destFile.sink().buffer().use { sink ->
+                sink.writeAll(response.body.source())
+            }
+            Timber.i("Downloaded $bytes (expected $remoteSize) bytes to $destFile from $url.")
+        } else {
+            Timber.i("Using $destFile of $localSize bytes.")
         }
-        Timber.i("Downloaded $bytes bytes to $downloadedFile.")
-        return downloadedFile
+        return destFile
     }
 
     fun searchParkings(loc: CarLocation) {

@@ -22,6 +22,7 @@ class CarSession(val app: CarApp) : Session() {
         intent.data?.let { uri ->
             Timber.i("Creating screen with $uri...")
         }
+//        return EmptyScreen(carContext)
         return PaneHomeScreen(carContext, app.appService)
     }
 
