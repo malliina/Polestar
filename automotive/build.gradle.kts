@@ -16,7 +16,7 @@ interface InjectedExecOps {
 
 android {
     namespace = "com.skogberglabs.polestar"
-    compileSdk = 36
+    compileSdk = 37
     val code = file(versionFilename).readText().trim().toIntOrNull() ?: 1
 
     fun makeVersion(c: Int): String = "1.22.$c"
@@ -79,8 +79,8 @@ android {
 
     defaultConfig {
         applicationId = "com.skogberglabs.polestar"
-        minSdk = 29 // Android 10
-        targetSdk = 36
+        minSdk = 33 // Android 13
+        targetSdk = 37
         versionCode = code
         versionName = makeVersion(code)
 
@@ -130,6 +130,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
