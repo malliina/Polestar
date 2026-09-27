@@ -63,4 +63,7 @@ class OffsetDateTimeSerializer : KSerializer<OffsetDateTime> {
     }
 }
 
-class JsonException(message: String, cause: Exception) : Exception(message, cause)
+class JsonException(
+    message: String,
+    cause: Exception,
+) : Exception(message, cause)

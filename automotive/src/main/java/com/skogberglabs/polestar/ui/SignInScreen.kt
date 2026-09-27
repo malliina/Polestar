@@ -20,7 +20,8 @@ import timber.log.Timber
 class SignInScreen(
     carContext: CarContext,
     private val service: AppService,
-) : Screen(carContext), LifecycleEventObserver {
+) : Screen(carContext),
+    LifecycleEventObserver {
     private var job: Job? = null
 
     init {
@@ -38,7 +39,6 @@ class SignInScreen(
                         service.appState.collect { state ->
                             when (state) {
                                 is AppState.LoggedIn -> {
-
                                     Timber.i("Logged in as '${state.user.email}'.")
                                     screenManager.pushLogged(PaneHomeScreen(carContext, service))
                                 }
@@ -59,7 +59,12 @@ class SignInScreen(
     override fun onGetTemplate(): Template {
         val state = service.state()
         val appName = carContext.getString(R.string.app_name)
-        val title = state.carLang()?.profile?.auth?.ctaGoogle ?: appName
+        val title =
+            state
+                .carLang()
+                ?.profile
+                ?.auth
+                ?.ctaGoogle ?: appName
         val signInAction =
             action {
                 setTitle(title)

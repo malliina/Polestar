@@ -16,11 +16,14 @@ import com.skogberglabs.polestar.listTemplate
 import com.skogberglabs.polestar.mapWithContentTemplate
 import timber.log.Timber
 
-class MapContentScreen(carContext: CarContext) : Screen(carContext) {
+class MapContentScreen(
+    carContext: CarContext,
+) : Screen(carContext) {
     @OptIn(ExperimentalCarApi::class)
     override fun onGetTemplate(): Template {
         val mapController =
-            MapController.Builder()
+            MapController
+                .Builder()
                 .setMapActionStrip(
                     actionStrip {
                         addAction(
@@ -33,11 +36,9 @@ class MapContentScreen(carContext: CarContext) : Screen(carContext) {
                             },
                         )
                     },
-                )
-                .setPanModeListener { isPan ->
+                ).setPanModeListener { isPan ->
                     Timber.i("Pan $isPan")
-                }
-                .build()
+                }.build()
         return mapWithContentTemplate {
             setMapController(mapController)
             setContentTemplate(

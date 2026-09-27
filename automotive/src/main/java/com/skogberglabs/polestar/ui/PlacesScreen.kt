@@ -1,7 +1,6 @@
 package com.skogberglabs.polestar.ui
 
 import android.content.Intent
-import android.net.Uri
 import android.text.SpannableString
 import android.text.Spanned
 import androidx.car.app.CarContext
@@ -14,6 +13,7 @@ import androidx.car.app.model.Distance
 import androidx.car.app.model.DistanceSpan
 import androidx.car.app.model.PlaceMarker
 import androidx.car.app.model.Template
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -39,13 +39,13 @@ import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
-import androidx.core.net.toUri
 
 class PlacesScreen(
     carContext: CarContext,
     private val service: AppService,
     private val lang: CarLang,
-) : Screen(carContext), LifecycleEventObserver {
+) : Screen(carContext),
+    LifecycleEventObserver {
     private val locationSource = service.locationSource
     private val latestCoord = locationSource.locationLatest() ?: Coord(60.155, 24.877)
     private var currentLocation: CarLocation = CarLocation.create(latestCoord.lat, latestCoord.lng)

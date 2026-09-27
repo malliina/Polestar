@@ -4,7 +4,9 @@ import kotlinx.serialization.Serializable
 
 @JvmInline
 @Serializable
-value class SpeedKnots(val knots: Double) {
+value class SpeedKnots(
+    val knots: Double,
+) {
     fun toSpeed() = Speed(knots.toFloat() * knotInKmh / meterPerSecondInKmh)
 
     companion object {
@@ -14,13 +16,22 @@ value class SpeedKnots(val knots: Double) {
 }
 
 @Serializable
-data class TrackTime(val dateTime: String)
+data class TrackTime(
+    val dateTime: String,
+)
 
 @Serializable
-data class Times(val start: TrackTime, val end: TrackTime)
+data class Times(
+    val start: TrackTime,
+    val end: TrackTime,
+)
 
 @Serializable
-data class TopPoint(val coord: Coord, val time: TrackTime, val speed: SpeedKnots) {
+data class TopPoint(
+    val coord: Coord,
+    val time: TrackTime,
+    val speed: SpeedKnots,
+) {
     val carSpeed: Speed get() = speed.toSpeed()
 }
 
@@ -34,16 +45,29 @@ data class Track(
 )
 
 @Serializable
-data class Tracks(val tracks: List<Track>)
+data class Tracks(
+    val tracks: List<Track>,
+)
 
 @Serializable
-data class NearestCoord(val coord: Coord, val distance: Distance, val address: String?)
+data class NearestCoord(
+    val coord: Coord,
+    val distance: Distance,
+    val address: String?,
+)
 
 @Serializable
-data class ParkingDirections(val from: Coord, val to: List<Coord>, val nearest: NearestCoord, val capacity: Int)
+data class ParkingDirections(
+    val from: Coord,
+    val to: List<Coord>,
+    val nearest: NearestCoord,
+    val capacity: Int,
+)
 
 @Serializable
-data class ParkingResponse(val directions: List<ParkingDirections>)
+data class ParkingResponse(
+    val directions: List<ParkingDirections>,
+)
 
 // Inspiration from https://github.com/android/location-samples/blob/main/LocationUpdatesBackgroundKotlin/app/src/main/java/com/google/android/gms/location/sample/locationupdatesbackgroundkotlin/data/MyLocationManager.kt
 
@@ -63,10 +87,19 @@ data class LocationUpdate(
 
     fun toPoint(car: CarState) =
         CarPoint(
-            longitude, latitude, altitudeMeters,
-            accuracyMeters, bearing, bearingAccuracyDegrees,
-            car.speed, car.batteryLevel, car.batteryCapacity,
-            car.rangeRemaining, car.outsideTemperature, car.nightMode, date,
+            longitude,
+            latitude,
+            altitudeMeters,
+            accuracyMeters,
+            bearing,
+            bearingAccuracyDegrees,
+            car.speed,
+            car.batteryLevel,
+            car.batteryCapacity,
+            car.rangeRemaining,
+            car.outsideTemperature,
+            car.nightMode,
+            date,
         )
 }
 
@@ -88,7 +121,10 @@ data class CarPoint(
 )
 
 @Serializable
-data class LocationUpdates(val updates: List<CarPoint>, val carId: String)
+data class LocationUpdates(
+    val updates: List<CarPoint>,
+    val carId: String,
+)
 
 interface Primitive {
     val value: String
@@ -96,7 +132,9 @@ interface Primitive {
 
 @JvmInline
 @Serializable
-value class Email(val email: String) : Primitive {
+value class Email(
+    val email: String,
+) : Primitive {
     override val value: String get() = email
 
     override fun toString(): String = email
@@ -104,18 +142,27 @@ value class Email(val email: String) : Primitive {
 
 @JvmInline
 @Serializable
-value class IdToken(val token: String) : Primitive {
+value class IdToken(
+    val token: String,
+) : Primitive {
     override val value: String get() = token
 
     override fun toString(): String = token
 }
 
-data class UserInfo(val email: Email, val idToken: IdToken)
+data class UserInfo(
+    val email: Email,
+    val idToken: IdToken,
+)
 
 sealed class Outcome<out T> {
-    data class Success<T>(val result: T) : Outcome<T>()
+    data class Success<T>(
+        val result: T,
+    ) : Outcome<T>()
 
-    data class Error(val e: Exception) : Outcome<Nothing>()
+    data class Error(
+        val e: Exception,
+    ) : Outcome<Nothing>()
 
     data object Loading : Outcome<Nothing>()
 

@@ -25,7 +25,8 @@ import timber.log.Timber
 class PaneHomeScreen(
     carContext: CarContext,
     private val service: AppService,
-) : Screen(carContext), LifecycleEventObserver {
+) : Screen(carContext),
+    LifecycleEventObserver {
     private var job: Job? = null
     private var isFirstRender = true
 
@@ -33,11 +34,12 @@ class PaneHomeScreen(
         lifecycle.addObserver(this)
     }
 
-    private fun stringify(state: AppState) = when (state) {
-        is AppState.Anon -> "anon"
-        is AppState.Loading -> "loading"
-        is AppState.LoggedIn -> state.user.email.value
-    }
+    private fun stringify(state: AppState) =
+        when (state) {
+            is AppState.Anon -> "anon"
+            is AppState.Loading -> "loading"
+            is AppState.LoggedIn -> state.user.email.value
+        }
 
     override fun onStateChanged(
         source: LifecycleOwner,
@@ -49,27 +51,28 @@ class PaneHomeScreen(
             Lifecycle.Event.ON_START -> {
                 job =
                     service.mainScope.launch {
-                        service.appState.distinctUntilChanged { old, new ->
-                            stringify(old) == stringify(new)
-                        }.collect { state ->
-                            val stateStr =
-                                when (state) {
-                                    is AppState.Anon -> "anon"
-                                    is AppState.Loading -> "loading"
-                                    is AppState.LoggedIn -> state.user.email.value
+                        service.appState
+                            .distinctUntilChanged { old, new ->
+                                stringify(old) == stringify(new)
+                            }.collect { state ->
+                                val stateStr =
+                                    when (state) {
+                                        is AppState.Anon -> "anon"
+                                        is AppState.Loading -> "loading"
+                                        is AppState.LoggedIn -> state.user.email.value
+                                    }
+                                val destination = checkDestination()
+                                destination?.let { screen ->
+                                    screenManager.pushLogged(screen)
+                                } ?: run {
+                                    Timber.i("State is $stateStr first $isFirstRender...")
+                                    if (!isFirstRender) {
+                                        Timber.i("State updated to $stateStr, invalidating screen")
+                                        invalidate()
+                                    }
+                                    isFirstRender = false
                                 }
-                            val destination = checkDestination()
-                            destination?.let { screen ->
-                                screenManager.pushLogged(screen)
-                            } ?: run {
-                                Timber.i("State is $stateStr first $isFirstRender...")
-                                if (!isFirstRender) {
-                                    Timber.i("State updated to $stateStr, invalidating screen")
-                                    invalidate()
-                                }
-                                isFirstRender = false
                             }
-                        }
                     }
             }
             Lifecycle.Event.ON_STOP -> {
@@ -125,9 +128,10 @@ class PaneHomeScreen(
                 val lang = state.lang
                 val user = state.user
                 val plang = lang.profile
-                val messages = user.activeCar?.let { car ->
-                    listOf("${plang.driving} ${car.name}.", plang.cloudInstructions)
-                } ?: listOf("${plang.signedInAs} ${user.email}.")
+                val messages =
+                    user.activeCar?.let { car ->
+                        listOf("${plang.driving} ${car.name}.", plang.cloudInstructions)
+                    } ?: listOf("${plang.signedInAs} ${user.email}.")
                 return paneTemplate(
                     pane {
                         messages.forEach { message ->
@@ -144,7 +148,7 @@ class PaneHomeScreen(
                         user.localCarImage?.let { icon ->
                             setImage(CarIcon.Builder(icon).build())
                         }
-                    }
+                    },
                 ) {
                     installHeader {
                         setTitle(lang.appName)
@@ -153,15 +157,17 @@ class PaneHomeScreen(
                                 setOnClickListener {
                                     screenManager.pushLogged(SettingsScreen(carContext, lang, service))
                                 }
-                            }
+                            },
                         )
                     }
                 }
             }
             is AppState.Loading -> {
-                return paneTemplate(pane {
-                    setLoading(true)
-                }) {
+                return paneTemplate(
+                    pane {
+                        setLoading(true)
+                    },
+                ) {
                 }
             }
             is AppState.Anon -> {

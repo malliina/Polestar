@@ -66,7 +66,7 @@ interface CarViewModelInterface {
                                 CarInfo(1, "Rivian", "t", 1L),
                                 CarInfo(1, "Cybertruck", "t", 1L),
                             ),
-                            emptyList()
+                            emptyList(),
                         ),
                         null,
                         null,
@@ -83,7 +83,10 @@ interface CarViewModelInterface {
     }
 }
 
-data class ParkingsSearch(val near: Coord, val at: Instant)
+data class ParkingsSearch(
+    val near: Coord,
+    val at: Instant,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppService(
@@ -105,56 +108,63 @@ class AppService(
 
     @OptIn(FlowPreview::class)
     val parkings: StateFlow<Outcome<ParkingResponse>> =
-        parkingSearch.filterNotNull().flatMapLatest { query ->
-            parkingsFlow(query)
-        }.debounce(200.milliseconds)
+        parkingSearch
+            .filterNotNull()
+            .flatMapLatest { query ->
+                parkingsFlow(query)
+            }.debounce(200.milliseconds)
             .flowOn(Dispatchers.IO)
             .stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
     override val profile: StateFlow<Outcome<ProfileInfo>> =
-        userState.userResult.flatMapLatest { result ->
-            when (result) {
-                is Outcome.Success -> Timber.i("Got result '${result.result.email}'.")
-                is Outcome.Error -> Timber.e(result.e, "Failed to get result.")
-                else -> {}
-            }
-            when (result) {
-                is Outcome.Success -> meFlow().map { it.map { u -> u } }
-                Outcome.Idle -> flowOf(Outcome.Idle)
-                Outcome.Loading -> flowOf(Outcome.Loading)
-                is Outcome.Error -> flowOf(Outcome.Error(result.e))
-            }
-        }.combine(activeCar) { user, carId ->
-            user.map { ProfileInfo(it.user, carId, it.localCarImage) }
-        }.flowOn(Dispatchers.IO)
+        userState.userResult
+            .flatMapLatest { result ->
+                when (result) {
+                    is Outcome.Success -> Timber.i("Got result '${result.result.email}'.")
+                    is Outcome.Error -> Timber.e(result.e, "Failed to get result.")
+                    else -> {}
+                }
+                when (result) {
+                    is Outcome.Success -> meFlow().map { it.map { u -> u } }
+                    Outcome.Idle -> flowOf(Outcome.Idle)
+                    Outcome.Loading -> flowOf(Outcome.Loading)
+                    is Outcome.Error -> flowOf(Outcome.Error(result.e))
+                }
+            }.combine(activeCar) { user, carId ->
+                user.map { ProfileInfo(it.user, carId, it.localCarImage) }
+            }.flowOn(Dispatchers.IO)
             .stateIn(mainScope, SharingStarted.Eagerly, Outcome.Idle)
 
     fun profileLatest(): ProfileInfo? = profile.value.toOption()
 
     val prefs =
-        preferences.userPreferencesFlow()
+        preferences
+            .userPreferencesFlow()
             .stateIn(ioScope, SharingStarted.Eagerly, UserPreferences.empty)
     private val currentLang: StateFlow<Outcome<CarLang>> =
-        preferences.userPreferencesFlow()
+        preferences
+            .userPreferencesFlow()
             .map { it.lang?.let { lang -> Outcome.Success(lang) } ?: Outcome.Loading }
             .stateIn(ioScope, SharingStarted.Eagerly, Outcome.Idle)
 
     @OptIn(FlowPreview::class)
     val appState: StateFlow<AppState> =
-        currentLang.combine(profile) { lang, user ->
-            when (lang) {
-                is Outcome.Error -> AppState.Loading(null)
-                Outcome.Idle -> AppState.Loading(null)
-                Outcome.Loading -> AppState.Loading(null)
-                is Outcome.Success ->
-                    when (user) {
-                        is Outcome.Error -> AppState.Anon(lang.result)
-                        Outcome.Idle -> AppState.Anon(lang.result)
-                        Outcome.Loading -> AppState.Loading(lang.result)
-                        is Outcome.Success -> AppState.LoggedIn(user.result, lang.result)
-                    }
-            }
-        }.debounce(500.milliseconds).stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading(null))
+        currentLang
+            .combine(profile) { lang, user ->
+                when (lang) {
+                    is Outcome.Error -> AppState.Loading(null)
+                    Outcome.Idle -> AppState.Loading(null)
+                    Outcome.Loading -> AppState.Loading(null)
+                    is Outcome.Success ->
+                        when (user) {
+                            is Outcome.Error -> AppState.Anon(lang.result)
+                            Outcome.Idle -> AppState.Anon(lang.result)
+                            Outcome.Loading -> AppState.Loading(lang.result)
+                            is Outcome.Success -> AppState.LoggedIn(user.result, lang.result)
+                        }
+                }
+            }.debounce(500.milliseconds)
+            .stateIn(mainScope, SharingStarted.Eagerly, AppState.Loading(null))
 
     private val navigateToPlacesState: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val navigateToPlaces get() = navigateToPlacesState.value
@@ -169,11 +179,11 @@ class AppService(
 
     fun onCreate() {
         carListener.connect()
-        logsJob = ioScope.launch {
-            LogsHttpClient.instance.sendLogs().collect {
-
+        logsJob =
+            ioScope.launch {
+                LogsHttpClient.instance.sendLogs().collect {
+                }
             }
-        }
         ioScope.launch { initialize() }
     }
 
@@ -241,11 +251,12 @@ class AppService(
             val outcome =
                 try {
                     val response = http.get<UserContainer>("/users/me?includeCars=true")
-                    val localImage = response.user.cars.map { v -> v.studioImage }.firstOrNull()?.let { url ->
-                        val file = download(url, "car.png")
-                        val bmp = BitmapFactory.decodeFile(file.absolutePath)
-                        IconCompat.createWithBitmap(bmp)
-                    }
+                    val localImage =
+                        response.user.cars.map { v -> v.studioImage }.firstOrNull()?.let { url ->
+                            val file = download(url, "car.png")
+                            val bmp = BitmapFactory.decodeFile(file.absolutePath)
+                            IconCompat.createWithBitmap(bmp)
+                        }
                     Outcome.Success(UserData(response.user, localImage))
                 } catch (e: Exception) {
                     Timber.e(e, "Failed to load profile. Retrying soon...")
@@ -258,16 +269,31 @@ class AppService(
             }
         }
 
-    private suspend fun download(url: FullUrl, to: String): File {
+    private suspend fun download(
+        url: FullUrl,
+        to: String,
+    ): File {
         val destFile = File(applicationContext.filesDir, to)
         val localSize = destFile.length()
         // Request builder is not reusable
-        val remoteSize = CarHttpClient.client.newCall(Request.Builder().url(url.url).head().build()).await().headers["content-length"]?.toLongOrNull() ?: 0L
+        val remoteSize =
+            CarHttpClient.client
+                .newCall(
+                    Request
+                        .Builder()
+                        .url(url.url)
+                        .head()
+                        .build(),
+                ).await()
+                .headers["content-length"]
+                ?.toLongOrNull()
+                ?: 0L
         if (!destFile.exists() || localSize == 0L || remoteSize != localSize) {
             val response = CarHttpClient.client.newCall(Request.Builder().url(url.url).build()).await()
-            val bytes = destFile.sink().buffer().use { sink ->
-                sink.writeAll(response.body.source())
-            }
+            val bytes =
+                destFile.sink().buffer().use { sink ->
+                    sink.writeAll(response.body.source())
+                }
             Timber.i("Downloaded $bytes (expected $remoteSize) bytes to $destFile from $url.")
         } else {
             Timber.i("Using $destFile of $localSize bytes.")

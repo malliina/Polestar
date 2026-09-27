@@ -135,7 +135,8 @@ class CarLocationService : Service() {
         val context = applicationContext
         client = LocationServices.getFusedLocationProviderClient(context)
         locationRequest =
-            LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
+            LocationRequest
+                .Builder(Priority.PRIORITY_HIGH_ACCURACY, intervalMillis)
                 .setMaxUpdateDelayMillis(intervalMillis * locationsPerBatch) // batching, check the docs
                 .build()
         val pi: PendingIntent by lazy {
@@ -164,7 +165,8 @@ class CarLocationService : Service() {
                 packageManager.getLaunchIntentForPackage(this.packageName),
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
             )
-        return Notification.Builder(applicationContext, LOCATIONS_CHANNEL)
+        return Notification
+            .Builder(applicationContext, LOCATIONS_CHANNEL)
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(startAppIntent)

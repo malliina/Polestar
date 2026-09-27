@@ -20,7 +20,10 @@ import com.skogberglabs.polestar.location.notGrantedPermissions
 import com.skogberglabs.polestar.messageTemplate
 import timber.log.Timber
 
-data class PermissionContent(val lang: PermissionContentLang, val permissions: List<String>) {
+data class PermissionContent(
+    val lang: PermissionContentLang,
+    val permissions: List<String>,
+) {
     val title = lang.title
     val message = lang.message
 
@@ -66,7 +69,9 @@ class RequestPermissionScreen(
                 PermissionContent.location(lang.location)
             } else if (notGranted.contains(PermissionContent.backgroundPermission)) {
                 PermissionContent.background(lang.background)
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && notGranted.contains(Manifest.permission.FOREGROUND_SERVICE_LOCATION)) {
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+                notGranted.contains(Manifest.permission.FOREGROUND_SERVICE_LOCATION)
+            ) {
                 PermissionContent(lang.foreground, listOf(Manifest.permission.FOREGROUND_SERVICE_LOCATION))
             } else {
                 PermissionContent.allForeground(lang.all)
@@ -115,9 +120,13 @@ class RequestPermissionScreen(
     }
 }
 
-class NoPermissionScreen(carContext: CarContext, val content: PermissionContent, val lang: PermissionsLang) : Screen(
-    carContext,
-) {
+class NoPermissionScreen(
+    carContext: CarContext,
+    val content: PermissionContent,
+    val lang: PermissionsLang,
+) : Screen(
+        carContext,
+    ) {
     override fun onGetTemplate(): Template {
         val openSettingsAction =
             action {

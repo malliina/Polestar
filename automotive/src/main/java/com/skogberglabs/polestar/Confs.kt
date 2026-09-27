@@ -4,7 +4,11 @@ import androidx.car.app.model.CarLocation
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class AuthLang(val ctaGoogle: String, val instructions: String, val additionalText: String)
+data class AuthLang(
+    val ctaGoogle: String,
+    val instructions: String,
+    val additionalText: String,
+)
 
 @Serializable
 data class CarProfileLang(
@@ -39,7 +43,10 @@ data class CarStatsLang(
 )
 
 @Serializable
-data class PermissionContentLang(val title: String, val message: String)
+data class PermissionContentLang(
+    val title: String,
+    val message: String,
+)
 
 @Serializable
 data class PermissionsLang(
@@ -73,7 +80,10 @@ data class CarSettingsLang(
 )
 
 @Serializable
-data class CarLanguage(val code: String, val name: String)
+data class CarLanguage(
+    val code: String,
+    val name: String,
+)
 
 @Serializable
 data class NotificationLang(
@@ -96,10 +106,15 @@ data class CarLang(
 )
 
 @Serializable
-data class CarConf(val languages: List<CarLang>)
+data class CarConf(
+    val languages: List<CarLang>,
+)
 
 @Serializable
-data class Coord(val lat: Double, val lng: Double) {
+data class Coord(
+    val lat: Double,
+    val lng: Double,
+) {
     companion object {
         fun format(d: Double) {
             val trunc = (d * 100000).toInt().toDouble() / 100000

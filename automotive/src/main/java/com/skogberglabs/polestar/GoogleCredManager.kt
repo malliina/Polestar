@@ -42,7 +42,8 @@ class GoogleCredManager(
         }
 
         private fun options(filterByAuthorized: Boolean): GetGoogleIdOption =
-            GetGoogleIdOption.Builder()
+            GetGoogleIdOption
+                .Builder()
                 .setFilterByAuthorizedAccounts(filterByAuthorized)
                 .setServerClientId(webClientId)
                 .setAutoSelectEnabled(true)
@@ -82,7 +83,8 @@ class GoogleCredManager(
         filterByAuthorized: Boolean,
         immediatelyAvailable: Boolean,
     ): GetCredentialRequest =
-        GetCredentialRequest.Builder()
+        GetCredentialRequest
+            .Builder()
             .addCredentialOption(options(filterByAuthorized))
             .setPreferImmediatelyAvailableCredentials(immediatelyAvailable)
             .build()

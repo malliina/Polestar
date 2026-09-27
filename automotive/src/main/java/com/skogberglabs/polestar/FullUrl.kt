@@ -10,9 +10,11 @@ import kotlinx.serialization.encoding.Encoder
 import org.json.JSONException
 import java.util.regex.Pattern
 
-typealias FullUrlJson = @Serializable(FullUrlSerializer::class) FullUrl
+typealias FullUrlJson =
+    @Serializable(FullUrlSerializer::class)
+    FullUrl
 
-class FullUrlSerializer: KSerializer<FullUrl> {
+class FullUrlSerializer : KSerializer<FullUrl> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor(FullUrl::class.simpleName!!, PrimitiveKind.STRING)
 
@@ -26,7 +28,11 @@ class FullUrlSerializer: KSerializer<FullUrl> {
     }
 }
 
-data class FullUrl(val proto: String, val hostAndPort: String, val uri: String) {
+data class FullUrl(
+    val proto: String,
+    val hostAndPort: String,
+    val uri: String,
+) {
     private val host: String = hostAndPort.takeWhile { c -> c != ':' }
     private val protoAndHost = "$proto://$hostAndPort"
     val url = "$protoAndHost$uri"
@@ -60,10 +66,9 @@ data class FullUrl(val proto: String, val hostAndPort: String, val uri: String) 
             uri: String,
         ): FullUrl = FullUrl("wss", domain, uri)
 
-        fun parse(input: String): FullUrl {
-            return build(input)
+        fun parse(input: String): FullUrl =
+            build(input)
                 ?: throw JSONException("Value $input cannot be converted to FullUrl")
-        }
 
         fun build(input: String): FullUrl? {
             val m = pattern.matcher(input)

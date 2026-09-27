@@ -13,12 +13,17 @@ class UserState {
 
     val userResult: StateFlow<Outcome<UserInfo>> = flow
     val isSuccess: Boolean get() = userResult.value.isSuccess()
+
     fun update(outcome: Outcome<UserInfo>) {
         flow.value = outcome
     }
 }
 
-data class ProfileInfo(val user: ApiUserInfo, val carId: String?, val localCarImage: IconCompat?) {
+data class ProfileInfo(
+    val user: ApiUserInfo,
+    val carId: String?,
+    val localCarImage: IconCompat?,
+) {
     val email = user.email
     val activeCar = user.boats.find { car -> car.idStr == carId }
     val hasCars = user.boats.isNotEmpty()

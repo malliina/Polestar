@@ -15,12 +15,17 @@ import timber.log.Timber
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
-class LogsTokenSource(val http: CarHttpClient): TokenSource {
+class LogsTokenSource(
+    val http: CarHttpClient,
+) : TokenSource {
     override suspend fun fetchToken(): IdToken =
         http.post<TokenRequest, TokenResponse>("/sources/token", TokenRequest("polestar-android")).token
 }
 
-class LogsHttpClient(val http: CarHttpClient, val timber: TimberClient) {
+class LogsHttpClient(
+    val http: CarHttpClient,
+    val timber: TimberClient,
+) {
     companion object {
         val instance = build()
 
@@ -34,53 +39,63 @@ class LogsHttpClient(val http: CarHttpClient, val timber: TimberClient) {
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun sendLogs(): Flow<Outcome<Published>> = timber.events().flatMapLatest { logs ->
-        sendFlow(logs)
-    }
-
-    private fun sendFlow(logs: List<LogEvent>): Flow<Outcome<Published>> = flow {
-        val outcome = try {
-            val res = send(logs)
-            Outcome.Success(res)
-        } catch (e: Exception) {
-            Outcome.Error(e)
+    fun sendLogs(): Flow<Outcome<Published>> =
+        timber.events().flatMapLatest { logs ->
+            sendFlow(logs)
         }
-        if (!outcome.isSuccess()) {
-            delay(30.seconds)
-            emitAll(sendFlow(logs))
-        }
-    }
 
-    suspend fun send(events: List<LogEvent>): Published {
-        return http.post<LogEvents, Published>("/sources/logs", LogEvents(events))
-    }
+    private fun sendFlow(logs: List<LogEvent>): Flow<Outcome<Published>> =
+        flow {
+            val outcome =
+                try {
+                    val res = send(logs)
+                    Outcome.Success(res)
+                } catch (e: Exception) {
+                    Outcome.Error(e)
+                }
+            if (!outcome.isSuccess()) {
+                delay(30.seconds)
+                emitAll(sendFlow(logs))
+            }
+        }
+
+    suspend fun send(events: List<LogEvent>): Published =
+        http.post<LogEvents, Published>("/sources/logs", LogEvents(events))
 }
 
-class TimberClient: Timber.Tree() {
+class TimberClient : Timber.Tree() {
     companion object {
         val instance = TimberClient()
     }
+
     private val batch = mutableListOf<LogEvent>()
 
-    fun events(): Flow<List<LogEvent>> = flow {
-        while(true) {
-            delay(1.seconds)
-            val logs = rinse()
-            if (logs.isNotEmpty()) {
-                emit(logs)
+    fun events(): Flow<List<LogEvent>> =
+        flow {
+            while (true) {
+                delay(1.seconds)
+                val logs = rinse()
+                if (logs.isNotEmpty()) {
+                    emit(logs)
+                }
             }
         }
-    }
 
-    override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-        val event = LogEvent(
-            Instant.now(),
-            message,
-            tag ?: "android",
-            Thread.currentThread().name,
-            LogLevel.fromTimber(priority),
-            t?.stackTraceToString()
-        )
+    override fun log(
+        priority: Int,
+        tag: String?,
+        message: String,
+        t: Throwable?,
+    ) {
+        val event =
+            LogEvent(
+                Instant.now(),
+                message,
+                tag ?: "android",
+                Thread.currentThread().name,
+                LogLevel.fromTimber(priority),
+                t?.stackTraceToString(),
+            )
         add(event)
     }
 

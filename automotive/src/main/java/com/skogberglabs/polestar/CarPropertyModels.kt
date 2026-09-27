@@ -6,18 +6,24 @@ import java.time.OffsetDateTime
 
 @JvmInline
 @Serializable
-value class Power(val watts: Float)
+value class Power(
+    val watts: Float,
+)
 
 @JvmInline
 @Serializable
-value class Energy(val wattHours: Float) {
+value class Energy(
+    val wattHours: Float,
+) {
     private val kWhRounded get() = (wattHours / 1000).formatted(2)
     val describeKWh: String get() = "$kWhRounded kWh"
 }
 
 @JvmInline
 @Serializable
-value class Distance(val meters: Double) {
+value class Distance(
+    val meters: Double,
+) {
     private val kmRounded get() = kilometers.formatted(2)
     val kilometers get() = meters / 1000
     val describeKm get() = "$kmRounded km"
@@ -25,34 +31,46 @@ value class Distance(val meters: Double) {
 
 @JvmInline
 @Serializable
-value class DistanceF(val meters: Float) {
+value class DistanceF(
+    val meters: Float,
+) {
     private val kmRounded get() = (meters / 1000).formatted(2)
     val describeKm get() = "$kmRounded km"
 }
 
 @JvmInline
 @Serializable
-value class Temperature(val celsius: Float) {
+value class Temperature(
+    val celsius: Float,
+) {
     private val rounded get() = celsius.formatted(2)
     val describeCelsius get() = "$rounded °C"
 }
 
 @JvmInline
 @Serializable
-value class Pressure(val pascals: Float)
+value class Pressure(
+    val pascals: Float,
+)
 
 @JvmInline
 @Serializable
-value class Speed(val metersPerSecond: Float) {
+value class Speed(
+    val metersPerSecond: Float,
+) {
     private val kmhRounded get() = (metersPerSecond * 3.6).formatted(2)
     val describeKmh get() = "$kmhRounded km/h"
 }
 
 @JvmInline
 @Serializable
-value class Rpm(val rpm: Int)
+value class Rpm(
+    val rpm: Int,
+)
 
-enum class Gear(val value: Int) {
+enum class Gear(
+    val value: Int,
+) {
     Drive(8),
     Neutral(1),
     Park(4),

@@ -23,7 +23,8 @@ import timber.log.Timber
 class HomeScreen(
     carContext: CarContext,
     private val service: AppService,
-) : Screen(carContext), LifecycleEventObserver {
+) : Screen(carContext),
+    LifecycleEventObserver {
     private var job: Job? = null
     private var isFirstRender = true
 
@@ -126,7 +127,7 @@ class HomeScreen(
                                 setOnClickListener {
                                     screenManager.pushLogged(SettingsScreen(carContext, lang, service))
                                 }
-                            }
+                            },
                         )
                     }
                     user.activeCar?.let {

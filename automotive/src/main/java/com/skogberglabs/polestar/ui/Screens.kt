@@ -17,7 +17,9 @@ import com.skogberglabs.polestar.paneTemplate
 import com.skogberglabs.polestar.row
 import timber.log.Timber
 
-class EmptyScreen(carContext: CarContext) : Screen(carContext) {
+class EmptyScreen(
+    carContext: CarContext,
+) : Screen(carContext) {
     override fun onGetTemplate(): Template {
         Screens.installProfileRootBackBehavior(this)
         return messageTemplate("?") {
@@ -50,9 +52,11 @@ object Screens {
     }
 }
 
-class ParkingScreen(carContext: CarContext) : Screen(carContext) {
-    override fun onGetTemplate(): Template {
-        return paneTemplate(
+class ParkingScreen(
+    carContext: CarContext,
+) : Screen(carContext) {
+    override fun onGetTemplate(): Template =
+        paneTemplate(
             pane {
                 addRow(
                     row {
@@ -66,10 +70,11 @@ class ParkingScreen(carContext: CarContext) : Screen(carContext) {
                 setStartHeaderAction(Action.BACK)
             }
         }
-    }
 }
 
-class CustomScreen(carContext: CarContext) : Screen(carContext) {
+class CustomScreen(
+    carContext: CarContext,
+) : Screen(carContext) {
     override fun onGetTemplate(): Template =
         paneTemplate(
             pane {
@@ -109,7 +114,9 @@ class CustomScreen(carContext: CarContext) : Screen(carContext) {
         }
 }
 
-class NavigationScreen(carContext: CarContext) : Screen(carContext) {
+class NavigationScreen(
+    carContext: CarContext,
+) : Screen(carContext) {
     override fun onGetTemplate(): Template =
         navigationTemplate {
             setActionStrip(

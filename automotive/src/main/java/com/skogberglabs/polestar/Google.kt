@@ -15,7 +15,10 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
 
-class Google(private val client: GoogleSignInClient, private val userState: UserState) {
+class Google(
+    private val client: GoogleSignInClient,
+    private val userState: UserState,
+) {
     companion object {
         // https://console.cloud.google.com/apis/credentials/oauthclient/497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com?project=boattracker-209616
         private const val webClientId = "497623115973-c6v1e9khup8bqj41vf228o2urnv86muh.apps.googleusercontent.com"
@@ -36,7 +39,8 @@ class Google(private val client: GoogleSignInClient, private val userState: User
         }
 
         private fun options() =
-            GoogleSignInOptions.Builder()
+            GoogleSignInOptions
+                .Builder()
                 .requestIdToken(webClientId)
                 .requestEmail()
                 .build()

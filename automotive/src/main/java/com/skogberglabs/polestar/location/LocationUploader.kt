@@ -35,17 +35,20 @@ class LocationUploader(
 ) {
     private val path = "/cars/locations"
     private val message: SharedFlow<Outcome<SimpleMessage>> =
-        userState.userResult.filter { it != Outcome.Loading }.distinctUntilChanged().flatMapLatest { user ->
-            when (user) {
-                is Outcome.Success -> {
-                    Timber.i("Logged in as ${user.result.email}, sending locations...")
-                    sendLocations()
+        userState.userResult
+            .filter { it != Outcome.Loading }
+            .distinctUntilChanged()
+            .flatMapLatest { user ->
+                when (user) {
+                    is Outcome.Success -> {
+                        Timber.i("Logged in as ${user.result.email}, sending locations...")
+                        sendLocations()
+                    }
+                    else -> {
+                        flowOf(Outcome.Idle)
+                    }
                 }
-                else -> {
-                    flowOf(Outcome.Idle)
-                }
-            }
-        }.shareIn(ioScope, SharingStarted.Eagerly, replay = 1)
+            }.shareIn(ioScope, SharingStarted.Eagerly, replay = 1)
     val status: StateFlow<Outcome<SimpleMessage>> = message.stateIn(ioScope, SharingStarted.Eagerly, Outcome.Loading)
 
     private val selectedCar = prefs.userPreferencesFlow().map { it.selectedCar }

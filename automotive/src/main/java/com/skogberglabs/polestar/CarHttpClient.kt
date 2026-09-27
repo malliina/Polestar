@@ -1,7 +1,6 @@
 package com.skogberglabs.polestar
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
@@ -31,7 +30,9 @@ interface TokenSource {
     }
 }
 
-class GoogleTokenSource(private val google: Google) : TokenSource {
+class GoogleTokenSource(
+    private val google: Google,
+) : TokenSource {
     override suspend fun fetchToken(): IdToken? =
         try {
             google.signInSilently("token")?.idToken
@@ -41,7 +42,9 @@ class GoogleTokenSource(private val google: Google) : TokenSource {
         }
 }
 
-class GoogleCredTokenSource(private val google: GoogleCredManager) : TokenSource {
+class GoogleCredTokenSource(
+    private val google: GoogleCredManager,
+) : TokenSource {
     override suspend fun fetchToken(): IdToken? =
         try {
             Timber.w("Fetching a token without an activity is not supported.")
@@ -52,7 +55,10 @@ class GoogleCredTokenSource(private val google: GoogleCredManager) : TokenSource
         }
 }
 
-class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvConf = EnvConf.current) {
+class CarHttpClient(
+    private val tokenSource: TokenSource,
+    private val env: EnvConf = EnvConf.current,
+) {
     companion object {
         private const val Accept = "Accept"
         private const val Authorization = "Authorization"
@@ -63,7 +69,8 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
 //        private val MediaTypeJson = "application/vnd.boat.v2+json".toMediaType()
 
         val client: OkHttpClient =
-            OkHttpClient.Builder()
+            OkHttpClient
+                .Builder()
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
@@ -93,7 +100,10 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
 
     suspend inline fun <reified T> get(path: String): T = get(path, serializer())
 
-    suspend fun <T> get(path: String, adapter: KSerializer<T>): T {
+    suspend fun <T> get(
+        path: String,
+        adapter: KSerializer<T>,
+    ): T {
         val request = authRequest(env.baseUrl.append(path), emptyMap()).get().build()
         Timber.i("Fetching '${request.url}'...")
         return execute(request, adapter)
@@ -103,7 +113,7 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
         path: String,
         body: Req,
         carToken: String,
-    ): Res = post(path, body,  mapOf(XToken to carToken))
+    ): Res = post(path, body, mapOf(XToken to carToken))
 
     suspend inline fun <reified Req, reified Res> post(
         path: String,
@@ -170,13 +180,14 @@ class CarHttpClient(private val tokenSource: TokenSource, private val env: EnvCo
                 if (response.isSuccessful) {
                     JsonConf.decode(body.string(), reader)
                 } else {
-                    val errors = try {
-                        val str = body.string()
-                        Timber.w("Request ${request.method} ${request.url} errored with body $str")
-                        JsonConf.decode(str, Errors.serializer())
-                    } catch (e: Exception) {
-                        null
-                    }
+                    val errors =
+                        try {
+                            val str = body.string()
+                            Timber.w("Request ${request.method} ${request.url} errored with body $str")
+                            JsonConf.decode(str, Errors.serializer())
+                        } catch (e: Exception) {
+                            null
+                        }
                     if (errors != null) {
                         Timber.w("Throwing error.")
                         throw ErrorsException(errors, response.code, request)

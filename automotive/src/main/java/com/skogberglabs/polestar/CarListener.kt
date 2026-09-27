@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
 
-class CarListener(private val context: Context) {
+class CarListener(
+    private val context: Context,
+) {
     companion object {
         val permissions =
             listOf(
@@ -127,9 +129,10 @@ class CarListener(private val context: Context) {
 //        val registrations = vehicleProps.map { prop ->
 //            carPropertyManager.subscribePropertyEvents(prop, CarPropertyManager.SENSOR_RATE_ONCHANGE, callback)
 //        }
-        val registrations = vehicleProps.map { prop ->
-            carPropertyManager.registerCallback(callback, prop, CarPropertyManager.SENSOR_RATE_ONCHANGE)
-        }
+        val registrations =
+            vehicleProps.map { prop ->
+                carPropertyManager.registerCallback(callback, prop, CarPropertyManager.SENSOR_RATE_ONCHANGE)
+            }
     }
 
     fun disconnect() = car.disconnect()

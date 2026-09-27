@@ -110,8 +110,8 @@ class SelectLanguageScreen(
 
     private val langs get() = current.carConf?.languages?.map { it.language } ?: emptyList()
 
-    override fun onGetTemplate(): Template {
-        return listTemplate {
+    override fun onGetTemplate(): Template =
+        listTemplate {
             installHeader {
                 current.lang?.let { lang ->
                     setTitle(lang.profile.chooseLanguage)
@@ -135,7 +135,6 @@ class SelectLanguageScreen(
                 }
             setSingleList(list)
         }
-    }
 }
 
 class SelectCarScreen(

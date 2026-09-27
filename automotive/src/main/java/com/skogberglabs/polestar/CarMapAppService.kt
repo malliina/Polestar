@@ -17,7 +17,9 @@ class CarTrackerAppService : CarAppService() {
     }
 }
 
-class CarSession(val app: CarApp) : Session() {
+class CarSession(
+    val app: CarApp,
+) : Session() {
     override fun onCreateScreen(intent: Intent): Screen {
         intent.data?.let { uri ->
             Timber.i("Creating screen with $uri...")

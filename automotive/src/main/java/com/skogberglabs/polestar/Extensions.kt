@@ -35,25 +35,28 @@ fun ItemList.Builder.addRow(build: Row.Builder.() -> Unit): ItemList.Builder = a
 
 fun pane(build: Pane.Builder.() -> Unit): Pane = Pane.Builder().apply(build).build()
 
-fun Pane.Builder.installRow(title: String) =
-    addRow(row { setTitle(title) })
+fun Pane.Builder.installRow(title: String) = addRow(row { setTitle(title) })
 
-fun Pane.Builder.installAction(title: String, isPrimary: Boolean, listener: OnClickListener) =
-    addAction(action {
+fun Pane.Builder.installAction(
+    title: String,
+    isPrimary: Boolean,
+    listener: OnClickListener,
+) = addAction(
+    action {
         setTitle(title)
         setOnClickListener(listener)
         if (isPrimary) {
             setFlags(Action.FLAG_PRIMARY)
         }
-    })
+    },
+)
 
 fun paneTemplate(
     pane: Pane,
     build: PaneTemplate.Builder.() -> Unit,
 ): PaneTemplate = PaneTemplate.Builder(pane).apply(build).build()
 
-fun PaneTemplate.Builder.installHeader(build: Header.Builder.() -> Unit) =
-    setHeader(header(build))
+fun PaneTemplate.Builder.installHeader(build: Header.Builder.() -> Unit) = setHeader(header(build))
 
 fun navigationTemplate(build: NavigationTemplate.Builder.() -> Unit) = NavigationTemplate.Builder().apply(build).build()
 
@@ -85,8 +88,7 @@ fun MessageTemplate.Builder.appendAction(
     make: Action.Builder.() -> Unit,
 ) = addAction(titledAction(title) { make() })
 
-fun MessageTemplate.Builder.installHeader(build: Header.Builder.() -> Unit) =
-    setHeader(header(build))
+fun MessageTemplate.Builder.installHeader(build: Header.Builder.() -> Unit) = setHeader(header(build))
 
 fun messageTemplate(
     message: String,
@@ -102,7 +104,6 @@ fun signInTemplate(
 
 fun listTemplate(build: ListTemplate.Builder.() -> Unit): ListTemplate = ListTemplate.Builder().apply(build).build()
 
-fun ListTemplate.Builder.installHeader(build: Header.Builder.() -> Unit) =
-    setHeader(header(build))
+fun ListTemplate.Builder.installHeader(build: Header.Builder.() -> Unit) = setHeader(header(build))
 
 fun header(build: Header.Builder.() -> Unit): Header = Header.Builder().apply(build).build()

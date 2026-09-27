@@ -35,7 +35,8 @@ class BootEventReceiver : BroadcastReceiver() {
                         PendingIntent.FLAG_IMMUTABLE,
                     )
                 val notification =
-                    Notification.Builder(context, BOOT_CHANNEL)
+                    Notification
+                        .Builder(context, BOOT_CHANNEL)
                         .setContentTitle(nlang.autoStart)
                         .setContentText(nlang.startTracking)
                         .setContentIntent(locationsIntent)
