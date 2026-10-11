@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.chunked
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -56,13 +57,14 @@ class LocationUploader(
     private fun sendLocations(): Flow<Outcome<SimpleMessage>> =
         locations.locationUpdates
             .filter { it.isNotEmpty() }
+            .chunked(10)
             .combine(selectedCar.filterNotNull()) { locs, car ->
                 try {
                     val result =
                         http.post<LocationUpdates, SimpleMessage>(
                             path,
                             LocationUpdates(
-                                locs.map {
+                                locs.flatten().map {
                                     it.toPoint(carListener.carInfo.value)
                                 },
                                 car.id,

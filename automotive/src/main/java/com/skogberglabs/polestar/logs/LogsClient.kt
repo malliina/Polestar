@@ -73,7 +73,7 @@ class TimberClient : Timber.Tree() {
     fun events(): Flow<List<LogEvent>> =
         flow {
             while (true) {
-                delay(1.seconds)
+                delay(30.seconds)
                 val logs = rinse()
                 if (logs.isNotEmpty()) {
                     emit(logs)

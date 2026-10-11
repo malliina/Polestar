@@ -115,14 +115,10 @@ android {
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
             } else {
-                val RELEASE_STORE_FILE: String by project
-                storeFile = file(RELEASE_STORE_FILE)
-                val RELEASE_STORE_PASSWORD: String by project
-                storePassword = RELEASE_STORE_PASSWORD
-                val RELEASE_KEY_ALIAS: String by project
-                keyAlias = RELEASE_KEY_ALIAS
-                val RELEASE_KEY_PASSWORD: String by project
-                keyPassword = RELEASE_KEY_PASSWORD
+                storeFile = file(project.property("RELEASE_STORE_FILE")!!)
+                storePassword = project.property("RELEASE_STORE_PASSWORD")?.toString()
+                keyAlias = project.property("RELEASE_KEY_ALIAS")?.toString()
+                keyPassword = project.property("RELEASE_KEY_PASSWORD")?.toString()
             }
         }
     }
