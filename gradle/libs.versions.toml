@@ -48,4 +48,4 @@ devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 kotlin-plugin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinSerialization"}
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
-updates = { id = "com.github.ben-manes.versions", version.ref = "updates" }
+updates = { id = "io.github.ben-manes.versions", version.ref = "updates" }
